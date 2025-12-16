@@ -15,8 +15,6 @@ const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang 
   const [displayPrompt, setDisplayPrompt] = useState(prompt);
 
   // Sync internal display state when the generated prompt changes from parent
-  // But only if we aren't currently holding an enhanced version that is different?
-  // Actually, standard behavior: if the user changes settings, it overrides the AI enhancement.
   React.useEffect(() => {
     setDisplayPrompt(prompt);
   }, [prompt]);
@@ -34,7 +32,7 @@ const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang 
         setDisplayPrompt(enhanced);
     } catch (e) {
         console.error(e);
-        alert("Error connecting to Gemini AI");
+        // Fail silently in UI to avoid disrupting user flow, error is logged in console
     } finally {
         setIsEnhancing(false);
     }

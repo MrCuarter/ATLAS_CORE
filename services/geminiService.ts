@@ -3,8 +3,17 @@ import { PromptType } from "../types";
 
 export const enhancePromptWithGemini = async (currentPrompt: string, promptType: PromptType): Promise<string> => {
   try {
-    // Guidelines: API key must be obtained exclusively from process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+    // Assume this variable is pre-configured, valid, and accessible in the execution context.
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+      console.error("Gemini API Key is missing. Please check environment variables.");
+      // Return original prompt to prevent app crash
+      return currentPrompt;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     const modelId = "gemini-2.5-flash";
     
     const systemInstruction = `You are an expert Prompt Engineer for generative AI models like Midjourney and Stable Diffusion. 
