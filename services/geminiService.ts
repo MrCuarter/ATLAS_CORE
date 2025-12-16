@@ -3,12 +3,7 @@ import { PromptType } from "../types";
 
 export const enhancePromptWithGemini = async (currentPrompt: string, promptType: PromptType): Promise<string> => {
   try {
-    // Access environment variable using process.env as per guidelines
-    if (!process.env.API_KEY) {
-      console.warn("API Key (process.env.API_KEY) not found in environment.");
-      return currentPrompt;
-    }
-
+    // Guidelines: API key must be obtained exclusively from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const modelId = "gemini-2.5-flash";
     

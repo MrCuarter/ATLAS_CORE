@@ -28,11 +28,6 @@ const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang 
   };
 
   const handleEnhance = async () => {
-    // Check using process.env as per guidelines
-    if (!process.env.API_KEY) {
-        alert("API Key missing. Please add API_KEY to your environment variables.");
-        return;
-    }
     setIsEnhancing(true);
     try {
         const enhanced = await enhancePromptWithGemini(displayPrompt, promptType);
