@@ -57,7 +57,7 @@ export const UI_TEXT = {
     customPlaceholder: "Escribe aquí detalles extra...",
     designedBy: "Diseñado por",
     followMe: "Sígueme en",
-    narrativeIntro: "Diseña una experiencia coherente. Genera 11 assets visuales del mismo mundo para construir tu narrativa.",
+    narrativeIntro: "Diseña una experiencia coherente. Genera 13 assets visuales del mismo mundo para construir tu narrativa.",
     enableAI: "ACTIVAR REFINAMIENTO IA (GEMINI)",
     enableAIDesc: "Aumenta la calidad de cada prompt individualmente. Proceso más lento.",
     assetMap: "MAPA TÁCTICO",
@@ -78,7 +78,7 @@ export const UI_TEXT = {
     ratioSquare: "Cuadrado (1:1)",
     ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **PROTOCOLO DE GENERACIÓN SECUENCIAL**\n\nActúa como un motor de generación de imágenes experto. Tienes una lista de 13 escenas que forman un pack coherente. **NO LAS GENERES TODAS A LA VEZ.**\n\n**TU MISIÓN:**\n1. Lee la descripción del estilo visual (Civilización, Atmósfera, Render).\n2. Genera **SOLO LA IMAGEN Nº 1** de la lista.\n3. **DETENTE** y espera a que yo te diga 'Siguiente' para generar la número 2.\n4. Mantén la coherencia visual estricta en todas ellas.\n\n**LISTA DE ESCENAS:**\n"
+    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate 13 high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials in every single image.\n3. **Format:** ALL images must be 16:9.\n\n**EXECUTION QUEUE:**\n"
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -134,7 +134,7 @@ export const UI_TEXT = {
     customPlaceholder: "Type extra details here...",
     designedBy: "Designed by",
     followMe: "Follow me on",
-    narrativeIntro: "Design a coherent experience. Generate 11 visual assets from the same world to build your narrative.",
+    narrativeIntro: "Design a coherent experience. Generate 13 visual assets from the same world to build your narrative.",
     enableAI: "ENABLE AI REFINEMENT (GEMINI)",
     enableAIDesc: "Increases quality of each prompt individually. Slower process.",
     assetMap: "TACTICAL MAP",
@@ -155,7 +155,7 @@ export const UI_TEXT = {
     ratioSquare: "Square (1:1)",
     ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **SEQUENTIAL GENERATION PROTOCOL**\n\nAct as an expert image generation engine. You have a list of 13 scenes that form a coherent pack. **DO NOT GENERATE THEM ALL AT ONCE.**\n\n**YOUR MISSION:**\n1. Analyze the visual style description (Civilization, Atmosphere, Render).\n2. Generate **ONLY IMAGE #1** from the list.\n3. **STOP** and wait for me to say 'Next' before generating number 2.\n4. Maintain strict visual coherence across all of them.\n\n**SCENE LIST:**\n"
+    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate 13 high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials in every single image.\n3. **Format:** ALL images must be 16:9.\n\n**EXECUTION QUEUE:**\n"
   }
 };
 

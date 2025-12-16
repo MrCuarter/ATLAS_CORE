@@ -34,15 +34,18 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     const systemInstruction = `You are an expert Prompt Engineer for generative AI models like Midjourney and Stable Diffusion. 
     Your task is to take a raw, structured map description and rewrite it into a highly detailed, evocative, and professional prompt.
     
+    CRITICAL CONSTRAINT: The output aspect ratio MUST be 16:9.
+    
     If the target is 'Midjourney':
     - Maintain the '::' multi-prompt structure if present.
     - Enhance vocabulary (e.g., change "fog" to "ethereal thick volumetric fog").
     - Add lighting details (e.g., "cinematic lighting", "ray tracing").
-    - Keep parameters like --ar at the end.
+    - ENSURE '--ar 16:9' is at the very end of the prompt.
     
     If the target is 'Generic':
     - Write a flowing, descriptive paragraph.
     - Focus on texture, mood, and specific details implied by the input.
+    - Explicitly state "Aspect Ratio: 16:9" in the text.
     
     Output ONLY the final prompt text. No explanations.`;
 
@@ -84,39 +87,48 @@ export const generateGameAssetsPrompt = async (contextDescription: string): Prom
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-2.5-flash";
 
-        const systemInstruction = `You are a Game Asset Designer expert.
-        Your task is to create TWO specific image prompts based on the context of a game world provided by the user.
+        // Advanced System Instruction for Professional Assets
+        const systemInstruction = `You are a Lead Game UI/UX Artist and Illustrator specializing in Midjourney prompting.
+        Your task is to analyze the provided Game World Context and generate TWO highly technical, polished Midjourney prompts.
+
+        CONTEXT: "${contextDescription}"
+
+        ---
         
-        The context is: "${contextDescription}"
+        ### REQUIREMENTS FOR PROMPT 1: GAME UI KIT
+        *   **Goal:** A modular sprite sheet for the game's interface.
+        *   **Visual Style:** Must derive materials strictly from context (e.g., "Rusty Metal & Neon" for Cyberpunk, "Parchment & Gold" for Fantasy).
+        *   **Elements:** Empty window frames (9-slice ready), Health/Mana bars, Action buttons (round/square), Dialogue box, Inventory slots.
+        *   **Composition:** "Knolling" or "Sprite Sheet" layout. Elements must NOT touch.
+        *   **Background:** Isolated on solid black (hex #000000).
+        *   **Tech Specs:** --ar 16:9 --v 6.0 --stylize 250 --no text, blur, cropping
 
-        You must output specific instructions to generate:
-        1. A "Game UI Kit" (User Interface). 
-           - Must include: empty dialog boxes, blank rectangular buttons, blank round buttons, window frames of different shapes.
-           - Constraint: "Not too many elements, ensure high resolution and quality".
-           - Style: Must match the civilization/atmosphere of the context (e.g., stone for medieval, holograms for sci-fi).
-           - View: Isolated on a plain background (sprite sheet style).
+        ### REQUIREMENTS FOR PROMPT 2: ITEM ICONS
+        *   **Goal:** A grid of inventory icons relevant to the location/theme.
+        *   **Content:** 6 to 8 distinct items (e.g., specific weapon, potion, map, key, relic, tool) that fit the world.
+        *   **Visual Style:** High-fidelity, vector game asset style, consistent with the UI.
+        *   **Composition:** Grid layout, equal spacing.
+        *   **Background:** Isolated on solid black (hex #000000).
+        *   **Tech Specs:** --ar 16:9 --v 6.0 --stylize 250 --no text, blur
 
-        2. A "Game Items & Icons Set".
-           - Must include: 5-6 items directly related to the context (e.g., potions, weapons, tools, artifacts).
-           - Style: Consistent with the UI.
-           - View: Grid layout, isolated.
+        ---
 
-        Output Format:
-        Return the result as a single text block formatted like this:
+        ### OUTPUT FORMAT
+        Return ONLY the two prompts below. Do not add introduction or conclusion.
         
-        **UI KIT PROMPT:**
-        [Prompt description here]
+        **UI KIT:**
+        [Your optimized Midjourney prompt here] --ar 16:9 --v 6.0 --no text
 
-        **ITEMS PROMPT:**
-        [Prompt description here]
+        **ITEMS:**
+        [Your optimized Midjourney prompt here] --ar 16:9 --v 6.0 --no text
         `;
 
         const response = await ai.models.generateContent({
             model: modelId,
-            contents: "Generate the assets prompts now.",
+            contents: "Execute generation.",
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.7,
+                temperature: 0.6, // Lower temperature for more precise adherence to structure
             }
         });
 
