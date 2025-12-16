@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapConfig, Language } from '../types';
 import * as C from '../constants';
+import { playPowerUp, playTechClick } from '../services/audioService';
 
 interface NarrativeViewProps {
   config: MapConfig;
@@ -51,7 +52,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, onSecre
           <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white font-mono">1. CONTEXTO</h3>
                <button 
-                onClick={onSecretPlace}
+                onClick={() => { onSecretPlace(); playTechClick(); }}
                 className="text-[10px] font-bold font-mono uppercase text-accent-300 border border-accent-500/30 px-3 py-1 hover:bg-accent-500/10 transition-colors flex items-center gap-2"
             >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +108,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, onSecre
 
       <div className="text-center">
         <button
-          onClick={onGenerate}
+          onClick={() => { onGenerate(); playPowerUp(); }}
           className="group relative inline-flex items-center justify-center px-16 py-6 text-xl font-bold text-white transition-all duration-300 bg-gray-950 border border-accent-500/50 hover:bg-accent-900/20 hover:border-accent-400 hover:shadow-[0_0_40px_rgba(34,211,238,0.25)] rounded-sm"
         >
              <span className="absolute w-2 h-2 bg-accent-400 top-0 left-0 -mt-1 -ml-1"></span>

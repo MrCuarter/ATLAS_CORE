@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PromptType, Language } from '../types';
 import { UI_TEXT } from '../constants';
 import { enhancePromptWithGemini } from '../services/geminiService';
+import { playSuccess, playTechClick } from '../services/audioService';
 
 interface PromptDisplayProps {
   prompt: string;
@@ -21,15 +22,18 @@ const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang 
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayPrompt);
+    playSuccess();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleEnhance = async () => {
+    playTechClick();
     setIsEnhancing(true);
     try {
         const enhanced = await enhancePromptWithGemini(displayPrompt, promptType);
         setDisplayPrompt(enhanced);
+        playSuccess(); // Optional: Play success when enhancement is done
     } catch (e) {
         console.error(e);
         // Fail silently in UI to avoid disrupting user flow, error is logged in console

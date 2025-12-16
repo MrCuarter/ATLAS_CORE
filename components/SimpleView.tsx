@@ -1,88 +1,196 @@
-import React from 'react';
-import { Preset, Language } from '../types';
-import { PRESETS, UI_TEXT } from '../constants';
+import React, { useRef, useEffect } from 'react';
+import { MapConfig, Language } from '../types';
+import { UI_TEXT, SCALES, CIVILIZATIONS, ART_STYLES, CAMERAS, RATIOS, PLACES_BY_CATEGORY, PLACE_CATEGORIES } from '../constants';
+import { playTechClick } from '../services/audioService';
 
 interface SimpleViewProps {
-  onPresetSelect: (preset: Preset) => void;
-  onSurprise: () => void;
-  onSecretPlace: () => void;
+  config: MapConfig;
+  onChange: (field: keyof MapConfig, value: any) => void;
   lang: Language;
 }
 
-const SimpleView: React.FC<SimpleViewProps> = ({ onPresetSelect, onSurprise, onSecretPlace, lang }) => {
+// Helper to determine the category of a selected "Top Place"
+const getCategoryForPlace = (place: string): string => {
+  for (const cat of PLACE_CATEGORIES) {
+    if (PLACES_BY_CATEGORY[cat].includes(place)) {
+      return cat;
+    }
+  }
+  return 'Civil'; // Fallback
+};
+
+// SHORTCUT LISTS FOR "FAST" MODE
+const FAST_PLACES = [
+  'Fortaleza', 'Ciudad', 'Prisión', 'Bosque ancestral', 
+  'Templo', 'Base espacial', 'Ruinas antiguas', 'Cyberpunk Megacity', 
+  'Puerto', 'Mazmorra', 'Cordillera', 'Desierto abierto'
+];
+
+const FAST_CIVS = [
+  'Humana genérica', 'Medieval', 'Futurista', 'Cyberpunk', 
+  'Elfos', 'Orcos', 'Imperial', 'Alienígena Orgánica'
+];
+
+const FAST_STYLES = [
+  'Realista cinematográfico', 'Cartoon estilizado', '3D render', 
+  'Isométrico', 'Pixel art', 'Dark fantasy', 'Blueprint', 'Studio Ghibli'
+];
+
+const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
   const t = UI_TEXT[lang];
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new sections appear
+  useEffect(() => {
+    if (endRef.current) {
+        // Small delay to allow DOM to update
+        setTimeout(() => {
+            endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+  }, [config.scale, config.placeType, config.civilization, config.artStyle, config.camera]);
+
+  const handlePlaceSelect = (place: string) => {
+    const cat = getCategoryForPlace(place);
+    onChange('placeCategory', cat);
+    onChange('placeType', place);
+  };
+
+  const renderSection = (
+    stepTitle: string,
+    items: string[],
+    currentValue: string,
+    onSelect: (val: string) => void,
+    visible: boolean,
+    customGridClass?: string
+  ) => {
+    if (!visible) return null;
+
+    return (
+      <div className="mb-8 animate-fade-in bg-gray-900/30 border border-gray-800 p-6 rounded-lg backdrop-blur-sm">
+        <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
+            <span className="w-2 h-2 bg-accent-500 rounded-full mr-3 animate-pulse"></span>
+            {stepTitle}
+        </h3>
+        <div className={customGridClass || "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"}>
+          {items.map(item => {
+             // For "Cyberpunk Megacity", we manually map it to "Ciudad" in backend but keep label
+             const isSelected = currentValue === item || (item === 'Cyberpunk Megacity' && currentValue === 'Ciudad' && config.civilization === 'Cyberpunk');
+             
+             return (
+              <button
+                key={item}
+                onClick={() => { onSelect(item); playTechClick(); }}
+                className={`
+                  relative px-4 py-3 text-xs sm:text-sm font-medium transition-all duration-200 border rounded
+                  ${isSelected 
+                    ? 'bg-accent-900/40 border-accent-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
+                    : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900'
+                  }
+                `}
+              >
+                {/* Selection marker */}
+                {isSelected && (
+                    <div className="absolute top-0 right-0 -mt-1 -mr-1 w-2 h-2 bg-accent-400 rounded-full shadow-[0_0_5px_rgba(34,211,238,0.8)]"></div>
+                )}
+                {item}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="pb-32 animate-fade-in">
-      {/* Surprise Section */}
-      <div className="mb-12 flex flex-col md:flex-row gap-4 justify-center items-stretch py-6">
-        {/* Main Genesis Button */}
-        <button
-          onClick={onSurprise}
-          className="group relative inline-flex items-center justify-center px-12 py-5 text-lg font-bold text-white transition-all duration-300 bg-gray-950 border border-accent-500/30 hover:bg-accent-900/10 hover:border-accent-400 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] rounded-sm overflow-hidden w-full md:w-2/3"
-        >
-            <span className="absolute w-1 h-3 bg-accent-400 top-0 left-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 top-0 right-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 bottom-0 left-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 bottom-0 right-0"></span>
-            
-            {/* Inner glow */}
-            <div className="absolute inset-0 bg-accent-400/5 blur-xl group-hover:bg-accent-400/10 transition-colors"></div>
+    <div className="pb-32 max-w-5xl mx-auto">
+      
+      {/* 1. SCALE */}
+      {renderSection(
+        t.stepScale, 
+        SCALES, 
+        config.scale, 
+        (val) => onChange('scale', val), 
+        true,
+        "grid grid-cols-1 sm:grid-cols-2 gap-3"
+      )}
 
-          <span className="mr-4 text-2xl text-accent-400 group-hover:rotate-180 transition-transform duration-700">❖</span>
-          <span className="font-mono tracking-widest relative z-10">{t.surpriseBtn}</span>
-        </button>
+      {/* 2. PLACE (Shortcuts) - Revealed when Scale is selected */}
+      {renderSection(
+        t.stepPlace, 
+        FAST_PLACES, 
+        config.placeType, 
+        handlePlaceSelect, 
+        !!config.scale
+      )}
 
-        {/* Secondary Secret Place Button */}
-        <button
-          onClick={onSecretPlace}
-          className="group relative inline-flex items-center justify-center px-8 py-5 text-sm font-bold text-white transition-all duration-300 bg-gray-950 border border-purple-500/30 hover:bg-purple-900/10 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-sm overflow-hidden w-full md:w-1/3"
-        >
-             <span className="absolute w-1 h-2 bg-purple-400 top-0 left-0"></span>
-             <span className="absolute w-1 h-2 bg-purple-400 bottom-0 right-0"></span>
+      {/* 3. CIVILIZATION - Revealed when Place is selected */}
+      {renderSection(
+        t.stepCiv, 
+        FAST_CIVS, 
+        config.civilization, 
+        (val) => onChange('civilization', val), 
+        !!config.placeType
+      )}
 
-             <div className="absolute inset-0 bg-purple-400/5 blur-xl group-hover:bg-purple-400/10 transition-colors"></div>
+      {/* 4. STYLE - Revealed when Civ is selected */}
+      {renderSection(
+        t.stepStyle, 
+        FAST_STYLES, 
+        config.artStyle, 
+        (val) => onChange('artStyle', val), 
+        !!config.civilization
+      )}
 
-             <span className="font-mono tracking-widest relative z-10 text-purple-300 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t.secretPlaceBtn}
-             </span>
-        </button>
-      </div>
+      {/* 5. CAMERA - Revealed when Style is selected */}
+      {renderSection(
+        t.stepCamera, 
+        CAMERAS, 
+        config.camera, 
+        (val) => onChange('camera', val), 
+        !!config.artStyle
+      )}
 
-      {/* Presets Grid */}
-      <h3 className="text-xl font-mono font-bold text-gray-400 mb-6 pl-2 flex items-center border-l-2 border-accent-500/50">
-        {t.presetsTitle}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {PRESETS.map((preset, idx) => (
-          <button
-            key={idx}
-            onClick={() => onPresetSelect(preset)}
-            className="flex flex-col text-left p-5 bg-gray-900 border border-gray-800 hover:border-accent-500/50 hover:bg-gray-800 transition-all duration-200 group h-full relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-accent-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            
-            <div className="flex justify-between items-start w-full mb-2 z-10">
-              <span className="font-bold text-gray-200 group-hover:text-accent-300 text-lg leading-tight font-sans">
-                {preset.name}
-              </span>
+       {/* 6. RATIO - Revealed when Camera is selected */}
+       {!!config.camera && (
+           <div className="mb-8 animate-fade-in bg-gray-900/30 border border-gray-800 p-6 rounded-lg backdrop-blur-sm">
+             <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
+                <span className="w-2 h-2 bg-accent-500 rounded-full mr-3 animate-pulse"></span>
+                {t.stepRatio}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                    { label: t.ratioCinema, val: '16:9', icon: 'rectangle' },
+                    { label: t.ratioMobile, val: '9:16', icon: 'vertical' },
+                    { label: t.ratioSquare, val: '1:1', icon: 'square' },
+                    { label: t.ratioUltra, val: '21:9', icon: 'ultra' }
+                ].map((opt) => (
+                    <button
+                        key={opt.val}
+                        onClick={() => { onChange('aspectRatio', opt.val); playTechClick(); }}
+                        className={`
+                        flex flex-col items-center justify-center p-4 border rounded transition-all duration-200
+                        ${config.aspectRatio.includes(opt.val) 
+                            ? 'bg-accent-900/40 border-accent-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
+                            : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900'
+                        }
+                        `}
+                    >
+                        {/* CSS Shapes for Icons */}
+                        <div className={`border-2 border-current mb-2 opacity-80 ${
+                            opt.icon === 'rectangle' ? 'w-8 h-5' :
+                            opt.icon === 'vertical' ? 'w-5 h-8' :
+                            opt.icon === 'square' ? 'w-6 h-6' : 'w-10 h-4'
+                        }`}></div>
+                        <span className="text-xs font-bold">{opt.label}</span>
+                    </button>
+                ))}
             </div>
-            <p className="text-sm text-gray-500 group-hover:text-gray-400 mb-4 flex-grow font-mono leading-relaxed">
-              {preset.description}
-            </p>
-            <div className="flex flex-wrap gap-2 mt-auto z-10">
-              {preset.tags.map(tag => (
-                <span key={tag} className="px-2 py-0.5 bg-gray-950 text-[10px] uppercase tracking-wider text-tech-500 border border-gray-800 group-hover:border-accent-900/50 group-hover:text-accent-400/80">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </button>
-        ))}
-      </div>
+           </div>
+       )}
+       
+       {/* Invisible div to track end of content for auto-scroll */}
+       <div ref={endRef} className="h-4"></div>
     </div>
   );
 };

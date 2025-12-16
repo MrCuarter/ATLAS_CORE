@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { AppMode, MediaType, PromptType, MapConfig, Preset, Language, PromptCollectionItem } from './types';
 import * as C from './constants';
 import SimpleView from './components/SimpleView';
+import PresetsView from './components/PresetsView';
 import AdvancedView from './components/AdvancedView';
 import NarrativeView from './components/NarrativeView';
 import PromptDisplay from './components/PromptDisplay';
 import CollectionDisplay from './components/CollectionDisplay';
 import { generatePrompt, generateNarrativeCollection, getRandomElement } from './services/promptGenerator';
+import { playSwitch, playTechClick } from './services/audioService';
 
 // Initial state helpers
 const getInitialConfig = (): MapConfig => ({
@@ -33,7 +35,7 @@ const getInitialConfig = (): MapConfig => ({
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(Language.ES);
-  const [mode, setMode] = useState<AppMode>(AppMode.SIMPLE);
+  const [mode, setMode] = useState<AppMode>(AppMode.PRESETS); // Default to PRESETS now
   const [mediaType, setMediaType] = useState<MediaType>(MediaType.IMAGE);
   const [promptType, setPromptType] = useState<PromptType>(PromptType.GENERIC);
   const [config, setConfig] = useState<MapConfig>(getInitialConfig());
@@ -76,60 +78,82 @@ const App: React.FC = () => {
       tags: preset.tags,
       presetName: preset.name
     }));
+    // After applying preset, switch to Builder so user sees the result
+    setMode(AppMode.SIMPLE); 
   };
 
   const generateSurprise = () => {
-    const randomScale = getRandomElement(C.SCALES);
-    const randomCat = getRandomElement(C.PLACE_CATEGORIES);
-    const randomPlace = getRandomElement(C.PLACES_BY_CATEGORY[randomCat]);
-    const randomPoi = getRandomElement(C.POI_MAPPING[randomPlace] || C.POI_MAPPING['DEFAULT']);
-    const randomCiv = getRandomElement(C.CIVILIZATIONS);
-    const randomTime = getRandomElement(C.TIMES);
-    const randomWeather = getRandomElement(C.WEATHERS);
-    const randomStyle = getRandomElement(C.ART_STYLES);
-
-    setConfig(prev => ({
-      ...getInitialConfig(),
-      scale: randomScale,
-      placeCategory: randomCat,
-      placeType: randomPlace,
-      poi: randomPoi,
-      civilization: randomCiv,
-      time: randomTime,
-      weather: randomWeather,
-      artStyle: randomStyle,
-      presetName: '🎲 ATLAS_RANDOM',
-      tags: ['Random', 'SystemGen']
-    }));
+    // Reuse the secret place logic but reset everything first implies a new "session"
+    handleSecretPlace();
+    // Rename preset to generic random
+    setConfig(prev => ({ ...prev, presetName: '🎲 ATLAS_RANDOM', tags: ['Random', 'SystemGen'] }));
+    setMode(AppMode.SIMPLE);
   };
 
-  // Specific "Secret Place" Logic: Randomize Place/Cat/POI but keep Style
+  // SMART RANDOMIZATION LOGIC
   const handleSecretPlace = () => {
+    // 1. Pick basic Scenario elements
+    const randomScale = getRandomElement(C.SCALES);
     const randomCat = getRandomElement(C.PLACE_CATEGORIES);
     const randomPlace = getRandomElement(C.PLACES_BY_CATEGORY[randomCat]);
     const availablePOIs = C.POI_MAPPING[randomPlace] || C.POI_MAPPING['DEFAULT'];
     const randomPoi = getRandomElement(availablePOIs);
 
-    // If in Simple mode, we also need to ensure we have *some* style set if it was empty,
-    // otherwise the prompt is too bare. 
-    setConfig(prev => {
-        const base = mode === AppMode.SIMPLE ? (prev.placeType ? prev : getInitialConfig()) : prev;
-        
-        // If simple mode and no style set, add a default 'Cinematic' style to make it look good
-        const styleUpdates = (mode === AppMode.SIMPLE && !base.artStyle) ? {
-            artStyle: 'Realista cinematográfico',
-            time: 'Mediodía',
-            weather: 'Soleado'
-        } : {};
+    // 2. Filter Civilizations based on Category to avoid incompatibilities
+    let allowedCivs = C.CIVILIZATIONS;
+    if (randomCat === 'Especial / Sci-Fi' || randomCat === 'Industrial / Tecnológico') {
+        allowedCivs = C.CIVILIZATIONS.filter(c => 
+            ['Futurista', 'Cyberpunk', 'Alienígena Orgánica', 'Alienígena Biomecánica', 'Alienígena Cristalina', 'Postindustrial', 'Steampunk', 'Base Lunar'].some(k => c.includes(k))
+        );
+    } else if (randomCat === 'Religioso / Mágico') {
+        allowedCivs = C.CIVILIZATIONS.filter(c => 
+            ['Elfos', 'No-muertos', 'Demoníaca', 'Antigua', 'Medieval', 'Imperial'].some(k => c.includes(k))
+        );
+    } else if (randomCat === 'Natural') {
+        allowedCivs = ['Elfos', 'Tribal', 'Prehistórica', 'Ninguna', 'Nómadas', 'Antigua desaparecida'];
+    }
+    // Fallback if filter implies empty (shouldn't happen with current constants)
+    if (allowedCivs.length === 0) allowedCivs = C.CIVILIZATIONS;
+    const randomCiv = getRandomElement(allowedCivs);
 
-        return {
-            ...base,
-            ...styleUpdates,
-            placeCategory: randomCat,
-            placeType: randomPlace,
-            poi: randomPoi
-        };
-    });
+    // 3. Filter Art Styles based on Category/Civ
+    let allowedStyles = C.ART_STYLES;
+    if (randomCiv.includes('Futurista') || randomCiv.includes('Cyberpunk') || randomCiv.includes('Alienígena')) {
+        allowedStyles = ['Starcraft', 'Star Wars', 'Realista cinematográfico', 'Sci-Fi cinematográfico', 'Blueprint', '3D render', 'Isometric'];
+    } else if (randomCiv.includes('Medieval') || randomCiv.includes('Imperial')) {
+        allowedStyles = ['Age of Empires', 'Civilization', 'D&D', 'World of Warcraft', 'Dark fantasy', 'Realista cinematográfico', 'Dibujado a mano'];
+    } else if (randomCiv.includes('Elfos') || randomCiv.includes('Tribal')) {
+        allowedStyles = ['Studio Ghibli', 'World of Warcraft', 'Ilustración', 'Realista cinematográfico', 'Cartoon estilizado'];
+    }
+    // Ensure we map back to the actual constant strings
+    const finalAllowedStyles = C.ART_STYLES.filter(s => allowedStyles.some(as => s.includes(as) || as.includes(s))); 
+    const randomStyle = getRandomElement(finalAllowedStyles.length > 0 ? finalAllowedStyles : C.ART_STYLES);
+
+    // 4. Randomize Atmosphere & Camera
+    const randomTime = getRandomElement(C.TIMES);
+    const randomWeather = getRandomElement(C.WEATHERS);
+    const randomZoom = getRandomElement(C.ZOOMS);
+    const randomCamera = getRandomElement(C.CAMERAS);
+    const randomRender = getRandomElement(C.RENDER_TECHS);
+    
+    // Set Full Configuration
+    setConfig(prev => ({
+        ...prev,
+        scale: randomScale,
+        placeCategory: randomCat,
+        placeType: randomPlace,
+        poi: randomPoi,
+        civilization: randomCiv,
+        artStyle: randomStyle,
+        time: randomTime,
+        weather: randomWeather,
+        zoom: randomZoom,
+        camera: randomCamera,
+        renderTech: randomRender,
+        // Reset specific overrides unless desired
+        customScenario: '',
+        customAtmosphere: ''
+    }));
   };
 
   const handleNarrativeGeneration = () => {
@@ -158,6 +182,7 @@ const App: React.FC = () => {
                   className="group flex items-center gap-2 text-[10px] font-mono font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onMouseEnter={() => playTechClick()}
                 >
                   <div className="w-5 h-5 rounded-sm flex items-center justify-center bg-gray-800 group-hover:bg-accent-600 transition-colors">
                      <svg className="w-3 h-3 text-current group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,6 +197,7 @@ const App: React.FC = () => {
                   className="group flex items-center gap-2 text-[10px] font-mono font-bold text-gray-500 hover:text-purple-400 transition-colors uppercase tracking-widest"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onMouseEnter={() => playTechClick()}
                 >
                   <div className="w-5 h-5 rounded-sm flex items-center justify-center bg-gray-800 group-hover:bg-purple-600 transition-colors">
                      <svg className="w-3 h-3 text-current group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -203,11 +229,11 @@ const App: React.FC = () => {
                 {/* Language Switcher */}
                 <div className="flex bg-gray-900 border border-gray-800 rounded p-0.5">
                     <button 
-                        onClick={() => setLang(Language.ES)}
+                        onClick={() => { setLang(Language.ES); playTechClick(); }}
                         className={`px-2 py-0.5 text-[10px] font-bold font-mono transition-colors ${lang === Language.ES ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >ES</button>
                     <button 
-                        onClick={() => setLang(Language.EN)}
+                        onClick={() => { setLang(Language.EN); playTechClick(); }}
                         className={`px-2 py-0.5 text-[10px] font-bold font-mono transition-colors ${lang === Language.EN ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >EN</button>
                 </div>
@@ -249,23 +275,29 @@ const App: React.FC = () => {
             {/* CONTROLS BAR */}
             <div className="w-full max-w-4xl bg-gray-900/80 backdrop-blur border border-gray-800 rounded-lg p-2 mb-12 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg">
                 
-                 {/* Mode Toggle - Moved First */}
-                 <div className="flex items-center gap-1 whitespace-nowrap w-full md:w-auto bg-gray-950 p-1 rounded">
+                 {/* Mode Toggle - Grid layout for better fit without scrolling */}
+                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1 w-full md:w-auto bg-gray-950 p-1 rounded">
                     <button
-                        onClick={() => { setMode(AppMode.SIMPLE); setNarrativeCollection([]); }}
-                        className={`flex-1 md:flex-none px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.SIMPLE ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        onClick={() => { setMode(AppMode.PRESETS); setNarrativeCollection([]); playSwitch(); }}
+                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.PRESETS ? 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                    >
+                        {t.presets}
+                    </button>
+                    <button
+                        onClick={() => { setMode(AppMode.SIMPLE); setNarrativeCollection([]); playSwitch(); }}
+                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.SIMPLE ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
                     >
                         {t.simple}
                     </button>
                     <button
-                        onClick={() => { setMode(AppMode.ADVANCED); setNarrativeCollection([]); }}
-                        className={`flex-1 md:flex-none px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.ADVANCED ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        onClick={() => { setMode(AppMode.ADVANCED); setNarrativeCollection([]); playSwitch(); }}
+                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.ADVANCED ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
                     >
                         {t.advanced}
                     </button>
                     <button
-                        onClick={() => { setMode(AppMode.NARRATIVE); }}
-                        className={`flex-1 md:flex-none px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.NARRATIVE ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        onClick={() => { setMode(AppMode.NARRATIVE); playSwitch(); }}
+                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.NARRATIVE ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
                     >
                         {t.narrative}
                     </button>
@@ -276,13 +308,13 @@ const App: React.FC = () => {
                  {/* Media Switch */}
                 <div className={`flex bg-gray-950 rounded p-1 whitespace-nowrap w-full md:w-auto ${mode === AppMode.NARRATIVE ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                     <button
-                    onClick={() => setMediaType(MediaType.IMAGE)}
+                    onClick={() => { setMediaType(MediaType.IMAGE); playTechClick(); }}
                     className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${mediaType === MediaType.IMAGE ? 'bg-accent-900/40 text-accent-400 shadow-[0_0_10px_rgba(34,211,238,0.1)] border border-accent-500/30' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                     {t.image}
                     </button>
                     <button
-                    onClick={() => setMediaType(MediaType.VIDEO)}
+                    onClick={() => { setMediaType(MediaType.VIDEO); playTechClick(); }}
                     className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${mediaType === MediaType.VIDEO ? 'bg-orange-900/40 text-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.1)] border border-orange-500/30' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                     {t.video}
@@ -294,13 +326,13 @@ const App: React.FC = () => {
                 {/* Prompt Type Switch */}
                 <div className="flex bg-gray-950 rounded p-1 whitespace-nowrap w-full md:w-auto">
                     <button
-                    onClick={() => setPromptType(PromptType.GENERIC)}
+                    onClick={() => { setPromptType(PromptType.GENERIC); playTechClick(); }}
                     className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${promptType === PromptType.GENERIC ? 'bg-gray-800 text-gray-200 border border-gray-600' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                     {t.generic}
                     </button>
                     <button
-                    onClick={() => setPromptType(PromptType.MIDJOURNEY)}
+                    onClick={() => { setPromptType(PromptType.MIDJOURNEY); playTechClick(); }}
                     className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${promptType === PromptType.MIDJOURNEY ? 'bg-gray-800 text-white border border-gray-600' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                     {t.midjourney}
@@ -325,11 +357,17 @@ const App: React.FC = () => {
             </div>
 
             <div className="w-full">
-                {mode === AppMode.SIMPLE && (
-                <SimpleView 
+                {mode === AppMode.PRESETS && (
+                <PresetsView 
                     onPresetSelect={applyPreset} 
                     onSurprise={generateSurprise}
-                    onSecretPlace={handleSecretPlace}
+                    lang={lang} 
+                />
+                )}
+                {mode === AppMode.SIMPLE && (
+                <SimpleView 
+                    config={config}
+                    onChange={handleConfigChange}
                     lang={lang} 
                 />
                 )}

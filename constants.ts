@@ -1,3 +1,5 @@
+
+
 import { PoiMapping, Preset, Language } from './types';
 
 // --- TRANSLATION MAPS ---
@@ -7,16 +9,17 @@ export const UI_TEXT = {
     appTitle: "Atlas_Core",
     subtitle: "SYSTEM MATRIX | By Mr. Cuarter",
     appDescription: "Generador profesional de prompts para mapas de juego. Diseña escenarios para RPG, Estrategia y Worldbuilding con control total sobre estilo, atmósfera y narrativa.",
-    simple: "RÁPIDO",
+    presets: "PRESETS", // New label
+    simple: "CONSTRUCTOR", // Renamed from RÁPIDO implies building
     advanced: "AVANZADO",
     narrative: "NARRATIVA",
     image: "IMAGEN",
     video: "VÍDEO",
     generic: "GENÉRICO",
     midjourney: "MIDJOURNEY",
-    surpriseTitle: "", // Removed
-    surpriseDesc: "", // Removed
-    surpriseBtn: "EJECUTAR PROTOCOLO GÉNESIS", // Punchier text
+    surpriseTitle: "", 
+    surpriseDesc: "", 
+    surpriseBtn: "EJECUTAR PROTOCOLO GÉNESIS",
     generateAssetsBtn: "GENERAR PACK DE ASSETS",
     presetsTitle: "Protocolos Predefinidos",
     scenario: "Núcleo del Escenario",
@@ -55,6 +58,16 @@ export const UI_TEXT = {
     assetEntrance: "ENTRADA PRINCIPAL",
     assetVictory: "ESCENA DE VICTORIA",
     secretPlaceBtn: "LUGAR SECRETO",
+    stepScale: "1. SELECCIONA ESCALA",
+    stepPlace: "2. IDENTIFICA EL LUGAR",
+    stepCiv: "3. CIVILIZACIÓN",
+    stepStyle: "4. ESTILO VISUAL",
+    stepCamera: "5. CÁMARA",
+    stepRatio: "6. FORMATO",
+    ratioCinema: "Cine (16:9)",
+    ratioMobile: "Móvil (9:16)",
+    ratioSquare: "Cuadrado (1:1)",
+    ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
     copyInstructionHeader: "⚠️ **PROTOCOLO DE GENERACIÓN SECUENCIAL**\n\nActúa como un motor de generación de imágenes experto. Tienes una lista de 11 escenas que forman un pack coherente. **NO LAS GENERES TODAS A LA VEZ.**\n\n**TU MISIÓN:**\n1. Lee la descripción del estilo visual (Civilización, Atmósfera, Render).\n2. Genera **SOLO LA IMAGEN Nº 1** de la lista.\n3. **DETENTE** y espera a que yo te diga 'Siguiente' para generar la número 2.\n4. Mantén la coherencia visual estricta en todas ellas.\n\n**LISTA DE ESCENAS:**\n"
   },
@@ -62,16 +75,17 @@ export const UI_TEXT = {
     appTitle: "Atlas_Core",
     subtitle: "SYSTEM MATRIX | By Mr. Cuarter",
     appDescription: "Professional game map prompt generator. Design RPG, Strategy, and Worldbuilding scenarios with full control over style, atmosphere, and narrative.",
-    simple: "FAST",
+    presets: "PRESETS",
+    simple: "BUILDER",
     advanced: "ADVANCED",
     narrative: "NARRATIVE",
     image: "IMAGE",
     video: "VIDEO",
     generic: "GENERIC",
     midjourney: "MIDJOURNEY",
-    surpriseTitle: "", // Removed
-    surpriseDesc: "", // Removed
-    surpriseBtn: "EXECUTE GENESIS PROTOCOL", // Punchier text
+    surpriseTitle: "", 
+    surpriseDesc: "", 
+    surpriseBtn: "EXECUTE GENESIS PROTOCOL", 
     generateAssetsBtn: "GENERATE ASSET PACK",
     presetsTitle: "Predefined Protocols",
     scenario: "Scenario Core",
@@ -110,6 +124,16 @@ export const UI_TEXT = {
     assetEntrance: "MAIN ENTRANCE",
     assetVictory: "VICTORY SCENE",
     secretPlaceBtn: "SECRET PLACE",
+    stepScale: "1. SELECT SCALE",
+    stepPlace: "2. IDENTIFY PLACE",
+    stepCiv: "3. CIVILIZATION",
+    stepStyle: "4. VISUAL STYLE",
+    stepCamera: "5. CAMERA",
+    stepRatio: "6. ASPECT RATIO",
+    ratioCinema: "Cinema (16:9)",
+    ratioMobile: "Mobile (9:16)",
+    ratioSquare: "Square (1:1)",
+    ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
     copyInstructionHeader: "⚠️ **SEQUENTIAL GENERATION PROTOCOL**\n\nAct as an expert image generation engine. You have a list of 11 scenes that form a coherent pack. **DO NOT GENERATE THEM ALL AT ONCE.**\n\n**YOUR MISSION:**\n1. Analyze the visual style description (Civilization, Atmosphere, Render).\n2. Generate **ONLY IMAGE #1** from the list.\n3. **STOP** and wait for me to say 'Next' before generating number 2.\n4. Maintain strict visual coherence across all of them.\n\n**SCENE LIST:**\n"
   }
@@ -138,10 +162,11 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Templo': 'Temple', 'Santuario': 'Sanctuary', 'Catedral': 'Cathedral', 'Monasterio': 'Monastery', 'Ziggurat': 'Ziggurat', 'Cementerio': 'Graveyard', 'Oráculo': 'Oracle', 'Academia de Magia': 'Magic Academy', 'Torre de Mago': 'Wizard Tower',
   'Base espacial': 'Space Base', 'Construcciones alienígenas': 'Alien Construction', 'Ruinas antiguas': 'Ancient Ruins', 'Ciudad flotante': 'Floating City', 'Colmena orgánica': 'Organic Hive', 'Estructura viva': 'Living Structure', 'Nave Espacial (Interior)': 'Spaceship Interior', 'Base Lunar': 'Moon Base', 'Mazmorra': 'Dungeon', 'Guarida de Dragón': 'Dragon Lair',
   'Bosque ancestral': 'Ancient Forest', 'Desierto abierto': 'Open Desert', 'Selva': 'Jungle', 'Cordillera': 'Mountain Range', 'Océano': 'Ocean', 'Entorno abierto': 'Open Environment', 'Volcán': 'Volcano', 'Cañón': 'Canyon', 'Pantano': 'Swamp', 'Cueva de Hielo': 'Ice Cave', 'Arrecife de Coral': 'Coral Reef',
+  'Cyberpunk Megacity': 'Cyberpunk Megacity',
 
   // POIs (Generic & Specific translations)
   'Celda de máxima seguridad': 'Maximum security cell', 'Bloque de celdas comunes': 'Common cell block', 'Pabellón central': 'Central pavilion', 'Perímetro de seguridad': 'Security perimeter', 'Torres de vigilancia': 'Watchtowers', 'Zona de recreo': 'Recreation area', 'Centro de control': 'Control center',
-  'Murallas': 'Walls', 'Puerta principal': 'Main gate', 'Plaza interior': 'Inner square', 'Barracones': 'Barracks', 'Armería': 'Armory', 'Casa del gobernador': 'Governor house',
+  'Murallas': 'Walls', 'Puerta principal': 'Main gate', 'Plaza interior': 'Inner square', 'Barracones': 'Barracks', 'Armería': 'Armory', 'Casa del gobernador': 'Governor house', 'Torre de vigilancia': 'Watchtower', 'Mazmorras': 'Dungeons',
   'Plaza mayor': 'Main square', 'Distrito noble': 'Noble district', 'Barrio pobre': 'Slums', 'Mercado central': 'Central market', 'Distrito comercial': 'Commercial district', 'Zona industrial': 'Industrial zone', 'Palacio': 'Palace',
   'Plaza central': 'Central plaza', 'Zona de viviendas': 'Housing area', 'Granero': 'Barn', 'Taberna': 'Tavern', 'Zona de ganado': 'Livestock area', 'Templo pequeño': 'Small temple', 'Muralla rudimentaria': 'Rudimentary wall',
   'Zona de tiendas': 'Tent area', 'Hogueras comunales': 'Communal bonfires', 'Defensas improvisadas': 'Improvised defenses',
@@ -155,6 +180,28 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Entrada principal': 'Main Entrance',
   // New POI Translations
   'Sala de conferencias': 'Lecture Hall', 'Biblioteca magna': 'Grand Library', 'Dormitorios': 'Dormitories', 'Jardines del campus': 'Campus Gardens', 'Sala de máquinas': 'Engine Room', 'Puente de mando': 'Bridge', 'Esclusa de aire': 'Airfock', 'Invernadero': 'Greenhouse', 'Cráter': 'Crater', 'Lago de lava': 'Lava Lake', 'Trono': 'Throne', 'Tesoro': 'Treasure Hoard', 'Sala de los espejos': 'Hall of Mirrors', 'Cementerio de barcos': 'Ship Graveyard', 'Sala de operaciones': 'Operating Theater', 'Morgue': 'Morgue', 'Ruleta': 'Roulette Area', 'Bóveda': 'Vault', 'Gradas': 'Bleachers', 'Vestuarios': 'Locker Room', 'Campo de juego': 'Playing Field', 'Compactadora': 'Compactor', 'Tubería principal': 'Main Pipe', 'Altar de sacrificios': 'Sacrificial Altar', 'Sala de pociones': 'Potions Classroom', 'Observatorio': 'Observatory',
+  'Entrada blindada': 'Armored Entrance', 'Sala de filtros de aire': 'Air Filter Room', 'Dormitorios comunes': 'Common Dorms', 'Almacén de víveres': 'Food Storage', 'Sala de generadores': 'Generator Room', 'Centro de comunicaciones': 'Comms Center',
+  'Pista de obstáculos': 'Obstacle Course', 'Campo de tiro': 'Shooting Range', 'Barracones de reclutas': 'Recruit Barracks', 'Torre de instrucción': 'Instruction Tower', 'Comedor': 'Mess Hall',
+  'Edificio principal': 'Main Building', 'Laboratorios de prácticas': 'Practice Labs',
+  'Sala de lectura principal': 'Main Reading Room', 'Sección prohibida': 'Restricted Section', 'Estanterías infinitas': 'Infinite Shelves', 'Escritorios antiguos': 'Ancient Desks', 'Cúpula de cristal': 'Glass Dome',
+  'Sala de tragaperras': 'Slot Machine Room', 'Mesas de juego': 'Gambling Tables', 'Bar de lujo': 'Luxury Bar', 'Caja fuerte': 'Safe Deposit', 'Despacho del dueño': 'Owner Office', 'Escenario de espectáculos': 'Performance Stage',
+  'Palco VIP': 'VIP Box', 'Túnel de entrada': 'Entrance Tunnel', 'Marcador gigante': 'Giant Scoreboard',
+  'Lobby lujoso': 'Luxury Lobby', 'Oficinas': 'Offices', 'Ático ejecutivo': 'Executive Penthouse', 'Helipuerto': 'Helipad', 'Sala de servidores': 'Server Room', 'Hueco del ascensor': 'Elevator Shaft',
+  'Prensa hidráulica': 'Hydraulic Press', 'Montañas de chatarra': 'Scrap Mountains', 'Grúa magnética': 'Magnetic Crane', 'Caseta del guardia': 'Guard Booth', 'Coches apilados': 'Stacked Cars',
+  'Cruce de túneles': 'Tunnel Junction', 'Sala de válvulas': 'Valve Room', 'Guarida secreta': 'Secret Lair', 'Desagüe al río': 'River Outlet',
+  'Mausoleo central': 'Central Mausoleum', 'Tumbas antiguas': 'Ancient Graves', 'Capilla funeraria': 'Funeral Chapel', 'Entrada de hierro': 'Iron Gate', 'Zona de fosas comunes': 'Mass Graves',
+  'Fuente de visiones': 'Fountain of Visions', 'Sala de vapores': 'Steam Room', 'Trono de la vidente': 'Seer Throne', 'Estatuas de dioses': 'God Statues', 'Jardín sagrado': 'Sacred Garden',
+  'Aula de hechizos': 'Spell Classroom', 'Torre de astronomía': 'Astronomy Tower', 'Invernadero mágico': 'Magical Greenhouse', 'Comedor flotante': 'Floating Dining Hall', 'Biblioteca de grimorios': 'Grimoire Library',
+  'Laboratorio de alquimia': 'Alchemy Lab', 'Sala de invocación': 'Summoning Room', 'Biblioteca espiral': 'Spiral Library', 'Sótano de experimentos': 'Experiment Basement',
+  'Comedor de la tripulación': 'Crew Mess Hall', 'Cápsulas de escape': 'Escape Pods',
+  'Cúpula habitacional': 'Habitation Dome', 'Muelle de rovers': 'Rover Dock', 'Invernadero hidropónico': 'Hydroponic Greenhouse', 'Paneles solares': 'Solar Panels', 'Mina de hielo': 'Ice Mine',
+  'Celdas': 'Cells', 'Sala de tortura': 'Torture Room', 'Foso de trampa': 'Trap Pit', 'Sala del tesoro': 'Treasure Room', 'Entrada secreta': 'Secret Entrance',
+  'Montaña de oro': 'Mountain of Gold', 'Huesos de aventureros': 'Adventurer Bones', 'Plataforma de roca': 'Rock Platform', 'Entrada de la cueva': 'Cave Entrance',
+  'Cráter activo': 'Active Crater', 'Ríos de lava': 'Lava Rivers', 'Puente de roca negra': 'Black Rock Bridge', 'Templo del fuego': 'Fire Temple', 'Geiseres': 'Geysers',
+  'Puente colgante': 'Suspension Bridge', 'Río en el fondo': 'River at Bottom', 'Cueva en el acantilado': 'Cliff Cave', 'Formaciones rocosas': 'Rock Formations', 'Nido de águilas': 'Eagle Nest',
+  'Choza de bruja': 'Witch Hut', 'Árboles podridos': 'Rotten Trees', 'Aguas estancadas': 'Stagnant Waters', 'Ruinas hundidas': 'Sunken Ruins', 'Luces fatuas': 'Will-o-wisps',
+  'Estalactitas gigantes': 'Giant Stalactites', 'Lago congelado': 'Frozen Lake', 'Cristales azules': 'Blue Crystals', 'Restos congelados': 'Frozen Remains', 'Túnel de viento': 'Wind Tunnel',
+  'Barco hundido': 'Sunken Ship', 'Coral cerebro gigante': 'Giant Brain Coral', 'Cueva submarina': 'Underwater Cave', 'Banco de peces': 'School of Fish', 'Acantilado submarino': 'Underwater Cliff',
 
   // CIVILIZATIONS
   'Humana genérica': 'Generic Human', 'Imperial': 'Imperial', 'Medieval': 'Medieval', 'Árabe': 'Arabian', 'Renacentista': 'Renaissance',
@@ -174,6 +221,7 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
 
   // STYLE
   'Realista cinematográfico': 'Cinematic Realistic', 'Cartoon estilizado': 'Stylized Cartoon', 'Dark fantasy': 'Dark Fantasy', 'Fantasía realista': 'Realistic Fantasy', 'Surrealista': 'Surrealist', 'Postapocalíptico': 'Post-apocalyptic',
+  'Age of Empires': 'Age of Empires style', 'Civilization': 'Civilization style', 'D&D': 'Dungeons and Dragons style', 'World of Warcraft': 'World of Warcraft style', 'Starcraft': 'Starcraft style', 'Star Wars': 'Star Wars style', 'Fortnite': 'Fortnite style', 'Sims': 'The Sims style', 'Studio Ghibli': 'Studio Ghibli style',
 
   // ZOOM
   'Vista épica global': 'Global epic view', 'Vista regional': 'Regional view', 'Vista urbana': 'City view', 'Vista distrital': 'District view', 'Vista focalizada': 'Focused view', 'Vista táctica': 'Tactical view', 'Vista global': 'Global view',

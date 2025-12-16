@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { MapConfig, MediaType, Language } from '../types';
 import * as C from '../constants';
+import { playTechClick } from '../services/audioService';
 
 interface AdvancedViewProps {
   config: MapConfig;
@@ -55,7 +56,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
                 {t.scenario}
             </h3>
             <button 
-                onClick={onSecretPlace}
+                onClick={() => { onSecretPlace(); playTechClick(); }}
                 className="text-[10px] font-bold font-mono uppercase text-accent-300 border border-accent-500/30 px-3 py-1 hover:bg-accent-500/10 transition-colors flex items-center gap-2"
             >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

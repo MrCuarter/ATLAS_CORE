@@ -10,9 +10,10 @@ export enum PromptType {
 }
 
 export enum AppMode {
-  SIMPLE = 'Simple',
+  PRESETS = 'Presets', // New Mode
+  SIMPLE = 'Simple',   // Now the Wizard Mode
   ADVANCED = 'Avanzado',
-  NARRATIVE = 'Narrativa', // New Mode
+  NARRATIVE = 'Narrativa',
 }
 
 export enum Language {
