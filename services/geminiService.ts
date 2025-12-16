@@ -5,15 +5,20 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
   console.log("🚀 Iniciando petición a Gemini...");
   
   try {
-    // Gracias al puente en index.tsx, ahora process.env.API_KEY debería tener valor
+    // Vite reemplazará 'process.env.API_KEY' por el string literal de la clave durante el build.
     const apiKey = process.env.API_KEY;
 
+    // --- DEBUGGING SEGURO ---
+    if (apiKey && apiKey.length > 4) {
+        console.log(`🔑 API Key detectada e inyectada. Terminación: ...${apiKey.slice(-4)}`);
+    } else {
+        console.error("❌ API Key está vacía o undefined.");
+        console.warn("Asegúrate de que VITE_API_KEY está definida en Vercel y has hecho REDEPLOY.");
+    }
+    // ------------------------
+
     if (!apiKey) {
-      console.error("❌ ERROR CRÍTICO: No se encontró la API Key en process.env.API_KEY.");
-      console.error("Pasos para solucionar:");
-      console.error("1. En Vercel, la variable debe llamarse 'VITE_API_KEY'.");
-      console.error("2. Debes hacer REDEPLOY tras cambiar la variable.");
-      alert("Error: Falta la API Key. Revisa la consola (F12) para más detalles.");
+      alert("Error de Configuración: No se detectó la API Key. Revisa la consola.");
       return currentPrompt;
     }
 
@@ -60,7 +65,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     console.error("❌ Error enhancing prompt:", error);
     // @ts-ignore
     if (error.message?.includes("API key")) {
-         alert("Error de API Key: Verifica que es válida y tiene permisos.");
+         alert("Error de API Key: Verifica que es válida y tiene permisos en Google Cloud Console.");
     }
     return currentPrompt; 
   }
