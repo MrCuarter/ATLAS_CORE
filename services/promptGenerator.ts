@@ -4,7 +4,12 @@ import { PROMPT_TRANSLATIONS, POI_MAPPING, UI_TEXT } from '../constants';
 // Helper to translate values
 const t = (val: string): string => {
   if (!val) return '';
-  return PROMPT_TRANSLATIONS[val] || val;
+  // Check exact match first
+  if (PROMPT_TRANSLATIONS[val]) return PROMPT_TRANSLATIONS[val];
+  
+  // If no exact match, try to find if the value contains a key part (heuristic)
+  // e.g., "Micro (Bosque...)" -> "Micro"
+  return val; 
 };
 
 // 1. VISUAL DNA CONSTRUCTOR (Strict English & Technical)
@@ -88,20 +93,142 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
+/**
+ * ROBUST PROMPT GENERATOR (MANUAL MODE)
+ * Fixes: Includes all fields, handles empty values, proper grammar.
+ */
 export const generatePrompt = (
   config: MapConfig,
   mediaType: MediaType,
   promptType: PromptType
 ): string => {
-   // Legacy single prompt generator - kept for Simple/Advanced modes
-   // But we will inject a bit of English translation to ensure stability
+   // 1. Extract and Translate inputs
+   const scale = t(config.scale);
    const place = t(config.placeType);
+   const poi = t(config.poi);
+   const civ = t(config.civilization);
+   const time = t(config.time);
+   const weather = t(config.weather);
    const style = t(config.artStyle);
+   const render = t(config.renderTech);
+   const zoom = t(config.zoom);
+   const camera = t(config.camera);
+   const customScen = config.customScenario || '';
+   const customAtm = config.customAtmosphere || '';
    
+   // Video params
+   const movement = t(config.videoMovement || '');
+   const dynamics = t(config.videoDynamics || '');
+   const rhythm = t(config.videoRhythm || '');
+   
+   // DYNAMIC ASPECT RATIO
+   const arValue = config.aspectRatio || '16:9';
+   const ar = `--ar ${arValue}`; 
+
    if (promptType === PromptType.MIDJOURNEY) {
-       return `**${place}** :: ${t(config.civilization)} style :: ${t(config.time)}, ${t(config.weather)} :: ${style} --ar 16:9 --v 6.0`;
+       // --- MIDJOURNEY LOGIC (Multi-Prompt Blocks) ---
+       
+       // Block 1: SUBJECT & CONTENT
+       const subjectParts = [];
+       if (scale) subjectParts.push(`${scale} scale`);
+       if (place) subjectParts.push(`**${place}**`);
+       if (poi) subjectParts.push(`focusing on ${poi}`);
+       if (customScen) subjectParts.push(customScen);
+       const subjectBlock = subjectParts.join(', ');
+
+       // Block 2: STYLE & CIV
+       const styleParts = [];
+       if (civ) styleParts.push(`${civ} Architecture`);
+       if (style) styleParts.push(`${style} Style`);
+       if (render) styleParts.push(render);
+       const styleBlock = styleParts.join(', ');
+
+       // Block 3: ATMOSPHERE
+       const atmParts = [];
+       if (time) atmParts.push(time);
+       if (weather) atmParts.push(weather);
+       if (customAtm) atmParts.push(customAtm);
+       const atmBlock = atmParts.join(', ');
+
+       // Block 4: CAMERA & COMPOSITION
+       const camParts = [];
+       if (zoom) camParts.push(zoom);
+       if (camera) camParts.push(`${camera} View`);
+       if (mediaType === MediaType.VIDEO) {
+           if (movement) camParts.push(`Camera Movement: ${movement}`);
+           if (dynamics) camParts.push(`Dynamic Elements: ${dynamics}`);
+           if (rhythm) camParts.push(`Rhythm: ${rhythm}`);
+           if (config.videoLoop) camParts.push("Seamless Loop");
+       }
+       const camBlock = camParts.join(', ');
+
+       // Combine blocks with '::' only if they have content
+       const finalParts = [subjectBlock, styleBlock, atmBlock, camBlock].filter(p => p.length > 0);
+       
+       return `${finalParts.join(' :: ')} ${ar} --v 6.0`;
+
+   } else {
+       // --- GENERIC LOGIC (Natural Language) ---
+       
+       let text = "";
+
+       // Sentence 1: The Core Subject
+       if (place) {
+           text += `A high quality ${mediaType === MediaType.VIDEO ? 'video' : 'image'} of a ${place}`;
+           if (scale) text += ` (${scale} scale)`;
+           text += ". ";
+       }
+
+       // Sentence 2: Specifics
+       if (poi || customScen) {
+           const details = [];
+           if (poi) details.push(`featuring a ${poi}`);
+           if (customScen) details.push(customScen);
+           text += `The scene includes ${details.join(' and ')}. `;
+       }
+
+       // Sentence 3: Style
+       if (civ || style || render) {
+           const styles = [];
+           if (civ) styles.push(`designed by a ${civ} civilization`);
+           if (style) styles.push(`in ${style} art style`);
+           if (render) styles.push(`rendered as ${render}`);
+           text += `The visual aesthetic is ${styles.join(', ')}. `;
+       }
+
+       // Sentence 4: Atmosphere
+       if (time || weather || customAtm) {
+           const env = [];
+           if (time) env.push(`set during ${time}`);
+           if (weather) env.push(`with ${weather} weather`);
+           if (customAtm) env.push(customAtm);
+           text += `Atmosphere: ${env.join(', ')}. `;
+       }
+
+       // Sentence 5: Camera
+       if (zoom || camera) {
+           const cam = [];
+           if (zoom) cam.push(zoom);
+           if (camera) cam.push(`${camera} angle`);
+           text += `Composition: ${cam.join(', ')}. `;
+       }
+
+       // Sentence 6: Video Specifics
+       if (mediaType === MediaType.VIDEO) {
+           const vid = [];
+           if (movement) vid.push(`${movement} camera movement`);
+           if (dynamics) vid.push(dynamics);
+           if (rhythm) vid.push(`${rhythm} pacing`);
+           if (config.videoLoop) vid.push("seamless loop");
+           if (vid.length > 0) text += `Video requirements: ${vid.join(', ')}. `;
+       }
+
+       // Final Polish
+       text += `Aspect Ratio ${arValue}.`;
+       
+       // Cleanup double spaces and empty punctuation
+       return text.replace(/\s+/g, ' ').replace(/\.\s*\./g, '.').trim();
    }
-   return `A high quality image of ${place} in a ${t(config.civilization)} style. Atmosphere: ${t(config.time)}, ${t(config.weather)}. Style: ${style}. Aspect Ratio 16:9.`;
 };
 
 
@@ -120,26 +247,33 @@ export const generateNarrativeCollection = (
   const weatherVal = t(config.weather);
   const styleVal = t(config.artStyle);
   const renderVal = t(config.renderTech);
+  
+  // USER DEFINED CAMERA (For Scenes)
+  const userCamera = t(config.camera) || "Cinematic View";
+  const userZoom = t(config.zoom) || "Focused view";
+  
+  // DYNAMIC ASPECT RATIO (For All)
+  const userAR = config.aspectRatio || '16:9';
 
   // 2. CONSTRUCT DNA
   const visualDNA = getVisualDNA(config.civilization, config.placeType, config.time, config.weather);
   const exclusions = getExclusions(promptType);
 
   // 3. DEFINE GLOBAL STYLE STRING
-  // "Cinematic 3D Render" or "Hand drawn map"
   const globalStyle = `${renderVal}, ${styleVal} style, high fidelity game asset`;
 
   // --- GENERATOR FUNCTIONS ---
 
   const buildPrompt = (subject: string, camera: string, focus: string): string => {
       if (promptType === PromptType.MIDJOURNEY) {
-          return `**${subject}** :: ${focus} :: ${visualDNA} :: Camera: ${camera} :: Global Style: ${globalStyle} --ar 16:9 --v 6.0 --stylize 250 ${exclusions}`;
+          return `**${subject}** :: ${focus} :: ${visualDNA} :: Camera: ${camera} :: Global Style: ${globalStyle} --ar ${userAR} --v 6.0 --stylize 250 ${exclusions}`;
       } else {
-          return `Generate a game asset of **${subject}**. Focus on ${focus}. ${visualDNA}. Camera Settings: ${camera}. Visual Style: ${globalStyle}. Aspect Ratio: 16:9. High resolution. ${exclusions}`;
+          return `Generate a game asset of **${subject}**. Focus on ${focus}. ${visualDNA}. Camera Settings: ${camera}. Visual Style: ${globalStyle}. Aspect Ratio: ${userAR}. High resolution. ${exclusions}`;
       }
   };
 
-  // --- ASSET 1: TACTICAL MAP ---
+  // --- ASSET 1: TACTICAL MAP (FIXED PERSPECTIVE) ---
+  // Always needs Orthographic for playability
   collection.push({
     title: labels.assetMap,
     type: 'MAP',
@@ -150,7 +284,8 @@ export const generateNarrativeCollection = (
     )
   });
 
-  // --- ASSET 2: ISOMETRIC VIEW ---
+  // --- ASSET 2: ISOMETRIC VIEW (FIXED PERSPECTIVE) ---
+  // Establishing shot implies wide/iso usually
   collection.push({
     title: labels.assetIso,
     type: 'PERSPECTIVE',
@@ -161,22 +296,21 @@ export const generateNarrativeCollection = (
     )
   });
 
-  // --- ASSET 3: ENTRANCE ---
+  // --- ASSET 3: ENTRANCE (USER CAMERA) ---
   collection.push({
     title: labels.assetEntrance,
     type: 'SCENE',
     prompt: buildPrompt(
         `Main Entrance to ${placeTypeVal}`, 
-        "Eye-level 35mm lens, f/5.6", 
+        `${userCamera}, ${userZoom}`, 
         "Imposing doorway/gate, transitional space, distinct architectural threshold, welcoming or forbidding mood"
     )
   });
 
-  // --- ASSETS 4-10: POINTS OF INTEREST (Unique Variations) ---
+  // --- ASSETS 4-10: POINTS OF INTEREST (USER CAMERA) ---
   let rawPOIs = POI_MAPPING[config.placeType] || POI_MAPPING['DEFAULT'];
   let shuffledPOIs = shuffleArray(rawPOIs);
 
-  // Differentiators to prevent repetitive images
   const differentiators = [
       "Focus on a specific light source casting long shadows",
       "Focus on a central hero prop or artifact",
@@ -197,13 +331,13 @@ export const generateNarrativeCollection = (
       type: 'SCENE',
       prompt: buildPrompt(
         `Interior Scene: ${poiName} inside ${placeTypeVal}`, 
-        "Cinematic 50mm lens, f/2.8 (shallow depth of field)", 
+        `${userCamera}, ${userZoom}`, 
         `Detailed environmental storytelling. ${diff}. Specific function: ${poiName}`
       )
     });
   }
 
-  // --- ASSET 11: UI KIT ---
+  // --- ASSET 11: UI KIT (FIXED FLAT) ---
   const uiDesc = `Game UI Sprite Sheet for ${civVal} setting`;
   const uiFocus = "Empty modular window frames, health bars, action buttons, inventory slots. Knolling layout. Isolated on solid black background";
   const uiCam = "Flat Vector Graphic, No perspective";
@@ -214,7 +348,7 @@ export const generateNarrativeCollection = (
     prompt: buildPrompt(uiDesc, uiCam, uiFocus)
   });
 
-  // --- ASSET 12: ITEMS ---
+  // --- ASSET 12: ITEMS (FIXED FLAT) ---
   const itemDesc = `RPG Item Icons Grid for ${placeTypeVal}`;
   const itemFocus = "6 distinct items (Key, Potion, Weapon, Map, Relic, Tool). Grid layout. Isolated on solid black background";
   
@@ -224,7 +358,7 @@ export const generateNarrativeCollection = (
     prompt: buildPrompt(itemDesc, uiCam, itemFocus)
   });
 
-  // --- ASSET 13: VICTORY ---
+  // --- ASSET 13: VICTORY (FIXED EPIC) ---
   collection.push({
     title: labels.assetVictory,
     type: 'VICTORY',
