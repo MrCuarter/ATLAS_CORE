@@ -1,10 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { PromptType } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const enhancePromptWithGemini = async (currentPrompt: string, promptType: PromptType): Promise<string> => {
   try {
+    // We initialize inside the function to avoid "process is not defined" crashes 
+    // during the initial app load in browsers.
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.warn("API Key not found in environment.");
+      return currentPrompt;
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     const modelId = "gemini-2.5-flash";
     
     const systemInstruction = `You are an expert Prompt Engineer for generative AI models like Midjourney and Stable Diffusion. 
@@ -34,6 +41,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     return response.text?.trim() || currentPrompt;
   } catch (error) {
     console.error("Error enhancing prompt:", error);
-    throw error;
+    // Return original prompt on failure so the user experience isn't broken
+    return currentPrompt; 
   }
 };
