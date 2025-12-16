@@ -1,39 +1,21 @@
 import React from 'react';
 import { Preset, Language } from '../types';
 import { PRESETS, UI_TEXT } from '../constants';
-import { playPowerUp, playTechClick } from '../services/audioService';
+import { playTechClick } from '../services/audioService';
 
 interface PresetsViewProps {
   onPresetSelect: (preset: Preset) => void;
-  onSurprise: () => void;
+  // onSurprise removed as it's handled globally now
+  onSurprise: () => void; // Kept in signature to avoid breaking parent temporarily, but unused in UI
   lang: Language;
 }
 
-const PresetsView: React.FC<PresetsViewProps> = ({ onPresetSelect, onSurprise, lang }) => {
+const PresetsView: React.FC<PresetsViewProps> = ({ onPresetSelect, lang }) => {
   const t = UI_TEXT[lang];
 
   return (
-    <div className="pb-32 animate-fade-in">
-      {/* Surprise Section */}
-      <div className="mb-12 flex flex-col items-center justify-center py-6">
-        {/* Main Genesis Button */}
-        <button
-          onClick={() => { onSurprise(); playPowerUp(); }}
-          className="group relative inline-flex items-center justify-center px-12 py-5 text-lg font-bold text-white transition-all duration-300 bg-gray-950 border border-accent-500/30 hover:bg-accent-900/10 hover:border-accent-400 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] rounded-sm overflow-hidden w-full max-w-2xl"
-        >
-            <span className="absolute w-1 h-3 bg-accent-400 top-0 left-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 top-0 right-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 bottom-0 left-0"></span>
-            <span className="absolute w-1 h-3 bg-accent-400 bottom-0 right-0"></span>
-            
-            {/* Inner glow */}
-            <div className="absolute inset-0 bg-accent-400/5 blur-xl group-hover:bg-accent-400/10 transition-colors"></div>
-
-          <span className="mr-4 text-2xl text-accent-400 group-hover:rotate-180 transition-transform duration-700">❖</span>
-          <span className="font-mono tracking-widest relative z-10">{t.surpriseBtn}</span>
-        </button>
-      </div>
-
+    <div className="pb-32 animate-fade-in pt-4">
+      
       {/* Presets Grid */}
       <h3 className="text-xl font-mono font-bold text-gray-400 mb-6 pl-2 flex items-center border-l-2 border-accent-500/50">
         {t.presetsTitle}

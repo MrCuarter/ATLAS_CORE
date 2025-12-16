@@ -1,17 +1,16 @@
 import React from 'react';
 import { MapConfig, Language } from '../types';
 import * as C from '../constants';
-import { playPowerUp, playTechClick } from '../services/audioService';
+import { playPowerUp } from '../services/audioService';
 
 interface NarrativeViewProps {
   config: MapConfig;
   onChange: (field: keyof MapConfig, value: any) => void;
-  onSecretPlace: () => void;
   lang: Language;
   onGenerate: () => void;
 }
 
-const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, onSecretPlace, lang, onGenerate }) => {
+const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, onGenerate }) => {
   const t = C.UI_TEXT[lang];
 
   const SelectGroup = ({ label, field, options }: { label: string, field: keyof MapConfig, options: string[] }) => (
@@ -51,15 +50,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, onSecre
           <div className="absolute top-0 left-0 w-1 h-full bg-accent-600"></div>
           <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white font-mono">1. CONTEXTO</h3>
-               <button 
-                onClick={() => { onSecretPlace(); playTechClick(); }}
-                className="text-[10px] font-bold font-mono uppercase text-accent-300 border border-accent-500/30 px-3 py-1 hover:bg-accent-500/10 transition-colors flex items-center gap-2"
-            >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-                {t.secretPlaceBtn}
-            </button>
+              {/* Removed local random button */}
           </div>
           
           <div className="mb-4">

@@ -1,5 +1,4 @@
 
-
 import { PoiMapping, Preset, Language } from './types';
 
 // --- TRANSLATION MAPS ---
@@ -11,8 +10,8 @@ export const UI_TEXT = {
     appDescription: "Generador profesional de prompts para mapas de juego. Diseña escenarios para RPG, Estrategia y Worldbuilding con control total sobre estilo, atmósfera y narrativa.",
     presets: "PRESETS", // New label
     simple: "CONSTRUCTOR", // Renamed from RÁPIDO implies building
-    advanced: "AVANZADO",
-    narrative: "NARRATIVA",
+    advanced: "ARQUITECTO", // Renamed from AVANZADO
+    narrative: "STORYCRAFTER", // Renamed from NARRATIVA
     image: "IMAGEN",
     video: "VÍDEO",
     generic: "GENÉRICO",
@@ -20,6 +19,7 @@ export const UI_TEXT = {
     surpriseTitle: "", 
     surpriseDesc: "", 
     surpriseBtn: "EJECUTAR PROTOCOLO GÉNESIS",
+    worldGenBtn: "EJECUTAR WORLD-GEN", // New Epic Button
     generateAssetsBtn: "GENERAR PACK DE ASSETS",
     presetsTitle: "Protocolos Predefinidos",
     scenario: "Núcleo del Escenario",
@@ -57,7 +57,7 @@ export const UI_TEXT = {
     assetIso: "PERSPECTIVA AÉREA",
     assetEntrance: "ENTRADA PRINCIPAL",
     assetVictory: "ESCENA DE VICTORIA",
-    secretPlaceBtn: "LUGAR SECRETO",
+    secretPlaceBtn: "ALEATORIZAR DATOS", // Kept for fallback, unused in main UI now
     stepScale: "1. SELECCIONA ESCALA",
     stepPlace: "2. IDENTIFICA EL LUGAR",
     stepCiv: "3. CIVILIZACIÓN",
@@ -77,8 +77,8 @@ export const UI_TEXT = {
     appDescription: "Professional game map prompt generator. Design RPG, Strategy, and Worldbuilding scenarios with full control over style, atmosphere, and narrative.",
     presets: "PRESETS",
     simple: "BUILDER",
-    advanced: "ADVANCED",
-    narrative: "NARRATIVE",
+    advanced: "ARCHITECT",
+    narrative: "STORYCRAFTER",
     image: "IMAGE",
     video: "VIDEO",
     generic: "GENERIC",
@@ -86,6 +86,7 @@ export const UI_TEXT = {
     surpriseTitle: "", 
     surpriseDesc: "", 
     surpriseBtn: "EXECUTE GENESIS PROTOCOL", 
+    worldGenBtn: "EXECUTE WORLD-GEN",
     generateAssetsBtn: "GENERATE ASSET PACK",
     presetsTitle: "Predefined Protocols",
     scenario: "Scenario Core",
@@ -123,7 +124,7 @@ export const UI_TEXT = {
     assetIso: "AERIAL PERSPECTIVE",
     assetEntrance: "MAIN ENTRANCE",
     assetVictory: "VICTORY SCENE",
-    secretPlaceBtn: "SECRET PLACE",
+    secretPlaceBtn: "RANDOMIZE DATA",
     stepScale: "1. SELECT SCALE",
     stepPlace: "2. IDENTIFY PLACE",
     stepCiv: "3. CIVILIZATION",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppMode, MediaType, PromptType, MapConfig, Preset, Language, PromptCollectionItem } from './types';
 import * as C from './constants';
 import SimpleView from './components/SimpleView';
@@ -8,7 +8,7 @@ import NarrativeView from './components/NarrativeView';
 import PromptDisplay from './components/PromptDisplay';
 import CollectionDisplay from './components/CollectionDisplay';
 import { generatePrompt, generateNarrativeCollection, getRandomElement } from './services/promptGenerator';
-import { playSwitch, playTechClick } from './services/audioService';
+import { playSwitch, playTechClick, playPowerUp } from './services/audioService';
 
 // Initial state helpers
 const getInitialConfig = (): MapConfig => ({
@@ -40,6 +40,9 @@ const App: React.FC = () => {
   const [promptType, setPromptType] = useState<PromptType>(PromptType.GENERIC);
   const [config, setConfig] = useState<MapConfig>(getInitialConfig());
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
+  
+  // Ref for auto-scrolling
+  const bottomRef = useRef<HTMLDivElement>(null);
   
   // Narrative Mode State
   const [narrativeCollection, setNarrativeCollection] = useState<PromptCollectionItem[]>([]);
@@ -83,77 +86,95 @@ const App: React.FC = () => {
   };
 
   const generateSurprise = () => {
-    // Reuse the secret place logic but reset everything first implies a new "session"
-    handleSecretPlace();
-    // Rename preset to generic random
-    setConfig(prev => ({ ...prev, presetName: '🎲 ATLAS_RANDOM', tags: ['Random', 'SystemGen'] }));
-    setMode(AppMode.SIMPLE);
+    // Legacy support wrapper
+    handleWorldGen();
   };
 
-  // SMART RANDOMIZATION LOGIC
-  const handleSecretPlace = () => {
-    // 1. Pick basic Scenario elements
+  // --- EPIC WORLD GEN LOGIC (Unified Randomizer) ---
+  const handleWorldGen = () => {
+    // 1. SCENARIO
     const randomScale = getRandomElement(C.SCALES);
     const randomCat = getRandomElement(C.PLACE_CATEGORIES);
     const randomPlace = getRandomElement(C.PLACES_BY_CATEGORY[randomCat]);
     const availablePOIs = C.POI_MAPPING[randomPlace] || C.POI_MAPPING['DEFAULT'];
     const randomPoi = getRandomElement(availablePOIs);
 
-    // 2. Filter Civilizations based on Category to avoid incompatibilities
+    // 2. COMPATIBLE CIVILIZATION
     let allowedCivs = C.CIVILIZATIONS;
+    // Smart Filter: Filter Civs based on Category to avoid weird mismatches
     if (randomCat === 'Especial / Sci-Fi' || randomCat === 'Industrial / Tecnológico') {
         allowedCivs = C.CIVILIZATIONS.filter(c => 
             ['Futurista', 'Cyberpunk', 'Alienígena Orgánica', 'Alienígena Biomecánica', 'Alienígena Cristalina', 'Postindustrial', 'Steampunk', 'Base Lunar'].some(k => c.includes(k))
         );
     } else if (randomCat === 'Religioso / Mágico') {
         allowedCivs = C.CIVILIZATIONS.filter(c => 
-            ['Elfos', 'No-muertos', 'Demoníaca', 'Antigua', 'Medieval', 'Imperial'].some(k => c.includes(k))
+            ['Elfos', 'No-muertos', 'Demoníaca', 'Antigua', 'Medieval', 'Imperial', 'Fantasía'].some(k => c.includes(k))
         );
     } else if (randomCat === 'Natural') {
         allowedCivs = ['Elfos', 'Tribal', 'Prehistórica', 'Ninguna', 'Nómadas', 'Antigua desaparecida'];
     }
-    // Fallback if filter implies empty (shouldn't happen with current constants)
+    // Fallback if filter is too aggressive
     if (allowedCivs.length === 0) allowedCivs = C.CIVILIZATIONS;
     const randomCiv = getRandomElement(allowedCivs);
 
-    // 3. Filter Art Styles based on Category/Civ
+    // 3. COMPATIBLE ATMOSPHERE & STYLE
+    // Smart Filter: Art Styles based on Civ
     let allowedStyles = C.ART_STYLES;
     if (randomCiv.includes('Futurista') || randomCiv.includes('Cyberpunk') || randomCiv.includes('Alienígena')) {
-        allowedStyles = ['Starcraft', 'Star Wars', 'Realista cinematográfico', 'Sci-Fi cinematográfico', 'Blueprint', '3D render', 'Isometric'];
+        allowedStyles = ['Starcraft', 'Star Wars', 'Realista cinematográfico', 'Sci-Fi cinematográfico', 'Blueprint', '3D render', 'Isométrico'];
     } else if (randomCiv.includes('Medieval') || randomCiv.includes('Imperial')) {
         allowedStyles = ['Age of Empires', 'Civilization', 'D&D', 'World of Warcraft', 'Dark fantasy', 'Realista cinematográfico', 'Dibujado a mano'];
     } else if (randomCiv.includes('Elfos') || randomCiv.includes('Tribal')) {
         allowedStyles = ['Studio Ghibli', 'World of Warcraft', 'Ilustración', 'Realista cinematográfico', 'Cartoon estilizado'];
     }
-    // Ensure we map back to the actual constant strings
     const finalAllowedStyles = C.ART_STYLES.filter(s => allowedStyles.some(as => s.includes(as) || as.includes(s))); 
     const randomStyle = getRandomElement(finalAllowedStyles.length > 0 ? finalAllowedStyles : C.ART_STYLES);
 
-    // 4. Randomize Atmosphere & Camera
+    // Weather filtering (avoid rain in space)
+    let allowedWeather = C.WEATHERS;
+    if (randomCat === 'Especial / Sci-Fi' && (randomPlace.includes('Espacial') || randomPlace.includes('Lunar'))) {
+        allowedWeather = C.WEATHERS.filter(w => !['Lluvia', 'Nevando', 'Tormenta eléctrica'].includes(w));
+    }
+    const randomWeather = getRandomElement(allowedWeather.length > 0 ? allowedWeather : C.WEATHERS);
     const randomTime = getRandomElement(C.TIMES);
-    const randomWeather = getRandomElement(C.WEATHERS);
+    const randomRender = getRandomElement(C.RENDER_TECHS);
+
+    // 4. FORMAT
     const randomZoom = getRandomElement(C.ZOOMS);
     const randomCamera = getRandomElement(C.CAMERAS);
-    const randomRender = getRandomElement(C.RENDER_TECHS);
-    
-    // Set Full Configuration
+
     setConfig(prev => ({
         ...prev,
+        // Scenario
         scale: randomScale,
         placeCategory: randomCat,
         placeType: randomPlace,
         poi: randomPoi,
         civilization: randomCiv,
+        customScenario: '',
+        // Atmosphere
         artStyle: randomStyle,
         time: randomTime,
         weather: randomWeather,
         zoom: randomZoom,
         camera: randomCamera,
         renderTech: randomRender,
-        // Reset specific overrides unless desired
-        customScenario: '',
-        customAtmosphere: ''
+        customAtmosphere: '',
+        // Format - ENFORCE LANDSCAPE (16:9) AS REQUESTED
+        aspectRatio: '16:9',
+        // Meta
+        presetName: '✨ PROTOCOLO GÉNESIS',
+        tags: ['Random', 'WorldGen']
     }));
+
+    // NOTE: Removed setMode(AppMode.SIMPLE). Now it stays in the current mode (Presets) 
+    // but updates the global config and prompts.
+    
+    // Auto Scroll to bottom (Prompt area)
+    setTimeout(() => {
+        // We use window scroll to ensure we hit the bottom where the new large prompt is
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleNarrativeGeneration = () => {
@@ -167,6 +188,15 @@ const App: React.FC = () => {
 
   const t = C.UI_TEXT[lang];
 
+  // Helper for tab classes
+  const getTabClass = (isActive: boolean) => `
+    flex-1 px-4 py-2 text-[10px] md:text-xs font-bold font-mono tracking-widest transition-all
+    ${isActive 
+        ? 'bg-gray-800 text-white shadow-sm' 
+        : 'text-gray-500 hover:text-gray-300 hover:bg-gray-900/50'
+    }
+  `;
+
   return (
     <div className="min-h-screen bg-[#020617] text-gray-300 font-sans selection:bg-accent-900 selection:text-white flex flex-col">
       
@@ -176,7 +206,7 @@ const App: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             
             {/* LEFT: External Links */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
                  <a 
                   href="https://mistercuarter.es" 
                   className="group flex items-center gap-2 text-[10px] font-mono font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest"
@@ -205,6 +235,22 @@ const App: React.FC = () => {
                      </svg>
                   </div>
                    <span className="hidden sm:inline">Laboratorio</span>
+                </a>
+
+                {/* NeoGenesis Link (Refined) */}
+                <a 
+                  href="https://neogenesis.mistercuarter.es" 
+                  className="group flex items-center gap-2 text-[10px] font-mono font-bold text-gray-500 hover:text-green-400 transition-colors uppercase tracking-widest"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onMouseEnter={() => playTechClick()}
+                >
+                  <div className="w-5 h-5 rounded-sm flex items-center justify-center bg-gray-800 group-hover:bg-green-600 transition-colors shadow-sm group-hover:shadow-green-900/50">
+                     <svg className="w-3 h-3 text-current group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                     </svg>
+                  </div>
+                   <span className="hidden sm:inline group-hover:text-green-400 transition-colors">NeoGenesis</span>
                 </a>
             </div>
 
@@ -272,72 +318,115 @@ const App: React.FC = () => {
                   </p>
             </div>
 
-            {/* CONTROLS BAR */}
-            <div className="w-full max-w-4xl bg-gray-900/80 backdrop-blur border border-gray-800 rounded-lg p-2 mb-12 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg">
+            {/* CONTROLS BAR (IMPROVED UNIFIED DESIGN) */}
+            <div className="w-full max-w-6xl bg-[#0b101b] border border-gray-800/80 rounded-lg p-2 mb-8 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-2xl shadow-black/50">
                 
-                 {/* Mode Toggle - Grid layout for better fit without scrolling */}
-                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1 w-full md:w-auto bg-gray-950 p-1 rounded">
+                 {/* Left: Navigation Modes (UNIFIED PILL) */}
+                 <div className="flex bg-gray-950 p-1 rounded-md border border-gray-800/50 w-full lg:w-auto overflow-x-auto custom-scrollbar">
+                    {/* Presets - The Head */}
                     <button
                         onClick={() => { setMode(AppMode.PRESETS); setNarrativeCollection([]); playSwitch(); }}
-                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.PRESETS ? 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        className={`px-5 py-2 rounded-sm font-bold font-mono tracking-widest transition-all text-xs whitespace-nowrap
+                        ${mode === AppMode.PRESETS 
+                            ? 'bg-green-600 text-white shadow-lg shadow-green-500/20' 
+                            : 'bg-transparent text-gray-400 hover:text-white hover:bg-gray-900'}`}
                     >
                         {t.presets}
                     </button>
+
+                    {/* Divider */}
+                    <div className="w-px bg-gray-800 mx-1 my-1"></div>
+
+                    {/* Modes - The Body */}
                     <button
                         onClick={() => { setMode(AppMode.SIMPLE); setNarrativeCollection([]); playSwitch(); }}
-                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.SIMPLE ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        className={getTabClass(mode === AppMode.SIMPLE)}
                     >
                         {t.simple}
                     </button>
                     <button
                         onClick={() => { setMode(AppMode.ADVANCED); setNarrativeCollection([]); playSwitch(); }}
-                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.ADVANCED ? 'bg-accent-600 border-accent-500 text-white shadow-lg shadow-accent-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        className={getTabClass(mode === AppMode.ADVANCED)}
                     >
                         {t.advanced}
                     </button>
                     <button
                         onClick={() => { setMode(AppMode.NARRATIVE); playSwitch(); }}
-                        className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-bold font-mono tracking-wider transition-all border ${mode === AppMode.NARRATIVE ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20' : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'}`}
+                        className={getTabClass(mode === AppMode.NARRATIVE)}
                     >
                         {t.narrative}
                     </button>
                 </div>
 
-                <div className="w-px h-8 bg-gray-800 hidden md:block"></div>
+                {/* Right Side: Configuration Tools (BALANCED GROUPS) */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto lg:ml-auto">
+                    
+                    {/* Media Switch (Equal Size with Text) */}
+                    <div className={`flex items-center bg-gray-950 border border-gray-800 rounded-md p-1 w-full sm:w-auto ${mode === AppMode.NARRATIVE ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                        <button
+                        onClick={() => { setMediaType(MediaType.IMAGE); playTechClick(); }}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-sm transition-all text-[10px] font-bold font-mono tracking-wider
+                        ${mediaType === MediaType.IMAGE ? 'bg-accent-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-900'}`}
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {t.image}
+                        </button>
+                        <button
+                        onClick={() => { setMediaType(MediaType.VIDEO); playTechClick(); }}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-sm transition-all text-[10px] font-bold font-mono tracking-wider
+                        ${mediaType === MediaType.VIDEO ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-900'}`}
+                        >
+                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                             </svg>
+                             {t.video}
+                        </button>
+                    </div>
 
-                 {/* Media Switch */}
-                <div className={`flex bg-gray-950 rounded p-1 whitespace-nowrap w-full md:w-auto ${mode === AppMode.NARRATIVE ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-                    <button
-                    onClick={() => { setMediaType(MediaType.IMAGE); playTechClick(); }}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${mediaType === MediaType.IMAGE ? 'bg-accent-900/40 text-accent-400 shadow-[0_0_10px_rgba(34,211,238,0.1)] border border-accent-500/30' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                    {t.image}
-                    </button>
-                    <button
-                    onClick={() => { setMediaType(MediaType.VIDEO); playTechClick(); }}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${mediaType === MediaType.VIDEO ? 'bg-orange-900/40 text-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.1)] border border-orange-500/30' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                    {t.video}
-                    </button>
+                    {/* Divider (Hidden on mobile) */}
+                    <div className="w-px h-8 bg-gray-800 hidden sm:block"></div>
+
+                    {/* Prompt Type Switch (Side-by-side Equal) */}
+                    <div className="flex bg-gray-950 border border-gray-800 rounded-md p-1 w-full sm:w-auto">
+                        <button
+                        onClick={() => { setPromptType(PromptType.GENERIC); playTechClick(); }}
+                        className={`flex-1 px-4 py-2 rounded-sm text-[10px] font-bold font-mono tracking-wider transition-all uppercase 
+                        ${promptType === PromptType.GENERIC 
+                            ? 'bg-gray-800 text-white shadow-sm' 
+                            : 'bg-transparent text-gray-500 hover:text-gray-300 hover:bg-gray-900'}`}
+                        >
+                        {t.generic}
+                        </button>
+                        <button
+                        onClick={() => { setPromptType(PromptType.MIDJOURNEY); playTechClick(); }}
+                        className={`flex-1 px-4 py-2 rounded-sm text-[10px] font-bold font-mono tracking-wider transition-all uppercase 
+                        ${promptType === PromptType.MIDJOURNEY 
+                            ? 'bg-gray-800 text-white shadow-sm' 
+                            : 'bg-transparent text-gray-500 hover:text-gray-300 hover:bg-gray-900'}`}
+                        >
+                        {t.midjourney}
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <div className="w-px h-8 bg-gray-800 hidden md:block"></div>
-
-                {/* Prompt Type Switch */}
-                <div className="flex bg-gray-950 rounded p-1 whitespace-nowrap w-full md:w-auto">
-                    <button
-                    onClick={() => { setPromptType(PromptType.GENERIC); playTechClick(); }}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${promptType === PromptType.GENERIC ? 'bg-gray-800 text-gray-200 border border-gray-600' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                    {t.generic}
-                    </button>
-                    <button
-                    onClick={() => { setPromptType(PromptType.MIDJOURNEY); playTechClick(); }}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded text-xs font-bold font-mono tracking-wide transition-all ${promptType === PromptType.MIDJOURNEY ? 'bg-gray-800 text-white border border-gray-600' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                    {t.midjourney}
-                    </button>
-                </div>
+            {/* --- GLOBAL WORLD GEN BUTTON --- */}
+            <div className="w-full max-w-6xl mb-8 flex justify-center animate-fade-in">
+                <button
+                    onClick={() => { handleWorldGen(); playPowerUp(); }}
+                    className="group relative inline-flex items-center justify-center px-16 py-4 text-base font-bold text-amber-100 transition-all duration-300 bg-[#1c160b] border border-amber-600/40 hover:bg-amber-900/20 hover:border-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] rounded-sm overflow-hidden w-full md:w-auto min-w-[300px]"
+                >
+                        {/* Corner accents */}
+                    <span className="absolute w-1.5 h-1.5 bg-amber-500 top-0 left-0"></span>
+                    <span className="absolute w-1.5 h-1.5 bg-amber-500 top-0 right-0"></span>
+                    <span className="absolute w-1.5 h-1.5 bg-amber-500 bottom-0 left-0"></span>
+                    <span className="absolute w-1.5 h-1.5 bg-amber-500 bottom-0 right-0"></span>
+                    
+                    <span className="mr-3 text-xl text-amber-500 group-hover:rotate-90 transition-transform duration-500">❖</span>
+                    <span className="font-mono tracking-[0.2em] relative z-10">{t.worldGenBtn}</span>
+                </button>
             </div>
 
             {/* Status Bar / Active Config Info */}
@@ -376,7 +465,6 @@ const App: React.FC = () => {
                     config={config} 
                     mediaType={mediaType} 
                     onChange={handleConfigChange} 
-                    onSecretPlace={handleSecretPlace}
                     lang={lang}
                 />
                 )}
@@ -385,7 +473,6 @@ const App: React.FC = () => {
                     <NarrativeView 
                       config={config}
                       onChange={handleConfigChange}
-                      onSecretPlace={handleSecretPlace}
                       lang={lang}
                       onGenerate={handleNarrativeGeneration}
                     />
@@ -393,6 +480,9 @@ const App: React.FC = () => {
                   </>
                 )}
             </div>
+            
+            {/* Anchor for auto-scrolling */}
+            <div ref={bottomRef} style={{ height: '350px' }} /> 
         </div>
       </main>
 
@@ -402,7 +492,7 @@ const App: React.FC = () => {
       )}
       
        {/* FOOTER */}
-      <footer className="border-t border-gray-800 bg-[#06090f] py-8 mt-auto relative z-10 pb-28 md:pb-8">
+      <footer className="border-t border-gray-800 bg-[#06090f] py-8 mt-auto relative z-10 pb-96 md:pb-64">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 
