@@ -269,7 +269,29 @@ export const generateNarrativeCollection = (
     });
   }
 
-  // 11. VICTORY
+  // 11. UI KIT (New)
+  const uiPrompt = promptType === PromptType.MIDJOURNEY 
+    ? `**Game User Interface Asset Sheet for ${civVal} Game** :: Modular empty window frames, blank dialogue boxes, rectangular buttons, round buttons, health bars. Style: ${materials} textures, ornate borders. Isolated on black background. Game Asset Sprite Sheet. --no text`
+    : `A Game User Interface (UI) asset sheet for a ${civVal} style game. Includes modular empty window frames, blank dialogue boxes, rectangular and round buttons, and health bars. The texture resembles ${materials} with ornate borders. Isolated on a black background, high resolution game sprites. No text on buttons.`;
+
+  collection.push({
+    title: labels.assetUI,
+    type: 'SCENE',
+    prompt: uiPrompt
+  });
+
+  // 12. ITEM ICONS (New)
+  const itemPrompt = promptType === PromptType.MIDJOURNEY
+    ? `**RPG Item Icon Set found in ${placeTypeVal}** :: 6 distinct game icons, grid layout. Items: Key, Potion, Weapon, Relic, Map, Tool. Style: ${renderVal}, ${styleVal}, vector quality. Isolated on black background. --no text`
+    : `A set of 6 RPG Item Icons found in a ${placeTypeVal}. The grid includes: a Key, a Potion, a Weapon, a Relic, a Map, and a Tool. Visual style is ${renderVal} and ${styleVal}. High contrast, isolated on black background, vector quality game assets.`;
+
+  collection.push({
+    title: labels.assetItems,
+    type: 'SCENE',
+    prompt: itemPrompt
+  });
+
+  // 13. VICTORY
   const victorySubject = promptType === PromptType.MIDJOURNEY
     ? `**Victory Scene inside ${placeTypeVal}**`
     : `A Victory scene inside ${placeTypeVal}`;

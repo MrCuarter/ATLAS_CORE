@@ -33,7 +33,7 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang 
   };
 
   return (
-    <div className="w-full animate-fade-in mt-12 pb-32">
+    <div className="w-full animate-fade-in mt-12 pb-8">
       <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
         <h3 className="text-2xl font-mono font-bold text-white flex items-center">
           <span className="w-3 h-3 bg-accent-500 mr-3 animate-pulse"></span>

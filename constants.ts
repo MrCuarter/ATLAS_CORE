@@ -1,4 +1,3 @@
-
 import { PoiMapping, Preset, Language } from './types';
 
 // --- TRANSLATION MAPS ---
@@ -18,10 +17,14 @@ export const UI_TEXT = {
     midjourney: "MIDJOURNEY",
     surpriseTitle: "", 
     surpriseDesc: "", 
-    surpriseBtn: "EJECUTAR PROTOCOLO GÉNESIS",
-    worldGenBtn: "EJECUTAR WORLD-GEN", // New Epic Button
+    surpriseBtn: "EJECUTAR PROTOCOLO ATLAS",
+    worldGenBtn: "EJECUTAR ATLAS_CORE", // Branding Update
+    worldGenDesc: "Crea un escenario aleatorio", // Updated description
     generateAssetsBtn: "GENERAR PACK DE ASSETS",
+    processing: "PROCESANDO...",
     presetsTitle: "Protocolos Predefinidos",
+    activeProtocol: "Protocolo Activo (Generado)",
+    reset: "RESET",
     scenario: "Núcleo del Escenario",
     scale: "Escala Territorial",
     category: "Categoría",
@@ -45,6 +48,8 @@ export const UI_TEXT = {
     rhythm: "Ritmo",
     loop: "Loop",
     enhance: "Optimizar con IA",
+    genGameAssets: "GENERAR UI & ITEMS", // New Button
+    gameAssetsTitle: "PACK DE ELEMENTOS DE JUEGO", // New Section Title
     copy: "COPIAR",
     copyAll: "COPIAR PACK (MODO INSTRUCCIÓN)",
     copied: "COPIADO",
@@ -53,14 +58,18 @@ export const UI_TEXT = {
     designedBy: "Diseñado por",
     followMe: "Sígueme en",
     narrativeIntro: "Diseña una experiencia coherente. Genera 11 assets visuales del mismo mundo para construir tu narrativa.",
+    enableAI: "ACTIVAR REFINAMIENTO IA (GEMINI)",
+    enableAIDesc: "Aumenta la calidad de cada prompt individualmente. Proceso más lento.",
     assetMap: "MAPA TÁCTICO",
     assetIso: "PERSPECTIVA AÉREA",
     assetEntrance: "ENTRADA PRINCIPAL",
     assetVictory: "ESCENA DE VICTORIA",
+    assetUI: "KIT DE INTERFAZ (UI)",
+    assetItems: "ICONOS DE OBJETOS",
     secretPlaceBtn: "ALEATORIZAR DATOS", // Kept for fallback, unused in main UI now
     stepScale: "1. SELECCIONA ESCALA",
     stepPlace: "2. IDENTIFICA EL LUGAR",
-    stepCiv: "3. CIVILIZACIÓN",
+    stepCiv: "3. CIVILIZATION",
     stepStyle: "4. ESTILO VISUAL",
     stepCamera: "5. CÁMARA",
     stepRatio: "6. FORMATO",
@@ -69,7 +78,7 @@ export const UI_TEXT = {
     ratioSquare: "Cuadrado (1:1)",
     ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **PROTOCOLO DE GENERACIÓN SECUENCIAL**\n\nActúa como un motor de generación de imágenes experto. Tienes una lista de 11 escenas que forman un pack coherente. **NO LAS GENERES TODAS A LA VEZ.**\n\n**TU MISIÓN:**\n1. Lee la descripción del estilo visual (Civilización, Atmósfera, Render).\n2. Genera **SOLO LA IMAGEN Nº 1** de la lista.\n3. **DETENTE** y espera a que yo te diga 'Siguiente' para generar la número 2.\n4. Mantén la coherencia visual estricta en todas ellas.\n\n**LISTA DE ESCENAS:**\n"
+    copyInstructionHeader: "⚠️ **PROTOCOLO DE GENERACIÓN SECUENCIAL**\n\nActúa como un motor de generación de imágenes experto. Tienes una lista de 13 escenas que forman un pack coherente. **NO LAS GENERES TODAS A LA VEZ.**\n\n**TU MISIÓN:**\n1. Lee la descripción del estilo visual (Civilización, Atmósfera, Render).\n2. Genera **SOLO LA IMAGEN Nº 1** de la lista.\n3. **DETENTE** y espera a que yo te diga 'Siguiente' para generar la número 2.\n4. Mantén la coherencia visual estricta en todas ellas.\n\n**LISTA DE ESCENAS:**\n"
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -85,10 +94,14 @@ export const UI_TEXT = {
     midjourney: "MIDJOURNEY",
     surpriseTitle: "", 
     surpriseDesc: "", 
-    surpriseBtn: "EXECUTE GENESIS PROTOCOL", 
-    worldGenBtn: "EXECUTE WORLD-GEN",
+    surpriseBtn: "EXECUTE ATLAS PROTOCOL", 
+    worldGenBtn: "EXECUTE ATLAS_CORE", // Branding Update
+    worldGenDesc: "Create a random scenario",
     generateAssetsBtn: "GENERATE ASSET PACK",
+    processing: "PROCESSING...",
     presetsTitle: "Predefined Protocols",
+    activeProtocol: "Active Protocol (Generated)",
+    reset: "RESET",
     scenario: "Scenario Core",
     scale: "Territorial Scale",
     category: "Category",
@@ -112,6 +125,8 @@ export const UI_TEXT = {
     rhythm: "Rhythm",
     loop: "Loop",
     enhance: "Optimize with AI",
+    genGameAssets: "GENERATE UI & ITEMS",
+    gameAssetsTitle: "GAME ASSETS PACK",
     copy: "COPY",
     copyAll: "COPY PACK (INSTRUCTION MODE)",
     copied: "COPIED",
@@ -120,10 +135,14 @@ export const UI_TEXT = {
     designedBy: "Designed by",
     followMe: "Follow me on",
     narrativeIntro: "Design a coherent experience. Generate 11 visual assets from the same world to build your narrative.",
+    enableAI: "ENABLE AI REFINEMENT (GEMINI)",
+    enableAIDesc: "Increases quality of each prompt individually. Slower process.",
     assetMap: "TACTICAL MAP",
     assetIso: "AERIAL PERSPECTIVE",
     assetEntrance: "MAIN ENTRANCE",
     assetVictory: "VICTORY SCENE",
+    assetUI: "USER INTERFACE (UI) KIT",
+    assetItems: "ITEM ICONS",
     secretPlaceBtn: "RANDOMIZE DATA",
     stepScale: "1. SELECT SCALE",
     stepPlace: "2. IDENTIFY PLACE",
@@ -136,7 +155,7 @@ export const UI_TEXT = {
     ratioSquare: "Square (1:1)",
     ratioUltra: "Ultra (21:9)",
     // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **SEQUENTIAL GENERATION PROTOCOL**\n\nAct as an expert image generation engine. You have a list of 11 scenes that form a coherent pack. **DO NOT GENERATE THEM ALL AT ONCE.**\n\n**YOUR MISSION:**\n1. Analyze the visual style description (Civilization, Atmosphere, Render).\n2. Generate **ONLY IMAGE #1** from the list.\n3. **STOP** and wait for me to say 'Next' before generating number 2.\n4. Maintain strict visual coherence across all of them.\n\n**SCENE LIST:**\n"
+    copyInstructionHeader: "⚠️ **SEQUENTIAL GENERATION PROTOCOL**\n\nAct as an expert image generation engine. You have a list of 13 scenes that form a coherent pack. **DO NOT GENERATE THEM ALL AT ONCE.**\n\n**YOUR MISSION:**\n1. Analyze the visual style description (Civilization, Atmosphere, Render).\n2. Generate **ONLY IMAGE #1** from the list.\n3. **STOP** and wait for me to say 'Next' before generating number 2.\n4. Maintain strict visual coherence across all of them.\n\n**SCENE LIST:**\n"
   }
 };
 
@@ -324,8 +343,8 @@ export const ART_STYLES = ['Age of Empires', 'Civilization', 'D&D', 'World of Wa
 // --- BLOCK 3: FORMAT ---
 
 export const ZOOMS = ['Vista épica global', 'Vista regional', 'Vista urbana', 'Vista distrital', 'Vista focalizada', 'Vista táctica'];
-export const CAMERAS = ['Cenital pura (top-down)', 'Isométrica clásica', 'Isométrica inclinada', 'Aérea ligeramente inclinada', 'Perspectiva oblicua', 'Vista frontal diorama', 'Cámara libre'];
-export const RATIOS = ['16:9', '1:1', '9:16', '21:9 (Ultra wide)', 'Sin bordes'];
+export const CAMERAS = ['Cenital pura (top-down)', 'Isométrica clásica', 'Isométrica inclinada', 'Aérea ligeramente inclinada', 'Perspectiva oblicua', 'Vista frontal diorama', 'Cámara libre', 'Aérea cinematográfica', 'Isométrica', 'Aérea', 'Frontal oblicua', 'Aérea amplia', 'Aérea suave', 'Cenital'];
+export const RATIOS = ['16:9', '9:16', '1:1', '21:9', '4:3', '3:4', '3:2', '2:3'];
 
 // --- BLOCK 4: VIDEO ---
 export const VIDEO_MOVEMENTS = ['Zoom in', 'Zoom out', 'Paneo lateral', 'Orbitar', 'Descenso', 'Sobrevuelo', 'Recorrido guiado'];

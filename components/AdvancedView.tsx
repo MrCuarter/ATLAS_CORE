@@ -43,7 +43,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
   );
 
   return (
-    <div className="pb-32 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+    <div className="pb-8 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
       
       {/* Block 1: Scenario */}
       <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden group">

@@ -1,21 +1,54 @@
-import React from 'react';
-import { Preset, Language } from '../types';
+import React, { useRef } from 'react';
+import { Preset, Language, MapConfig } from '../types';
 import { PRESETS, UI_TEXT } from '../constants';
 import { playTechClick } from '../services/audioService';
 
 interface PresetsViewProps {
   onPresetSelect: (preset: Preset) => void;
   // onSurprise removed as it's handled globally now
-  onSurprise: () => void; // Kept in signature to avoid breaking parent temporarily, but unused in UI
+  onSurprise: () => void; 
   lang: Language;
+  config?: MapConfig; // Accept current config to show active state
 }
 
-const PresetsView: React.FC<PresetsViewProps> = ({ onPresetSelect, lang }) => {
+const PresetsView: React.FC<PresetsViewProps> = ({ onPresetSelect, lang, config }) => {
   const t = UI_TEXT[lang];
 
+  // Determine if we have a "custom" or "generated" protocol active that isn't just a placeholder
+  const hasActiveProtocol = config && config.presetName && config.presetName.includes('ATLAS_CORE');
+
   return (
-    <div className="pb-32 animate-fade-in pt-4">
+    <div className="pb-8 animate-fade-in pt-4">
       
+      {/* ACTIVE PROTOCOL DASHBOARD - Only shows if World-Gen was run */}
+      {hasActiveProtocol && (
+        <div className="mb-8 p-6 bg-gray-900/80 border border-accent-500/50 rounded-lg shadow-[0_0_20px_rgba(34,211,238,0.1)] relative overflow-hidden group">
+            {/* Animated Background Line */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent-500 to-transparent animate-pulse-slow"></div>
+            
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 className="text-accent-400 font-mono font-bold text-sm tracking-[0.2em] uppercase mb-1 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-accent-500 rounded-full animate-pulse"></span>
+                        {t.activeProtocol}
+                    </h3>
+                    <h2 className="text-white text-2xl font-bold font-sans tracking-tight">
+                        {config.presetName}
+                    </h2>
+                </div>
+                
+                {/* Visual DNA Tags */}
+                <div className="flex flex-wrap gap-2">
+                    {[config.civilization, config.placeType, config.weather, config.artStyle].filter(Boolean).map((tag, i) => (
+                        <span key={i} className="px-3 py-1 bg-black/50 border border-accent-500/30 text-accent-300 text-xs font-mono font-bold rounded uppercase">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Presets Grid */}
       <h3 className="text-xl font-mono font-bold text-gray-400 mb-6 pl-2 flex items-center border-l-2 border-accent-500/50">
         {t.presetsTitle}

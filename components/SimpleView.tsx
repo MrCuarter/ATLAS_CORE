@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { MapConfig, Language } from '../types';
-import { UI_TEXT, SCALES, CIVILIZATIONS, ART_STYLES, CAMERAS, RATIOS, PLACES_BY_CATEGORY, PLACE_CATEGORIES } from '../constants';
+import { UI_TEXT, SCALES, CIVILIZATIONS, ART_STYLES, CAMERAS, PLACES_BY_CATEGORY, PLACE_CATEGORIES } from '../constants';
 import { playTechClick } from '../services/audioService';
 
 interface SimpleViewProps {
@@ -103,7 +103,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
   };
 
   return (
-    <div className="pb-32 max-w-5xl mx-auto">
+    <div className="pb-8 max-w-5xl mx-auto">
       
       {/* 1. SCALE */}
       {renderSection(

@@ -8,7 +8,8 @@ import NarrativeView from './components/NarrativeView';
 import PromptDisplay from './components/PromptDisplay';
 import CollectionDisplay from './components/CollectionDisplay';
 import { generatePrompt, generateNarrativeCollection, getRandomElement } from './services/promptGenerator';
-import { playSwitch, playTechClick, playPowerUp } from './services/audioService';
+import { enhancePromptWithGemini } from './services/geminiService'; // Import Gemini service
+import { playSwitch, playTechClick, playPowerUp, playSuccess } from './services/audioService';
 
 // Initial state helpers
 const getInitialConfig = (): MapConfig => ({
@@ -46,6 +47,7 @@ const App: React.FC = () => {
   
   // Narrative Mode State
   const [narrativeCollection, setNarrativeCollection] = useState<PromptCollectionItem[]>([]);
+  const [isGeneratingNarrative, setIsGeneratingNarrative] = useState(false);
 
   // Update prompt whenever config changes (Only for Simple/Advanced modes)
   useEffect(() => {
@@ -88,6 +90,14 @@ const App: React.FC = () => {
   const generateSurprise = () => {
     // Legacy support wrapper
     handleWorldGen();
+  };
+
+  const handleReset = () => {
+      playTechClick();
+      setConfig(getInitialConfig());
+      setNarrativeCollection([]);
+      // If in narrative mode, maybe stay there, otherwise go to presets? 
+      // User likely wants to clear the current "Work".
   };
 
   // --- EPIC WORLD GEN LOGIC (Unified Randomizer) ---
@@ -163,27 +173,57 @@ const App: React.FC = () => {
         // Format - ENFORCE LANDSCAPE (16:9) AS REQUESTED
         aspectRatio: '16:9',
         // Meta
-        presetName: '✨ PROTOCOLO GÉNESIS',
+        presetName: '✨ PROTOCOLO ATLAS_CORE', // Renamed from GENESIS
         tags: ['Random', 'WorldGen']
     }));
 
-    // NOTE: Removed setMode(AppMode.SIMPLE). Now it stays in the current mode (Presets) 
-    // but updates the global config and prompts.
+    // Stay in current mode (Presets, Simple, etc)
     
     // Auto Scroll to bottom (Prompt area)
     setTimeout(() => {
-        // We use window scroll to ensure we hit the bottom where the new large prompt is
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const handleNarrativeGeneration = () => {
+  const handleNarrativeGeneration = async (useAI: boolean) => {
       if (!config.placeType) {
           alert(lang === Language.ES ? "Selecciona un Lugar primero" : "Select a Place first");
           return;
       }
-      const collection = generateNarrativeCollection(config, promptType, lang);
-      setNarrativeCollection(collection);
+
+      setIsGeneratingNarrative(true);
+      setNarrativeCollection([]); // Clear previous
+
+      try {
+        // 1. Generate Base Collection (Instant)
+        let collection = generateNarrativeCollection(config, promptType, lang);
+
+        // 2. If AI mode is enabled, enhance each prompt
+        if (useAI) {
+            // Process in parallel blocks to speed it up, but not all at once to avoid rate limits
+            // Since we have ~13 items, we can do them in batches or simple Promise.all if quota allows.
+            // Let's do Promise.all for now as Gemini 2.5 is fast.
+            
+            const enhancementPromises = collection.map(async (item) => {
+                try {
+                    const enhancedText = await enhancePromptWithGemini(item.prompt, promptType);
+                    return { ...item, prompt: enhancedText };
+                } catch (e) {
+                    return item; // Fallback to original if AI fails
+                }
+            });
+
+            collection = await Promise.all(enhancementPromises);
+        }
+
+        setNarrativeCollection(collection);
+        playSuccess();
+
+      } catch (error) {
+          console.error("Error generating collection:", error);
+      } finally {
+          setIsGeneratingNarrative(false);
+      }
   };
 
   const t = C.UI_TEXT[lang];
@@ -361,6 +401,17 @@ const App: React.FC = () => {
                 {/* Right Side: Configuration Tools (BALANCED GROUPS) */}
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto lg:ml-auto">
                     
+                    {/* Reset Button (NEW) */}
+                    <button
+                        onClick={handleReset}
+                        className="px-4 py-2 rounded-sm font-mono font-bold text-[10px] uppercase tracking-wider text-red-400 border border-red-900/30 hover:bg-red-900/20 hover:border-red-500/50 transition-colors w-full sm:w-auto"
+                        title={lang === Language.ES ? 'Reiniciar configuración' : 'Reset configuration'}
+                    >
+                        {t.reset}
+                    </button>
+
+                    <div className="h-6 w-px bg-gray-800 hidden sm:block"></div>
+
                     {/* Media Switch (Equal Size with Text) */}
                     <div className={`flex items-center bg-gray-950 border border-gray-800 rounded-md p-1 w-full sm:w-auto ${mode === AppMode.NARRATIVE ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                         <button
@@ -412,21 +463,29 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- GLOBAL WORLD GEN BUTTON --- */}
+            {/* --- GLOBAL WORLD GEN BUTTON (RE-DESIGNED) --- */}
             <div className="w-full max-w-6xl mb-8 flex justify-center animate-fade-in">
-                <button
-                    onClick={() => { handleWorldGen(); playPowerUp(); }}
-                    className="group relative inline-flex items-center justify-center px-16 py-4 text-base font-bold text-amber-100 transition-all duration-300 bg-[#1c160b] border border-amber-600/40 hover:bg-amber-900/20 hover:border-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] rounded-sm overflow-hidden w-full md:w-auto min-w-[300px]"
-                >
-                        {/* Corner accents */}
-                    <span className="absolute w-1.5 h-1.5 bg-amber-500 top-0 left-0"></span>
-                    <span className="absolute w-1.5 h-1.5 bg-amber-500 top-0 right-0"></span>
-                    <span className="absolute w-1.5 h-1.5 bg-amber-500 bottom-0 left-0"></span>
-                    <span className="absolute w-1.5 h-1.5 bg-amber-500 bottom-0 right-0"></span>
-                    
-                    <span className="mr-3 text-xl text-amber-500 group-hover:rotate-90 transition-transform duration-500">❖</span>
-                    <span className="font-mono tracking-[0.2em] relative z-10">{t.worldGenBtn}</span>
-                </button>
+                <div className="flex flex-col items-center">
+                    <button
+                        onClick={() => { handleWorldGen(); playPowerUp(); }}
+                        className="group relative inline-flex flex-col items-center justify-center px-12 py-4 text-sm font-bold text-amber-100 transition-all duration-300 bg-[#1c160b] border border-amber-600/40 hover:bg-amber-900/20 hover:border-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] rounded-sm overflow-hidden min-w-[280px]"
+                    >
+                            {/* Simple border accents */}
+                        <span className="absolute w-1 h-1 bg-amber-500 top-0 left-0"></span>
+                        <span className="absolute w-1 h-1 bg-amber-500 bottom-0 right-0"></span>
+                        
+                        {/* Main Title Row */}
+                        <div className="flex items-center relative z-10 mb-1">
+                            <span className="mr-2 text-lg text-amber-500 group-hover:rotate-90 transition-transform duration-500">❖</span>
+                            <span className="font-mono tracking-[0.1em] font-bold text-sm md:text-base">{t.worldGenBtn}</span>
+                        </div>
+                        
+                        {/* Subtitle Description */}
+                        <span className="relative z-10 text-[9px] text-amber-500/60 font-mono uppercase tracking-widest group-hover:text-amber-400/80 transition-colors">
+                            {t.worldGenDesc}
+                        </span>
+                    </button>
+                </div>
             </div>
 
             {/* Status Bar / Active Config Info */}
@@ -450,7 +509,8 @@ const App: React.FC = () => {
                 <PresetsView 
                     onPresetSelect={applyPreset} 
                     onSurprise={generateSurprise}
-                    lang={lang} 
+                    lang={lang}
+                    config={config} 
                 />
                 )}
                 {mode === AppMode.SIMPLE && (
@@ -475,24 +535,25 @@ const App: React.FC = () => {
                       onChange={handleConfigChange}
                       lang={lang}
                       onGenerate={handleNarrativeGeneration}
+                      isGenerating={isGeneratingNarrative}
                     />
                     <CollectionDisplay collection={narrativeCollection} lang={lang} />
                   </>
                 )}
             </div>
+
+            {/* PromptDisplay MOVED INSIDE MAIN FLOW - Appearing after the tools */}
+            {mode !== AppMode.NARRATIVE && (
+               <PromptDisplay prompt={generatedPrompt} promptType={promptType} lang={lang} />
+            )}
             
             {/* Anchor for auto-scrolling */}
-            <div ref={bottomRef} style={{ height: '350px' }} /> 
+            <div ref={bottomRef} className="h-8" /> 
         </div>
       </main>
-
-      {/* Show PromptDisplay ONLY if NOT in Narrative Mode */}
-      {mode !== AppMode.NARRATIVE && (
-         <PromptDisplay prompt={generatedPrompt} promptType={promptType} lang={lang} />
-      )}
       
        {/* FOOTER */}
-      <footer className="border-t border-gray-800 bg-[#06090f] py-8 mt-auto relative z-10 pb-96 md:pb-64">
+      <footer className="border-t border-gray-800 bg-[#06090f] py-8 mt-auto relative z-10 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 
