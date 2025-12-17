@@ -223,6 +223,10 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Estalactitas gigantes': 'Giant Stalactites', 'Lago congelado': 'Frozen Lake', 'Cristales azules': 'Blue Crystals', 'Restos congelados': 'Frozen Remains', 'Túnel de viento': 'Wind Tunnel',
   'Barco hundido': 'Sunken Ship', 'Coral cerebro gigante': 'Giant Brain Coral', 'Cueva submarina': 'Underwater Cave', 'Banco de peces': 'School of Fish', 'Acantilado submarino': 'Underwater Cliff',
 
+  // FALLBACK GENERIC POIs (Ensure we have at least 6 here to mix in)
+  'Sala de Mapas': 'Map Room', 'Armería Antigua': 'Ancient Armory', 'Sala del Trono': 'Throne Room', 'Pasillo Oscuro': 'Dark Corridor', 'Habitación Oculta': 'Hidden Room', 'Mirador': 'Overlook', 'Cámara del Consejo': 'Council Chamber',
+  'Patio Interior': 'Inner Courtyard', 'Biblioteca Olvidada': 'Forgotten Library', 'Cocina': 'Kitchen',
+
   // CIVILIZATIONS
   'Humana genérica': 'Generic Human', 'Imperial': 'Imperial', 'Medieval': 'Medieval', 'Árabe': 'Arabian', 'Renacentista': 'Renaissance',
   'Elfos': 'Elven', 'Orcos': 'Orc', 'Goblins': 'Goblin', 'Enanos': 'Dwarven', 'No-muertos': 'Undead', 'Demoníaca': 'Demonic',
@@ -321,8 +325,8 @@ export const POI_MAPPING: PoiMapping = {
   'Cueva de Hielo': ['Estalactitas gigantes', 'Lago congelado', 'Cristales azules', 'Restos congelados', 'Túnel de viento'],
   'Arrecife de Coral': ['Barco hundido', 'Coral cerebro gigante', 'Cueva submarina', 'Banco de peces', 'Acantilado submarino'],
 
-  // Fallbacks for others
-  'DEFAULT': ['Estructura central', 'Entrada principal', 'Zona periférica', 'Punto de observación', 'Ruinas', 'Sin POI específico']
+  // Fallbacks for others - EXPANDED to ensure uniqueness
+  'DEFAULT': ['Estructura central', 'Entrada principal', 'Zona periférica', 'Punto de observación', 'Ruinas', 'Sin POI específico', 'Sala de Mapas', 'Armería Antigua', 'Sala del Trono', 'Pasillo Oscuro', 'Habitación Oculta', 'Mirador', 'Cámara del Consejo', 'Patio Interior', 'Biblioteca Olvidada']
 };
 
 export const CIVILIZATIONS = [

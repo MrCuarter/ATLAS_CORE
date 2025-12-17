@@ -103,6 +103,18 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
         </div>
       </div>
 
+      {/* POI SETTINGS (NEW SECTION) */}
+      <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden mb-8">
+          <div className="absolute top-0 left-0 w-1 h-full bg-orange-600"></div>
+          <h3 className="text-lg font-bold text-white mb-4 font-mono">3. CONFIGURACIÓN DE POIs</h3>
+          <p className="text-xs text-gray-500 mb-4">Afecta solo a las escenas interiores (POIs y Entrada).</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <SelectGroup label={t.camera} field="camera" options={C.CAMERAS} />
+            <SelectGroup label={t.zoom} field="zoom" options={C.ZOOMS} />
+            <SelectGroup label={t.ratio} field="aspectRatio" options={C.RATIOS} />
+          </div>
+      </div>
+
       {/* AI TOGGLE */}
       <div className="flex justify-center mb-6">
           <button 
