@@ -8,61 +8,123 @@ const t = (val: string): string => {
   return val; 
 };
 
-// 1. VISUAL DNA CONSTRUCTOR
-const getVisualDNA = (civ: string, placeType: string, time: string, weather: string, customAtm?: string): string => {
-    let palette = "Neutral grey, earthy tones";
-    let materials = "Standard construction materials";
-    let tech = "Low tech";
+// 1. VISUAL DNA CONSTRUCTOR (REMASTERED FOR STYLE PRIORITY)
+const getVisualDNA = (civ: string, style: string, placeType: string, time: string, weather: string, customAtm?: string): string => {
+    let palette = "";
+    let materials = "";
+    let tech = "";
+    let lighting = "";
+    let renderStyle = "";
 
-    const has = (str: string, key: string) => str.toLowerCase().includes(key.toLowerCase());
+    const has = (str: string, key: string) => str?.toLowerCase().includes(key.toLowerCase());
 
-    if (has(civ, "Human") || has(civ, "Imperial") || has(civ, "Humana")) {
-        palette = "Royal Blue (#4169E1), White Marble, Gold Accents";
-        materials = "Polished stone, limestone, oak wood, iron reinforcements";
-        tech = "Classical mechanics, torchlight";
-    } else if (has(civ, "Elf") || has(civ, "Elfos")) {
-        palette = "Emerald Green (#50C878), Silver, Pearl White";
-        materials = "Living wood, bioluminescent flora, white marble, curved architecture";
-        tech = "Magic-infused nature, glowing runes";
-    } else if (has(civ, "Orc") || has(civ, "Orcos")) {
-        palette = "Rust Red (#804040), Charcoal Black, Mud Brown";
-        materials = "Scrap iron, raw timber, animal leather, jagged rocks";
-        tech = "Primitive industrial, fire-based";
-    } else if (has(civ, "Cyberpunk") || has(civ, "Futurist")) {
-        palette = "Neon Cyan (#00FFFF), Magenta (#FF00FF), Deep Black";
-        materials = "Carbon fiber, wet concrete, glass, holograms";
-        tech = "High-tech, holographic displays, LED strips";
-    } else if (has(civ, "Dwarven") || has(civ, "Enanos")) {
-        palette = "Bronze (#CD7F32), Slate Grey, Lava Orange";
-        materials = "Carved granite, heavy iron, molten gold geometry";
-        tech = "Steam power, subterranean forges";
-    } else if (has(civ, "Alien") || has(civ, "Alienígena")) {
-        palette = "Bio-Luminescent Purple (#9932CC), Acid Green, Obsidian";
-        materials = "Organic resin, chitin, unknown alloys, pulsating veins";
-        tech = "Biotechnology, anti-gravity";
+    // --- STEP 1: STYLE DEFINES THE RENDER & PALETTE (HIGHEST PRIORITY) ---
+    
+    // VIDEO GAMES
+    if (has(style, "Cyberpunk 2077")) {
+        palette = "Neon Acid Green, Hot Pink, Electric Blue, Deep Black Shadows";
+        materials = "Wet Asphalt, Chrome, Plastic, Synth-skin, Holograms";
+        lighting = "Night City Lighting, High Contrast, Volumetric Neon Fog, Chromatic Aberration";
+        renderStyle = "Red Engine 4, Ray Tracing Overdrive, Hyper-Realistic Game Asset";
+    } else if (has(style, "Elden Ring") || has(style, "Dark Souls") || has(style, "Bloodborne")) {
+        palette = "Golden Erdtree Light, Desaturated Green, Decay Brown, Faded Gold";
+        materials = "Tarnished Metal, Ancient Stone, Rotting Cloth, Fog";
+        lighting = "Divine yet melancholy lighting, Atmospheric bloom, God rays";
+        renderStyle = "FromSoftware Art Style, Detailed Textures, Painterly Realism";
+    } else if (has(style, "Overwatch") || has(style, "Fortnite") || has(style, "Warcraft")) {
+        palette = "Vibrant, Saturated, Complementary Colors";
+        materials = "Stylized PBR, Hand-painted textures, Chunky shapes";
+        lighting = "Soft ambient occlusion, Bright daylight, stylized rim light";
+        renderStyle = "Blizzard/Epic Games Style, Stylized 3D, Clean lines";
+    } else if (has(style, "Zelda") || has(style, "Ghibli")) {
+        palette = "Pastel Greens, Sky Blues, Vibrant Nature Tones";
+        materials = "Cel-shaded textures, Soft Grass, Painted Stone";
+        lighting = "Soft sunlight, fluffy clouds shadows, bloom";
+        renderStyle = "Studio Ghibli / Breath of the Wild Style, Anime-inspired 3D";
+    } else if (has(style, "Minecraft") || has(style, "Voxel")) {
+        palette = "8-bit Vibrant";
+        materials = "Blocks, Voxels, Pixels";
+        lighting = "Ray Traced Global Illumination (RTX)";
+        renderStyle = "Voxel Art, Blocky, Minecraft Aesthetic";
+    } 
+    // MOVIES / SERIES
+    else if (has(style, "Pixar") || has(style, "Disney")) {
+        palette = "Warm, Inviting, Highly Saturated";
+        materials = "Subsurface scattering (skin/wax), Soft plastic, Fluffy fur";
+        lighting = "Cinematic Studio Lighting, Soft Shadows, Warm Bounce Light";
+        renderStyle = "Pixar 3D Render, RenderMan, Cute proportions";
+    } else if (has(style, "Arcane")) {
+        palette = "Oil Painting tones, Deep Purples and Golds";
+        materials = "Painted textures with 3D depth, Brushstrokes on metal";
+        lighting = "Dramatic, moody, painterly light shafts";
+        renderStyle = "Fortiche Production Style, 2.5D, Hand-painted texture projection";
+    } else if (has(style, "Spider-Verse")) {
+        palette = "CMYK offset, Neon Glitch, Pop Art colors";
+        materials = "Halftone patterns, Ink lines, Comic book paper texture";
+        lighting = "Stylized rim lights, chromatic aberration";
+        renderStyle = "Into the Spider-Verse Style, Comic Book Shader, Variable Frame Rate";
+    } else if (has(style, "Wes Anderson")) {
+        palette = "Pastel Pink, Mint Green, Symmetrical Yellows";
+        materials = "Matte paint, Fabric, Dollhouse textures";
+        lighting = "Flat lighting, High key, Symmetrical composition";
+        renderStyle = "Symmetrical Cinematography, Flat lay aesthetic";
+    }
+    // ARTISTIC GENERIC
+    else if (has(style, "Noir") || has(style, "B&W")) {
+        palette = "Black, White, High Contrast Greys";
+        materials = "Smoke, Rain, Concrete";
+        lighting = "Chiaroscuro, Venetian blinds shadows, Silhouette";
+        renderStyle = "Film Noir, Black and White Photography";
+    } else if (has(style, "Blueprint")) {
+        palette = "Royal Blue background, White lines";
+        materials = "Paper, Ink";
+        lighting = "Flat technical lighting";
+        renderStyle = "Architectural Schematic, Technical Drawing";
     }
 
-    let wear = "Moderate wear";
-    if (has(placeType, "Ruins") || has(placeType, "Dungeon") || has(placeType, "Desguace")) {
-        wear = "Heavy weathering, cracks, moss, decay, dust";
-    } else if (has(placeType, "Palace") || has(placeType, "Lab") || has(placeType, "Temple")) {
-        wear = "Pristine condition, polished surfaces, clean";
+    // --- STEP 2: CIVILIZATION FILLS THE GAPS (IF STYLE DIDN'T DEFINE THEM) ---
+    // Only apply Civ logic if palette/materials are still empty or generic
+    if (!palette) {
+        if (has(civ, "Human") || has(civ, "Imperial")) {
+            palette = "Royal Blue, White Marble, Gold";
+            materials = "Polished stone, steel";
+        } else if (has(civ, "Elf")) {
+            palette = "Emerald Green, Silver, Pearl";
+            materials = "Living wood, bioluminescence";
+        } else if (has(civ, "Cyberpunk") || has(civ, "Futurist")) {
+            // Fallback if user picked "Cyberpunk Civ" but "Realistic" style
+            palette = "Neon Cyan, Magenta, Black";
+            materials = "Carbon fiber, glass, LEDs";
+        } else if (has(civ, "Steampunk") || has(civ, "Dwarven")) {
+            palette = "Bronze, Copper, Steam White";
+            materials = "Brass, Gears, Leather, Wood";
+        } else {
+            palette = "Earthy tones, realistic";
+            materials = "Standard environmental materials";
+        }
     }
 
-    let light = "Neutral daylight";
-    if (has(time, "Night") || has(time, "Noche")) {
-        light = "Moonlight (Blue Tones), high contrast shadows, artificial light sources";
-    } else if (has(time, "Sunset") || has(time, "Atardecer")) {
-        light = "Golden Hour (Warm Orange Tones), long shadows, rim lighting";
+    // --- STEP 3: ENVIRONMENT INFLUENCE (ADDITIVE) ---
+    let envDetails = "";
+    if (has(time, "Night")) {
+        envDetails += "Night time, artificial light sources dominant. ";
+    } else if (has(time, "Sunset")) {
+        envDetails += "Golden hour, long dramatic shadows. ";
     }
     
-    if (has(weather, "Fog") || has(weather, "Niebla")) {
-        light += ", Volumetric fog, soft diffusion";
-    } else if (has(weather, "Rain") || has(weather, "Lluvia")) {
-        light += ", Wet surfaces, reflections, moody atmosphere";
+    if (has(weather, "Rain")) {
+        envDetails += "Wet surfaces, reflections, puddles. ";
+    } else if (has(weather, "Fog")) {
+        envDetails += "Volumetric fog, atmospheric depth. ";
     }
+
+    // --- CONSTRUCT DNA STRING ---
+    let finalDNA = `**VISUAL STYLE PRIORITY: ${style}**. `;
+    finalDNA += `[Render Engine: ${renderStyle || "Unreal Engine 5, Octane Render"}] `;
+    finalDNA += `[Palette: ${palette}] `;
+    finalDNA += `[Texture/Materials: ${materials}] `;
+    finalDNA += `[Lighting: ${lighting || envDetails}] `;
     
-    let finalDNA = `VISUAL DNA: [Palette: ${palette}] [Materials: ${materials}] [Lighting: ${light}] [Wear: ${wear}] [Tech: ${tech}]`;
     if (customAtm) finalDNA += ` [Custom Details: ${customAtm}]`;
 
     return finalDNA;
@@ -70,7 +132,7 @@ const getVisualDNA = (civ: string, placeType: string, time: string, weather: str
 
 // 2. EXCLUSIONS
 const getExclusions = (promptType: PromptType): string => {
-    const base = "text, watermark, ui elements, hud, blur, distortion, low quality, pixelated, cartoon, anime";
+    const base = "text, watermark, ui elements, hud, blur, distortion, low quality, pixelated, cartoon, anime, lowres, jpeg artifacts";
     if (promptType === PromptType.MIDJOURNEY) return `--no ${base}`;
     return `Exclusions: ${base}.`;
 };
@@ -92,7 +154,6 @@ const getSidekickConfig = (civ: string): { desc: string, ar: string } => {
     if (c.includes('cyber') || c.includes('futur')) return { desc: "Floating Drone Companion or Mechanical Dog", ar: "16:9" };
     if (c.includes('magic') || c.includes('wizard')) return { desc: "Small Dragon or Familiar", ar: "16:9" };
     if (c.includes('orc') || c.includes('warrior')) return { desc: "War Beast or Goblin Slave", ar: "16:9" };
-    // Default Humanoid sidekicks
     return { desc: "Loyal Squire or Apprentice carrying supplies", ar: "9:16" };
 }
 
@@ -103,7 +164,7 @@ export const generateNarrativeCollection = (
   config: MapConfig,
   promptType: PromptType,
   lang: Language,
-  mode: NarrativeMode // NEW PARAMETER
+  mode: NarrativeMode
 ): PromptCollectionItem[] => {
   const collection: PromptCollectionItem[] = [];
   const labels = UI_TEXT[lang];
@@ -111,17 +172,18 @@ export const generateNarrativeCollection = (
   // Common Inputs
   const placeTypeVal = t(config.placeType);
   const civVal = t(config.civilization);
-  const styleVal = t(config.artStyle);
-  const renderVal = t(config.renderTech);
-  const scaleOrDetails = config.manualDetails ? `Context details: ${config.manualDetails}` : t(config.scale);
+  const styleVal = t(config.artStyle); // RAW STYLE NAME
   
   const userCamera = t(config.camera) || "Cinematic View";
   const userZoom = t(config.zoom) || "Focused view";
   const userAR = config.aspectRatio || '16:9';
 
-  const visualDNA = getVisualDNA(config.civilization, config.placeType, config.time, config.weather, config.customAtmosphere);
+  // Pass styleVal explicitly to getVisualDNA
+  const visualDNA = getVisualDNA(config.civilization, styleVal, config.placeType, config.time, config.weather, config.customAtmosphere);
   const exclusions = getExclusions(promptType);
-  const globalStyle = `${renderVal}, ${styleVal} style, high fidelity game asset`;
+  
+  // Stronger Header for Midjourney
+  const globalHeader = `**Art Style: ${styleVal}** ::`;
 
   const build = (subject: string, camera: string, focus: string, ar: string = '16:9', extraExcluded: string = ""): string => {
       let finalExclusions = exclusions;
@@ -130,325 +192,211 @@ export const generateNarrativeCollection = (
           else finalExclusions = finalExclusions.replace('.', `, ${extraExcluded}.`);
       }
 
+      // MJ Structure: SUBJECT :: STYLE :: DETAILS --ar
       if (promptType === PromptType.MIDJOURNEY) {
-          return `**${subject}** :: ${focus} :: ${visualDNA} :: Camera: ${camera} :: Global Style: ${globalStyle} --ar ${ar} --v 6.0 --stylize 250 ${finalExclusions}`;
+          return `${globalHeader} **${subject}** :: ${visualDNA} :: Focus on ${focus} :: Camera: ${camera} --ar ${ar} --v 6.0 --stylize 250 ${finalExclusions}`;
       } else {
-          return `Generate a game asset of **${subject}**. Focus on ${focus}. ${visualDNA}. Camera Settings: ${camera}. Visual Style: ${globalStyle}. Aspect Ratio: ${ar}. High resolution. ${finalExclusions}`;
+          return `Generate a game asset. **ART STYLE: ${styleVal}**. Subject: ${subject}. Focus on ${focus}. ${visualDNA}. Camera: ${camera}. Aspect Ratio: ${ar}. High resolution. ${finalExclusions}`;
       }
   };
 
+  // ... (Rest of the narrative generation logic remains mostly the same, but uses the new 'build' function which enforces style) ...
+  
   // =========================================================================================
-  // MODE: WORLD GENERATION (Map, Cover, Entrance, 6 POIs)
+  // MODE: WORLD GENERATION
   // =========================================================================================
   if (mode === NarrativeMode.WORLD) {
-      
-      // Select POIs (User manual input takes precedence)
       let selectedPOIs: string[] = [];
       const validManualPOIs = config.manualPOIs?.filter(p => p.trim().length > 0) || [];
       if (validManualPOIs.length >= 6) {
           selectedPOIs = validManualPOIs.slice(0, 6).map(p => t(p));
       } else {
-          // Fallback logic inside generator just in case UI didn't catch it
           let rawPOIs = POI_MAPPING[config.placeType] || POI_MAPPING['DEFAULT'];
           if (rawPOIs.length < 6) rawPOIs = [...new Set([...rawPOIs, ...POI_MAPPING['DEFAULT']])];
           selectedPOIs = shuffleArray(rawPOIs).slice(0, 6).map(p => t(p));
       }
 
-      // 1. TACTICAL MAP
-      const mapDesc = `Tactical Battle Map of ${placeTypeVal}`;
-      const mapContext = `Features key locations visible on the terrain: ${selectedPOIs.join(', ')}. ${scaleOrDetails}. Clear grid layout possibility, high contrast, playable terrain, VTT optimized.`;
+      const mapDesc = `Tactical Battle Map of ${placeTypeVal}, ${civVal} architecture`;
       collection.push({
         title: labels.assetMap,
         type: 'MAP',
-        prompt: build(mapDesc, "Top-down Orthographic 90-degree, f/8", mapContext)
+        prompt: build(mapDesc, "Top-down Orthographic 90-degree, f/8", `Playable grid layout, visible key locations: ${selectedPOIs.join(', ')}. Clear terrain definition.`)
       });
 
-      // 2. EPIC COVER ART
-      const coverDesc = `Epic Game Box Art / Title Screen for ${placeTypeVal}`;
-      const coverFocus = `Blockbuster composition, breathtaking scale, establishing shot. Hero location ${selectedPOIs[0]} visible. Dramatic lighting, adventure and mystery.`;
+      const coverDesc = `Epic Game Splash Art for ${placeTypeVal}`;
       collection.push({
         title: labels.assetIso,
         type: 'PERSPECTIVE',
-        prompt: build(coverDesc, "Cinematic Wide Angle, Drone Shot", coverFocus)
+        prompt: build(coverDesc, "Cinematic Wide Angle, Drone Shot", "Blockbuster composition, establishing shot, dramatic lighting, adventure and mystery.")
       });
 
-      // 3. MAIN ENTRANCE
       collection.push({
         title: labels.assetEntrance,
         type: 'SCENE',
-        prompt: build(
-            `Main Entrance to ${placeTypeVal}`, 
-            `${userCamera}, ${userZoom}`, 
-            "Imposing doorway/gate/path, transitional space, distinct architectural threshold"
-        )
+        prompt: build(`Main Entrance to ${placeTypeVal}`, `${userCamera}, ${userZoom}`, "Imposing doorway/gate/path, transitional space, distinct architectural threshold.")
       });
 
-      // 4-9. POIs
       selectedPOIs.forEach((poiName, idx) => {
           collection.push({
             title: `POI ${idx + 1}: ${poiName}`,
             type: 'SCENE',
-            prompt: build(
-                `Interior Scene: ${poiName} inside ${placeTypeVal}`, 
-                `${userCamera}, ${userZoom}`, 
-                `Detailed environmental storytelling. Specific function: ${poiName}`,
-                userAR
-            )
+            prompt: build(`Interior Scene: ${poiName} inside ${placeTypeVal}`, `${userCamera}, ${userZoom}`, `Detailed environmental storytelling. Specific function: ${poiName}.`, userAR)
           });
       });
   }
 
   // =========================================================================================
-  // MODE: UI GENERATION (Buttons, Windows, Dialogs)
+  // MODE: UI GENERATION
   // =========================================================================================
   else if (mode === NarrativeMode.UI) {
-      // Common UI settings
-      const uiBase = `Game UI Asset Sheet for ${civVal} setting`;
-      const uiBg = "Isolated on solid white background";
+      const uiBg = "Isolated on solid black background";
       const noText = "typography, letters, words";
+      const uiStyleDesc = `${styleVal} aesthetic`; // Ensure style is passed to UI description
 
-      // 1. BUTTONS (Clean)
       collection.push({
           title: "UI: ACTION BUTTONS",
           type: 'UI',
-          prompt: build(
-              `${uiBase} - Action Buttons`,
-              "Flat Vector Graphic, Frontal",
-              `Set of 6 distinct buttons (Attack, Defend, Magic, Item, Run). Shapes: Round, Square, Hexagon. States: Normal and Pressed. NO TEXT inside buttons. ${uiBg}`,
-              "16:9",
-              noText
-          )
+          prompt: build(`Game UI Asset Sheet: Action Buttons (${uiStyleDesc})`, "Flat Vector Graphic, Frontal", `Set of 6 distinct buttons (Attack, Defend, Magic, Item, Run). Shapes: Round, Square, Hexagon. States: Normal and Pressed. NO TEXT inside buttons. ${uiBg}`, "16:9", noText)
       });
 
-      // 2. WINDOW FRAMES
       collection.push({
           title: "UI: WINDOW FRAMES",
           type: 'UI',
-          prompt: build(
-              `${uiBase} - Container Frames`,
-              "Flat Vector Graphic, Frontal",
-              `3 Ornate Window Frames for inventory or stats. 9-slice scaling ready. Empty centers. Border details matching ${civVal} aesthetics. ${uiBg}`,
-              "16:9",
-              noText
-          )
+          prompt: build(`Game UI Asset Sheet: Window Frames (${uiStyleDesc})`, "Flat Vector Graphic, Frontal", `3 Ornate Window Frames for inventory or stats. 9-slice scaling ready. Empty centers. Border details matching ${civVal} theme. ${uiBg}`, "16:9", noText)
       });
 
-      // 3. DIALOGS & HUD
       collection.push({
           title: "UI: DIALOGS & HUD",
           type: 'UI',
-          prompt: build(
-              `${uiBase} - Dialog Box & Bars`,
-              "Flat Vector Graphic, Frontal",
-              `Long horizontal Dialog Box for text. Health Bar (Red) and Mana Bar (Blue) with decorative borders. Experience Bar. ${uiBg}`,
-              "16:9",
-              noText
-          )
+          prompt: build(`Game UI Asset Sheet: HUD Elements (${uiStyleDesc})`, "Flat Vector Graphic, Frontal", `Long horizontal Dialog Box for text. Health Bar (Red) and Mana Bar (Blue) with decorative borders. Experience Bar. ${uiBg}`, "16:9", noText)
       });
   }
 
   // =========================================================================================
-  // MODE: CHARACTER GENERATION (Heroes, Villains, Badges)
+  // MODE: CHARACTER GENERATION
   // =========================================================================================
   else if (mode === NarrativeMode.CHARACTERS) {
-      const charBase = `Full body Character Concept Art, ${civVal} style`;
       const charBg = "Isolated on neutral studio background";
       const arPortrait = "9:16";
 
-      // 1. MALE PROTAGONIST
       collection.push({
           title: "CHAR: MALE HERO",
           type: 'CHARACTER',
-          prompt: build(
-              `${charBase} - Male Protagonist`,
-              "Full shot, eye level",
-              `Heroic pose, distinct silhouette, main weapon drawn. Leadership vibes. ${charBg}`,
-              arPortrait
-          )
+          prompt: build(`Male Protagonist Concept Art, ${civVal} origin`, "Full shot, eye level", `Heroic pose, distinct silhouette, main weapon drawn. Leadership vibes. ${charBg}`, arPortrait)
       });
 
-      // 2. FEMALE PROTAGONIST
       collection.push({
           title: "CHAR: FEMALE HERO",
           type: 'CHARACTER',
-          prompt: build(
-              `${charBase} - Female Protagonist`,
-              "Full shot, eye level",
-              `Dynamic pose, magic or agile weapon. Determined expression. ${charBg}`,
-              arPortrait
-          )
+          prompt: build(`Female Protagonist Concept Art, ${civVal} origin`, "Full shot, eye level", `Dynamic pose, magic or agile weapon. Determined expression. ${charBg}`, arPortrait)
       });
 
-      // 3. VILLAIN / BOSS
       collection.push({
           title: "CHAR: VILLAIN/BOSS",
           type: 'BOSS',
-          prompt: build(
-              `${charBase} - Main Antagonist`,
-              "Low angle, looking up",
-              `Intimidating, dark aura, heavy armor or corrupt robes. Dominating stance. ${charBg}`,
-              arPortrait
-          )
+          prompt: build(`Main Antagonist / Boss Concept Art`, "Low angle, looking up", `Intimidating, dark aura, heavy armor or corrupt robes. Dominating stance. ${charBg}`, arPortrait)
       });
 
-      // 4. MINION
       collection.push({
           title: "CHAR: MINION",
           type: 'CHARACTER',
-          prompt: build(
-              `${charBase} - Standard Enemy Minion`,
-              "Full shot",
-              `Generic soldier/creature, hunchbacked or ready to attack. Uniform equipment. ${charBg}`,
-              arPortrait
-          )
+          prompt: build(`Standard Enemy Minion`, "Full shot", `Generic soldier/creature, hunchbacked or ready to attack. Uniform equipment. ${charBg}`, arPortrait)
       });
 
-      // 5. HONORABLE NPC
       collection.push({
           title: "CHAR: HONORABLE NPC",
           type: 'CHARACTER',
-          prompt: build(
-              `${charBase} - Quest Giver / Elder`,
-              "Medium shot",
-              `Wise, older, wearing ceremonial garb or merchant clothes. Non-combat pose. ${charBg}`,
-              arPortrait
-          )
+          prompt: build(`Quest Giver / Elder NPC`, "Medium shot", `Wise, older, wearing ceremonial garb or merchant clothes. Non-combat pose. ${charBg}`, arPortrait)
       });
 
-      // 6. SIDEKICK (Dynamic)
       const sidekick = getSidekickConfig(config.civilization);
       collection.push({
           title: "CHAR: SIDEKICK",
           type: 'CHARACTER',
-          prompt: build(
-              `${charBase} - Companion`,
-              "Full shot",
-              `${sidekick.desc}. Loyal, cute or cool. Standing next to hero scale. ${charBg}`,
-              sidekick.ar
-          )
+          prompt: build(`Companion / Sidekick`, "Full shot", `${sidekick.desc}. Loyal, cute or cool. Standing next to hero scale. ${charBg}`, sidekick.ar)
       });
 
-      // 7. BADGE SHEET
       collection.push({
           title: "CHAR: BADGE SHEET",
           type: 'BADGE',
-          prompt: build(
-              "Character Selection Portraits / Token Sheet",
-              "Flat Vector, Frontal",
-              `Grid of 6 circular character portraits (Badges). 3 on top row, 3 on bottom row. Featuring the faces of: Hero Male, Hero Female, Villain, Minion, Elder, Sidekick. Distinct border frames. High contrast. Distance between icons. Isolated on black`,
-              "16:9"
-          )
+          prompt: build("Character Selection Portraits / Token Sheet", "Flat Vector, Frontal", `Grid of 6 circular character portraits (Badges). 3 on top row, 3 on bottom row. Featuring the faces of: Hero Male, Hero Female, Villain, Minion, Elder, Sidekick. Distinct border frames. High contrast. Distance between icons. Isolated on black`, "16:9")
       });
   }
 
   return collection;
 };
 
-// --- GENERIC EXPORT (Unchanged)
+// --- GENERIC EXPORT ---
 export const generatePrompt = (
   config: MapConfig,
   mediaType: MediaType,
   promptType: PromptType
 ): string => {
-    // Keep existing single prompt logic...
-    // Reuse previous implementation to ensure non-breaking change for simple/advanced modes
+    // 1. GATHER INPUTS
     const scale = t(config.scale);
     const place = t(config.placeType);
     const poi = t(config.poi);
     const civ = t(config.civilization);
     const time = t(config.time);
     const weather = t(config.weather);
-    const style = t(config.artStyle);
+    const style = t(config.artStyle); // CRITICAL: This is the visual anchor
     const render = t(config.renderTech);
     const zoom = t(config.zoom);
     const camera = t(config.camera);
     const customScen = config.customScenario || '';
     const customAtm = config.customAtmosphere || '';
     
+    // Video params
     const movement = t(config.videoMovement || '');
     const dynamics = t(config.videoDynamics || '');
     const rhythm = t(config.videoRhythm || '');
+    const loop = config.videoLoop ? "Seamless Loop" : "";
     
     const arValue = config.aspectRatio || '16:9';
     const ar = `--ar ${arValue}`; 
 
+    // 2. GET REFINED DNA (Style prioritizes Palette/Materials)
+    const visualDNA = getVisualDNA(config.civilization, config.artStyle, config.placeType, config.time, config.weather, config.customAtmosphere);
+
     if (promptType === PromptType.MIDJOURNEY) {
-        const subjectParts = [];
-        if (scale) subjectParts.push(`${scale} scale`);
-        if (place) subjectParts.push(`**${place}**`);
-        if (poi) subjectParts.push(`focusing on ${poi}`);
-        if (customScen) subjectParts.push(customScen);
-        const subjectBlock = subjectParts.join(', ');
+        // MJ STRUCTURE: 
+        // [STRONG STYLE HEADER] :: [SUBJECT] :: [VISUAL DNA] :: [CAMERA] --ar
+        
+        const styleHeader = `**Art Style: ${style}**`;
+        
+        let subject = `**${place}**`;
+        if (scale) subject += `, ${scale} scale`;
+        if (poi) subject += `, focusing on ${poi}`;
+        if (civ) subject += `, built by ${civ} civilization`; // Civ becomes context, not style
+        if (customScen) subject += `, ${customScen}`;
 
-        const styleParts = [];
-        if (civ) styleParts.push(`${civ} Architecture`);
-        if (style) styleParts.push(`${style} Style`);
-        if (render) styleParts.push(render);
-        const styleBlock = styleParts.join(', ');
+        const cameraBlock = [zoom, camera, movement, dynamics, rhythm, loop].filter(Boolean).join(', ');
 
-        const atmParts = [];
-        if (time) atmParts.push(time);
-        if (weather) atmParts.push(weather);
-        if (customAtm) atmParts.push(customAtm);
-        const atmBlock = atmParts.join(', ');
-
-        const camParts = [];
-        if (zoom) camParts.push(zoom);
-        if (camera) camParts.push(`${camera} View`);
-        if (mediaType === MediaType.VIDEO) {
-            if (movement) camParts.push(`Camera Movement: ${movement}`);
-            if (dynamics) camParts.push(`Dynamic Elements: ${dynamics}`);
-            if (rhythm) camParts.push(`Rhythm: ${rhythm}`);
-            if (config.videoLoop) camParts.push("Seamless Loop");
-        }
-        const camBlock = camParts.join(', ');
-
-        const finalParts = [subjectBlock, styleBlock, atmBlock, camBlock].filter(p => p.length > 0);
-        return `${finalParts.join(' :: ')} ${ar} --v 6.0`;
+        return `${styleHeader} :: ${subject} :: ${visualDNA} :: Camera: ${cameraBlock} :: ${render} ${ar} --v 6.0 --stylize 250`;
 
     } else {
-        let text = "";
-        if (place) {
-            text += `A high quality ${mediaType === MediaType.VIDEO ? 'video' : 'image'} of a ${place}`;
-            if (scale) text += ` (${scale} scale)`;
-            text += ". ";
-        }
-        if (poi || customScen) {
-            const details = [];
-            if (poi) details.push(`featuring a ${poi}`);
-            if (customScen) details.push(customScen);
-            text += `The scene includes ${details.join(' and ')}. `;
-        }
-        if (civ || style || render) {
-            const styles = [];
-            if (civ) styles.push(`designed by a ${civ} civilization`);
-            if (style) styles.push(`in ${style} art style`);
-            if (render) styles.push(`rendered as ${render}`);
-            text += `The visual aesthetic is ${styles.join(', ')}. `;
-        }
-        if (time || weather || customAtm) {
-            const env = [];
-            if (time) env.push(`set during ${time}`);
-            if (weather) env.push(`with ${weather} weather`);
-            if (customAtm) env.push(customAtm);
-            text += `Atmosphere: ${env.join(', ')}. `;
-        }
-        if (zoom || camera) {
-            const cam = [];
-            if (zoom) cam.push(zoom);
-            if (camera) cam.push(`${camera} angle`);
-            text += `Composition: ${cam.join(', ')}. `;
-        }
+        // GENERIC AI STRUCTURE
+        let text = `Generate a ${mediaType === MediaType.VIDEO ? 'video' : 'image'} in the strict visual style of **${style}**. `;
+        
+        text += `SUBJECT: A ${place}`;
+        if (scale) text += ` (${scale} scale)`;
+        if (civ) text += ` created by a ${civ} civilization`;
+        text += ". ";
+
+        if (poi) text += `Focus on ${poi}. `;
+        if (customScen) text += `${customScen} `;
+
+        text += `\nVISUAL SPECIFICATIONS: ${visualDNA}. `;
+        
+        if (render) text += `Render Technique: ${render}. `;
+        if (camera || zoom) text += `Camera: ${camera}, ${zoom}. `;
+        
         if (mediaType === MediaType.VIDEO) {
-            const vid = [];
-            if (movement) vid.push(`${movement} camera movement`);
-            if (dynamics) vid.push(dynamics);
-            if (rhythm) vid.push(`${rhythm} pacing`);
-            if (config.videoLoop) vid.push("seamless loop");
-            if (vid.length > 0) text += `Video requirements: ${vid.join(', ')}. `;
+            text += `Video Dynamics: ${movement}, ${dynamics}, ${rhythm}, ${loop}. `;
         }
-        text += `Aspect Ratio ${arValue}.`;
-        return text.replace(/\s+/g, ' ').replace(/\.\s*\./g, '.').trim();
+
+        text += `Aspect Ratio: ${arValue}. High quality, detailed.`;
+        return text;
     }
 }
 

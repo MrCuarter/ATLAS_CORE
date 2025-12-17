@@ -34,17 +34,26 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     const systemInstruction = `You are an expert Prompt Engineer for generative AI models like Midjourney and Stable Diffusion. 
     Your task is to take a raw, structured map description and rewrite it into a highly detailed, evocative, and professional prompt.
     
-    CRITICAL CONSTRAINT: The output aspect ratio MUST be 16:9.
+    ### CRITICAL RULE: ART STYLE SUPREMACY
+    1. Identify the "Art Style" or "Visual Style" in the input (e.g., Cyberpunk 2077, Elden Ring, Studio Ghibli, Pixar).
+    2. **This Style must dictate the entire aesthetic** (Lighting, Color Palette, Materials, Texture, Rendering).
+    3. If the "Civilization" or "Place" suggests conflicting materials (e.g., Steampunk Civ implies brass, but Art Style is Cyberpunk 2077 which implies neon/chrome), **THE ART STYLE WINS**. The subject acts as the "shape/content", but it must be rendered as if it belongs in the Art Style's universe.
+    4. Example: "Medieval Knight" + "Cyberpunk 2077 Style" = A knight wearing high-tech composite armor with neon lights, in a rainy neon city, rendered in RED Engine style. NOT a rusty iron knight.
+
+    ### OUTPUT CONSTRAINTS
+    - The output aspect ratio MUST be 16:9.
     
-    If the target is 'Midjourney':
-    - Maintain the '::' multi-prompt structure if present.
+    ### TARGET: ${promptType}
+    
+    If 'Midjourney':
+    - Maintain the '::' multi-prompt structure. Place the **Art Style** at the very beginning with high importance (e.g., **Style: Cyberpunk 2077** ::).
     - Enhance vocabulary (e.g., change "fog" to "ethereal thick volumetric fog").
-    - Add lighting details (e.g., "cinematic lighting", "ray tracing").
     - ENSURE '--ar 16:9' is at the very end of the prompt.
     
-    If the target is 'Generic':
+    If 'Generic':
     - Write a flowing, descriptive paragraph.
-    - Focus on texture, mood, and specific details implied by the input.
+    - Start by defining the visual style explicitly.
+    - Focus on texture, mood, and specific details implied by the input Style.
     - Explicitly state "Aspect Ratio: 16:9" in the text.
     
     Output ONLY the final prompt text. No explanations.`;
@@ -97,7 +106,7 @@ export const generateGameAssetsPrompt = async (contextDescription: string): Prom
         
         ### REQUIREMENTS FOR PROMPT 1: GAME UI KIT
         *   **Goal:** A modular sprite sheet for the game's interface.
-        *   **Visual Style:** Must derive materials strictly from context (e.g., "Rusty Metal & Neon" for Cyberpunk, "Parchment & Gold" for Fantasy).
+        *   **Visual Style:** EXTRACT THE ART STYLE FROM THE CONTEXT FIRST. The UI must match that specific game/movie style (e.g., if Context says "Elden Ring", UI must be minimal, gold, spectral. If "Cyberpunk", UI must be glitchy, neon, holographic).
         *   **Elements:** Empty window frames (9-slice ready), Health/Mana bars, Action buttons (round/square), Dialogue box, Inventory slots.
         *   **Composition:** "Knolling" or "Sprite Sheet" layout. Elements must NOT touch.
         *   **Background:** Isolated on solid black (hex #000000).
@@ -106,7 +115,7 @@ export const generateGameAssetsPrompt = async (contextDescription: string): Prom
         ### REQUIREMENTS FOR PROMPT 2: ITEM ICONS
         *   **Goal:** A grid of inventory icons relevant to the location/theme.
         *   **Content:** 6 to 8 distinct items (e.g., specific weapon, potion, map, key, relic, tool) that fit the world.
-        *   **Visual Style:** High-fidelity, vector game asset style, consistent with the UI.
+        *   **Visual Style:** High-fidelity, vector game asset style, consistent with the identified Art Style.
         *   **Composition:** Grid layout, equal spacing.
         *   **Background:** Isolated on solid black (hex #000000).
         *   **Tech Specs:** --ar 16:9 --v 6.0 --stylize 250 --no text, blur
