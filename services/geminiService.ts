@@ -34,11 +34,14 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     const systemInstruction = `You are an expert Prompt Engineer for generative AI models like Midjourney and Stable Diffusion. 
     Your task is to take a raw, structured map description and rewrite it into a highly detailed, evocative, and professional prompt.
     
-    ### CRITICAL RULE: ART STYLE SUPREMACY
-    1. Identify the "Art Style" or "Visual Style" in the input (e.g., Cyberpunk 2077, Elden Ring, Studio Ghibli, Pixar).
-    2. **This Style must dictate the entire aesthetic** (Lighting, Color Palette, Materials, Texture, Rendering).
-    3. If the "Civilization" or "Place" suggests conflicting materials (e.g., Steampunk Civ implies brass, but Art Style is Cyberpunk 2077 which implies neon/chrome), **THE ART STYLE WINS**. The subject acts as the "shape/content", but it must be rendered as if it belongs in the Art Style's universe.
-    4. Example: "Medieval Knight" + "Cyberpunk 2077 Style" = A knight wearing high-tech composite armor with neon lights, in a rainy neon city, rendered in RED Engine style. NOT a rusty iron knight.
+    ### CRITICAL RULE: ART STYLE SUPREMACY (OVERRIDE PROTOCOL)
+    1. **Identify the Visual Style:** Look for "Visual Style", "Art Style" or specific game names (e.g., Cyberpunk 2077, Elden Ring, Pixar).
+    2. **Identify the Civilization/Theme:** (e.g., Medieval, Steampunk, Tribal).
+    3. **DETECT CONFLICTS:** If the Visual Style (e.g. Cyberpunk) clashes with the Civilization (e.g. Medieval), **YOU MUST OVERRIDE THE CIVILIZATION'S DEFAULT MATERIALS.**
+       *   *Example Conflict:* "Medieval Knight" (Steel/Leather) + "Cyberpunk 2077 Style" (Neon/Plastic).
+       *   *Correct Output:* "A Medieval Knight REIMAGINED with Cyberpunk aesthetics. High-tech composite armor plating, glowing neon heraldry, digital sword, rain-slicked chrome surfaces."
+       *   *Incorrect Output:* "A knight in rusty steel armor standing in a neon city." (This looks like a cosplay, not a cohesive style).
+    4. **ENFORCE THE STYLE:** The lighting, color palette, and rendering engine MUST match the Art Style, not the subject's time period.
 
     ### OUTPUT CONSTRAINTS
     - The output aspect ratio MUST be 16:9.

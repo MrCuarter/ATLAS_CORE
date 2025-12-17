@@ -300,6 +300,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
           <div className="mb-4 flex-grow">
              <StyleSelector 
                 selectedStyle={config.artStyle}
+                civilization={config.civilization} // Pass civ for clash check
                 onSelect={(val) => {
                     onChange('artStyle', val);
                     onChange('renderTech', ''); // Clear renderTech

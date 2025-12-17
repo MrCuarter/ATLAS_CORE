@@ -8,6 +8,20 @@ const t = (val: string): string => {
   return val; 
 };
 
+// HELPER: DETECT AND RESOLVE CLASHES
+const resolveFusion = (style: string, civ: string): string => {
+    const s = style.toLowerCase();
+    const c = civ.toLowerCase();
+
+    const isSciFiStyle = s.includes('cyber') || s.includes('neon') || s.includes('mass effect') || s.includes('halo') || s.includes('destiny') || s.includes('starcraft') || s.includes('tron');
+    const isAncientCiv = c.includes('medieval') || c.includes('elf') || c.includes('orc') || c.includes('dwarv') || c.includes('roman') || c.includes('ancient') || c.includes('tribal');
+
+    if (isSciFiStyle && isAncientCiv) {
+        return "Techno-Organic Fusion, Neo-Historical Aesthetic, Holographic Magic, Chrome-plated Traditional Armor, Laser-edged Weaponry, Anachronistic High-Tech";
+    }
+    return "";
+};
+
 // 1. VISUAL DNA CONSTRUCTOR (REMASTERED FOR STYLE PRIORITY)
 const getVisualDNA = (civ: string, style: string, placeType: string, time: string, weather: string, customAtm?: string): string => {
     let palette = "";
@@ -15,71 +29,74 @@ const getVisualDNA = (civ: string, style: string, placeType: string, time: strin
     let tech = "";
     let lighting = "";
     let renderStyle = "";
+    
+    // Check for fusion necessity
+    const fusionKeywords = resolveFusion(style, civ);
 
     const has = (str: string, key: string) => str?.toLowerCase().includes(key.toLowerCase());
 
     // --- STEP 1: STYLE DEFINES THE RENDER & PALETTE (HIGHEST PRIORITY) ---
     
     // VIDEO GAMES
-    if (has(style, "Cyberpunk 2077")) {
-        palette = "Neon Acid Green, Hot Pink, Electric Blue, Deep Black Shadows";
-        materials = "Wet Asphalt, Chrome, Plastic, Synth-skin, Holograms";
-        lighting = "Night City Lighting, High Contrast, Volumetric Neon Fog, Chromatic Aberration";
+    if (has(style, "Cyberpunk 2077") || has(style, "Blade Runner")) {
+        palette = "Neon Acid Green, Hot Pink, Electric Blue, Deep Black Shadows, Chromatic Aberration";
+        materials = "Wet Asphalt, Chrome, Plastic, Synth-skin, Holograms, LED arrays";
+        lighting = "Night City Lighting, High Contrast, Volumetric Neon Fog, Harsh Rim Light";
         renderStyle = "Red Engine 4, Ray Tracing Overdrive, Hyper-Realistic Game Asset";
     } else if (has(style, "Elden Ring") || has(style, "Dark Souls") || has(style, "Bloodborne")) {
-        palette = "Golden Erdtree Light, Desaturated Green, Decay Brown, Faded Gold";
-        materials = "Tarnished Metal, Ancient Stone, Rotting Cloth, Fog";
-        lighting = "Divine yet melancholy lighting, Atmospheric bloom, God rays";
+        palette = "Golden Erdtree Light, Desaturated Green, Decay Brown, Faded Gold, Spectral Blue";
+        materials = "Tarnished Metal, Ancient Stone, Rotting Cloth, Fog, Rust";
+        lighting = "Divine yet melancholy lighting, Atmospheric bloom, God rays, Low Key";
         renderStyle = "FromSoftware Art Style, Detailed Textures, Painterly Realism";
     } else if (has(style, "Overwatch") || has(style, "Fortnite") || has(style, "Warcraft")) {
-        palette = "Vibrant, Saturated, Complementary Colors";
-        materials = "Stylized PBR, Hand-painted textures, Chunky shapes";
-        lighting = "Soft ambient occlusion, Bright daylight, stylized rim light";
-        renderStyle = "Blizzard/Epic Games Style, Stylized 3D, Clean lines";
+        palette = "Vibrant, Saturated, Distinct Color Theory, Complementary Colors";
+        materials = "Stylized PBR, Hand-painted textures, Chunky shapes, Smooth gradients";
+        lighting = "Soft ambient occlusion, Bright daylight, stylized rim light, Bounce Light";
+        renderStyle = "Blizzard/Epic Games Style, Stylized 3D, Clean lines, Exaggerated Proportions";
     } else if (has(style, "Zelda") || has(style, "Ghibli")) {
-        palette = "Pastel Greens, Sky Blues, Vibrant Nature Tones";
-        materials = "Cel-shaded textures, Soft Grass, Painted Stone";
-        lighting = "Soft sunlight, fluffy clouds shadows, bloom";
-        renderStyle = "Studio Ghibli / Breath of the Wild Style, Anime-inspired 3D";
+        palette = "Pastel Greens, Sky Blues, Vibrant Nature Tones, Watercolor textures";
+        materials = "Cel-shaded textures, Soft Grass, Painted Stone, Wind effects";
+        lighting = "Soft sunlight, fluffy clouds shadows, bloom, cinematic warmth";
+        renderStyle = "Studio Ghibli / Breath of the Wild Style, Anime-inspired 3D, Toon Shader";
     } else if (has(style, "Minecraft") || has(style, "Voxel")) {
-        palette = "8-bit Vibrant";
-        materials = "Blocks, Voxels, Pixels";
-        lighting = "Ray Traced Global Illumination (RTX)";
-        renderStyle = "Voxel Art, Blocky, Minecraft Aesthetic";
+        palette = "8-bit Vibrant, Limited Palette";
+        materials = "Blocks, Voxels, Pixels, Cubical Geometry";
+        lighting = "Ray Traced Global Illumination (RTX), Sharp Shadows";
+        renderStyle = "Voxel Art, Blocky, Minecraft Aesthetic, MagicaVoxel Render";
     } 
     // MOVIES / SERIES
     else if (has(style, "Pixar") || has(style, "Disney")) {
-        palette = "Warm, Inviting, Highly Saturated";
-        materials = "Subsurface scattering (skin/wax), Soft plastic, Fluffy fur";
-        lighting = "Cinematic Studio Lighting, Soft Shadows, Warm Bounce Light";
-        renderStyle = "Pixar 3D Render, RenderMan, Cute proportions";
+        palette = "Warm, Inviting, Highly Saturated, Color Scripted";
+        materials = "Subsurface scattering (skin/wax), Soft plastic, Fluffy fur, Imperfect Perfection";
+        lighting = "Cinematic Studio Lighting, Soft Shadows, Warm Bounce Light, Three-point lighting";
+        renderStyle = "Pixar 3D Render, RenderMan, Cute proportions, Big Eyes";
     } else if (has(style, "Arcane")) {
-        palette = "Oil Painting tones, Deep Purples and Golds";
-        materials = "Painted textures with 3D depth, Brushstrokes on metal";
-        lighting = "Dramatic, moody, painterly light shafts";
+        palette = "Oil Painting tones, Deep Purples and Golds, Grunge";
+        materials = "Painted textures with 3D depth, Brushstrokes on metal, Steampunk grunge";
+        lighting = "Dramatic, moody, painterly light shafts, High Dynamic Range";
         renderStyle = "Fortiche Production Style, 2.5D, Hand-painted texture projection";
     } else if (has(style, "Spider-Verse")) {
-        palette = "CMYK offset, Neon Glitch, Pop Art colors";
-        materials = "Halftone patterns, Ink lines, Comic book paper texture";
-        lighting = "Stylized rim lights, chromatic aberration";
-        renderStyle = "Into the Spider-Verse Style, Comic Book Shader, Variable Frame Rate";
+        palette = "CMYK offset, Neon Glitch, Pop Art colors, Ben-Day dots";
+        materials = "Halftone patterns, Ink lines, Comic book paper texture, Glitch effects";
+        lighting = "Stylized rim lights, chromatic aberration, comic book shading";
+        renderStyle = "Into the Spider-Verse Style, Comic Book Shader, Variable Frame Rate, Distortion";
     } else if (has(style, "Wes Anderson")) {
-        palette = "Pastel Pink, Mint Green, Symmetrical Yellows";
-        materials = "Matte paint, Fabric, Dollhouse textures";
-        lighting = "Flat lighting, High key, Symmetrical composition";
-        renderStyle = "Symmetrical Cinematography, Flat lay aesthetic";
+        palette = "Pastel Pink, Mint Green, Symmetrical Yellows, Vintage Kodachrome";
+        materials = "Matte paint, Fabric, Dollhouse textures, Corduroy";
+        lighting = "Flat lighting, High key, Symmetrical composition, No shadows";
+        renderStyle = "Symmetrical Cinematography, Flat lay aesthetic, Orthographic feel";
     }
     // ARTISTIC GENERIC
     else if (has(style, "Noir") || has(style, "B&W")) {
         palette = "Black, White, High Contrast Greys";
-        materials = "Smoke, Rain, Concrete";
-        lighting = "Chiaroscuro, Venetian blinds shadows, Silhouette";
-        renderStyle = "Film Noir, Black and White Photography";
+        materials = "Smoke, Rain, Concrete, Wet pavement";
+        lighting = "Chiaroscuro, Venetian blinds shadows, Silhouette, Hard Light";
+        renderStyle = "Film Noir, Black and White Photography, Grainy";
     } else if (has(style, "Blueprint")) {
         palette = "Royal Blue background, White lines";
-        materials = "Paper, Ink";
-        lighting = "Flat technical lighting";
-        renderStyle = "Architectural Schematic, Technical Drawing";
+        materials = "Paper, Ink, Grid lines";
+        lighting = "Flat technical lighting, No shading";
+        renderStyle = "Architectural Schematic, Technical Drawing, ISO standard";
     }
 
     // --- STEP 2: CIVILIZATION FILLS THE GAPS (IF STYLE DIDN'T DEFINE THEM) ---
@@ -120,6 +137,7 @@ const getVisualDNA = (civ: string, style: string, placeType: string, time: strin
 
     // --- CONSTRUCT DNA STRING ---
     let finalDNA = `**VISUAL STYLE PRIORITY: ${style}**. `;
+    if (fusionKeywords) finalDNA += `**FUSION OVERRIDE:** ${fusionKeywords}. `;
     finalDNA += `[Render Engine: ${renderStyle || "Unreal Engine 5, Octane Render"}] `;
     finalDNA += `[Palette: ${palette}] `;
     finalDNA += `[Texture/Materials: ${materials}] `;

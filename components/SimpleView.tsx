@@ -139,6 +139,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
            </div>
            <StyleSelector 
              selectedStyle={config.artStyle}
+             civilization={config.civilization} // Pass civ for clash check
              onSelect={(val) => onChange('artStyle', val)}
              lang={lang}
              isSimpleMode={true}

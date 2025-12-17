@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UI_TEXT, STYLES_ARTISTIC, STYLES_GAMES, STYLES_MEDIA } from '../constants';
 import { Language } from '../types';
 import { playTechClick } from '../services/audioService';
 
 interface StyleSelectorProps {
   selectedStyle: string;
+  civilization?: string; // New prop to check for clashes
   onSelect: (style: string) => void;
   lang: Language;
   isSimpleMode?: boolean;
@@ -12,9 +13,36 @@ interface StyleSelectorProps {
 
 type StyleCategory = 'ART' | 'GAME' | 'MEDIA';
 
-const StyleSelector: React.FC<StyleSelectorProps> = ({ selectedStyle, onSelect, lang, isSimpleMode = false }) => {
+// Helper to detect thematic clashes
+const detectClash = (style: string, civ: string): string | null => {
+  if (!style || !civ) return null;
+  const s = style.toLowerCase();
+  const c = civ.toLowerCase();
+
+  const isSciFiStyle = s.includes('cyber') || s.includes('neon') || s.includes('mass effect') || s.includes('halo') || s.includes('destiny') || s.includes('starcraft') || s.includes('matrix');
+  const isAncientCiv = c.includes('medieval') || c.includes('elfos') || c.includes('orcos') || c.includes('prehist') || c.includes('romana') || c.includes('antigua') || c.includes('tribu');
+
+  const isCartoonStyle = s.includes('mario') || s.includes('simpsons') || s.includes('adventure time') || s.includes('pokemon') || s.includes('disney');
+  const isSeriousCiv = c.includes('terror') || c.includes('lovecraft') || c.includes('dark fantasy') || c.includes('realista');
+
+  if (isSciFiStyle && isAncientCiv) return "ANACHRONISM_WARNING";
+  if (isCartoonStyle && isSeriousCiv) return "TONE_CLASH_WARNING";
+  
+  return null;
+};
+
+const StyleSelector: React.FC<StyleSelectorProps> = ({ selectedStyle, civilization, onSelect, lang, isSimpleMode = false }) => {
   const [activeCategory, setActiveCategory] = useState<StyleCategory>('ART');
+  const [clashWarning, setClashWarning] = useState<string | null>(null);
   const t = UI_TEXT[lang];
+
+  useEffect(() => {
+    if (civilization && selectedStyle) {
+        setClashWarning(detectClash(selectedStyle, civilization));
+    } else {
+        setClashWarning(null);
+    }
+  }, [selectedStyle, civilization]);
 
   // Helper to get items based on category
   const getItems = (cat: StyleCategory) => {
@@ -31,13 +59,53 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({ selectedStyle, onSelect, 
 
   const currentItems = getItems(activeCategory);
 
+  const renderWarning = () => {
+      if (clashWarning === "ANACHRONISM_WARNING") {
+          return (
+              <div className="mb-3 p-2 bg-yellow-900/20 border border-yellow-600/50 rounded flex items-start gap-2 animate-fade-in">
+                  <svg className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <div>
+                      <h4 className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">FUSIÓN ANACRÓNICA</h4>
+                      <p className="text-[10px] text-yellow-200/70 leading-tight">
+                          El estilo <strong>{selectedStyle}</strong> forzará una reinterpretación tecnológica de la civilización <strong>{civilization}</strong>.
+                      </p>
+                  </div>
+              </div>
+          );
+      }
+      if (clashWarning === "TONE_CLASH_WARNING") {
+        return (
+            <div className="mb-3 p-2 bg-pink-900/20 border border-pink-600/50 rounded flex items-start gap-2 animate-fade-in">
+                <svg className="w-4 h-4 text-pink-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                    <h4 className="text-[10px] font-bold text-pink-400 uppercase tracking-wider">CHOQUE TONAL</h4>
+                    <p className="text-[10px] text-pink-200/70 leading-tight">
+                        El estilo <strong>{selectedStyle}</strong> suavizará drásticamente la temática <strong>{civilization}</strong>.
+                    </p>
+                </div>
+            </div>
+        );
+      }
+      return null;
+  };
+
   return (
     <div className="w-full">
       {/* Label */}
-      <h3 className="text-sm font-mono font-bold text-accent-400 mb-3 uppercase tracking-widest flex items-center">
-        {!isSimpleMode && <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 animate-pulse"></span>}
-        {t.style}
-      </h3>
+      <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-mono font-bold text-accent-400 uppercase tracking-widest flex items-center">
+            {!isSimpleMode && <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 animate-pulse"></span>}
+            {t.style}
+          </h3>
+          {selectedStyle && (
+              <span className="text-[9px] font-mono text-gray-500 uppercase bg-gray-900 px-2 py-0.5 rounded border border-gray-800">
+                  PRIORIDAD ALTA
+              </span>
+          )}
+      </div>
+
+      {/* Warning Area */}
+      {renderWarning()}
 
       {/* Triple Toggle Switch */}
       <div className="flex bg-gray-950 p-1 rounded border border-gray-800 mb-4">

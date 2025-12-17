@@ -148,6 +148,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
         <div className="mb-4 flex-grow">
             <StyleSelector 
               selectedStyle={config.artStyle}
+              civilization={config.civilization} // Pass civ for clash check
               onSelect={(val) => {
                   onChange('artStyle', val);
                   onChange('renderTech', ''); // Clear renderTech as StyleSelector covers it
