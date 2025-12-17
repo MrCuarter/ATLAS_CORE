@@ -1,4 +1,3 @@
-
 export enum MediaType {
   IMAGE = 'Imagen',
   VIDEO = 'Vídeo',
@@ -16,11 +15,15 @@ export enum AppMode {
   NARRATIVE = 'Narrativa',
 }
 
-// New Enum for the 3 buttons
 export enum NarrativeMode {
   WORLD = 'WORLD',
   UI = 'UI',
   CHARACTERS = 'CHARACTERS'
+}
+
+export enum ThemeMode {
+  FANTASY = 'FANTASY',
+  HISTORICAL = 'HISTORICAL'
 }
 
 export enum Language {
@@ -29,39 +32,32 @@ export enum Language {
 }
 
 export interface MapConfig {
-  // Block 1: Scenario
   scale: string;
   placeType: string; 
   placeCategory: string; 
   poi: string;
   civilization: string;
   customScenario: string; 
-  
-  // Block 2: Atmosphere
   time: string;
   weather: string;
   renderTech: string;
   artStyle: string;
   customAtmosphere: string; 
-  
-  // Block 3: Format
   zoom: string;
   camera: string;
   aspectRatio: string;
-  
-  // Block 4: Video (Optional)
+  era: string;
+  buildingType: string;
+  themeMode?: ThemeMode;
+  anachronismPolicy?: 'STRICT' | 'CHAOS';
   videoMovement?: string;
   videoDynamics?: string;
   videoRhythm?: string;
   videoLoop?: boolean;
-
-  // Metadata for display
   presetName?: string;
   tags?: string[];
-  
-  // Storycrafter Specific Data
   manualPOIs?: string[]; 
-  manualDetails?: string; // Replaces scale in manual mode
+  manualDetails?: string; 
 }
 
 export interface Preset {
@@ -69,12 +65,6 @@ export interface Preset {
   description: string;
   config: Partial<MapConfig>;
   tags: string[];
-}
-
-export interface CategoryData {
-  id: string;
-  label: string;
-  options: string[];
 }
 
 export interface PoiMapping {

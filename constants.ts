@@ -1,13 +1,19 @@
 import { PoiMapping, Preset, Language } from './types';
 
-// --- TRANSLATION MAPS ---
+export const PROMPT_TRANSLATIONS: Record<string, string> = {
+  // SCALES
+  'Micro (Bosque, Oasis)': 'Micro Scale (Forest, Oasis)',
+  'Meso (Ciudad, Región)': 'Meso Scale (City, Region)',
+  'Macro (Continente, Mundo)': 'Macro Scale (Kingdom, World)',
+  'Especial (Plano astral)': 'Special Dimension (Astral Plane)',
+};
 
 export const UI_TEXT = {
   [Language.ES]: {
     appTitle: "Atlas_Core",
     subtitle: "SYSTEM MATRIX | By Mr. Cuarter",
     appDescription: "Generador profesional de prompts para mapas de juego. Diseña escenarios para RPG, Estrategia y Worldbuilding con control total sobre estilo, atmósfera y narrativa.",
-    presets: "PRESETS", 
+    presets: "CARTÓGRAFO", 
     simple: "CONSTRUCTOR", 
     advanced: "ARQUITECTO", 
     narrative: "STORYCRAFTER", 
@@ -15,95 +21,58 @@ export const UI_TEXT = {
     video: "VÍDEO",
     generic: "GENÉRICO",
     midjourney: "MIDJOURNEY",
-    surpriseTitle: "", 
-    surpriseDesc: "", 
-    surpriseBtn: "EJECUTAR PROTOCOLO ATLAS",
-    worldGenBtn: "EJECUTAR ATLAS_CORE", 
-    worldGenDesc: "Crea un escenario aleatorio",
-    worldGenCompact: "AUTO-COMPLETAR DATOS", // Compact button text 
-    generateAssetsBtn: "GENERAR PACK DE ASSETS",
-    processing: "PROCESANDO...",
-    presetsTitle: "Protocolos Predefinidos",
-    activeProtocol: "Protocolo Activo (Generado)",
+    presetsTitle: "INTELIGENCIA CARTOGRÁFICA (9 PLANOS)",
+    shuffleBtn: "REMEZCLAR DATOS",
     reset: "RESET",
-    scenario: "Núcleo del Escenario",
-    scale: "Escala Territorial",
-    category: "Categoría",
-    place: "Lugar",
-    poi: "Punto de Interés",
-    civilization: "Civilización",
-    customScenarioLabel: "Detalles adicionales del escenario (Input manual)",
-    atmosphere: "Atmósfera y Render",
+    scenario: "NÚCLEO DE ESCENARIO",
+    scale: "Escala",
+    place: "Geolocalización",
+    civilization: "Civilización / Raza",
+    atmosphere: "Atmósfera y ADN Visual",
     time: "Hora",
     weather: "Clima",
-    tech: "Técnica",
     style: "Estilo Visual",
     styleArt: "ARTÍSTICO",
     styleGame: "VIDEOJUEGOS",
     styleMedia: "CINE / SERIES",
-    customAtmosphereLabel: "ADN Visual Personalizado (Input manual)",
-    format: "Formato y Cámara",
+    format: "Configuración de Salida",
     zoom: "Zoom",
     camera: "Ángulo",
     ratio: "Aspect Ratio",
-    videoSettings: "Dinámicas de Vídeo",
-    movement: "Movimiento",
-    dynamics: "Elementos",
-    rhythm: "Ritmo",
-    loop: "Loop",
-    enhance: "Optimizar con IA",
-    genGameAssets: "GENERAR UI & ITEMS", 
-    gameAssetsTitle: "PACK DE ELEMENTOS DE JUEGO", 
-    copy: "COPIAR",
-    copyAll: "COPIAR PACK (MODO INSTRUCCIÓN)",
+    copy: "COPIAR PROMPT",
     copied: "COPIADO",
-    noneOption: "--- Nada seleccionado ---",
-    customPlaceholder: "Escribe aquí detalles extra...",
+    noneOption: "--- Seleccionar ---",
+    customPlaceholder: "ADN Visual Adicional (Detalles técnicos...)",
     designedBy: "Diseñado por",
     followMe: "Sígueme en",
-    contactTitle: "¿Errores o propuestas de mejora?",
-    contactBtn: "CONTACTAR SOPORTE",
-    // UPDATED NARRATIVE INTRO
-    narrativeIntro: "Diseña una experiencia coherente. Construye tu mundo por fases: Entorno, Interfaz y Personajes.",
-    enableAI: "ACTIVAR REFINAMIENTO IA (GEMINI)",
-    enableAIDesc: "Aumenta la calidad de cada prompt individualmente. Proceso más lento.",
-    assetMap: "MAPA TÁCTICO",
-    assetIso: "PERSPECTIVA AÉREA",
-    assetEntrance: "ENTRADA PRINCIPAL",
-    assetVictory: "ESCENA DE VICTORIA",
-    assetUI: "KIT DE INTERFAZ (UI)",
-    assetItems: "ICONOS DE OBJETOS",
-    assetBoss: "JEFE / AMENAZA", // New Asset 13
-    secretPlaceBtn: "ALEATORIZAR DATOS", 
     stepScale: "1. SELECCIONA ESCALA",
-    stepPlace: "2. IDENTIFICA EL LUGAR",
-    stepCiv: "3. CIVILIZATION",
+    stepCiv: "2. CIVILIZACIÓN / RAZA",
+    stepPlace: "3. EL LUGAR",
     stepStyle: "4. ESTILO VISUAL",
     stepCamera: "5. CÁMARA",
     stepRatio: "6. FORMATO",
-    ratioCinema: "Cine (16:9)",
-    ratioMobile: "Móvil (9:16)",
-    ratioSquare: "Cuadrado (1:1)",
-    ratioUltra: "Ultra (21:9)",
-    modeAssistant: "ASISTENTE",
-    modeManual: "MANUAL",
-    manualPlacePlaceholder: "Ej: Castillo Flotante, Laboratorio Secreto...",
-    manualCivPlaceholder: "Ej: Vampiros Cibernéticos, Monjes Guerreros...",
-    manualDetailsPlaceholder: "Ej: Flotando en el vacío, bajo el agua, en ruinas...",
-    manualContextTitle: "CONTEXTO PERSONALIZADO",
-    manualDetailsLabel: "DETALLES CONCRETOS",
-    manualPOITitle: "DEFINICIÓN DE POIs",
-    suggestPOIsBtn: "IA: PROPONER POIs",
-    manualPOIDesc: "Define los 6 lugares clave. En Asistente se autocompletan.",
-    storycrafterTitle: "STORYCRAFTER ENGINE", // New Header Title
-    
-    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials.\n\n**EXECUTION QUEUE:**\n"
+    storycrafterTitle: "STORYCRAFTER ENGINE",
+    themeFantasy: "FANTASÍA",
+    themeHistory: "HISTÓRICO",
+    labelRace: "1A. RAZA / ESPECIE",
+    labelGeo: "1B. GEOLOCALIZACIÓN (NATURAL)",
+    labelCiv: "1A. CIVILIZACIÓN",
+    labelEra: "1B. ÉPOCA / TIEMPO",
+    labelSettlement: "1C. EDIFICACIÓN",
+    anachronismTitle: "¡DETECCIÓN DE ANACRONISMO!",
+    anachronismDesc: "Has mezclado una civilización antigua con una época futura. ¿Qué quieres priorizar?",
+    anachronismStrict: "RIGOR HISTÓRICO",
+    anachronismChaos: "CAOS CREATIVO IA",
+    worldGenBtn: "EJECUTAR ATLAS_CORE",
+    worldGenDesc: "Generar Mundo Completo",
+    modeAssistant: "ASISTENTE IA",
+    modeManual: "MODO MANUAL"
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
     subtitle: "SYSTEM MATRIX | By Mr. Cuarter",
     appDescription: "Professional game map prompt generator. Design RPG, Strategy, and Worldbuilding scenarios with full control over style, atmosphere, and narrative.",
-    presets: "PRESETS",
+    presets: "CARTOGRAPHER",
     simple: "BUILDER",
     advanced: "ARCHITECT",
     narrative: "STORYCRAFTER",
@@ -111,429 +80,258 @@ export const UI_TEXT = {
     video: "VIDEO",
     generic: "GENERIC",
     midjourney: "MIDJOURNEY",
-    surpriseTitle: "", 
-    surpriseDesc: "", 
-    surpriseBtn: "EXECUTE ATLAS PROTOCOL", 
-    worldGenBtn: "EXECUTE ATLAS_CORE", 
-    worldGenDesc: "Create a random scenario",
-    worldGenCompact: "AUTO-COMPLETE DATA",
-    generateAssetsBtn: "GENERATE ASSET PACK",
-    processing: "PROCESSING...",
-    presetsTitle: "Predefined Protocols",
-    activeProtocol: "Active Protocol (Generated)",
+    presetsTitle: "CARTOGRAPHIC INTELLIGENCE (9 PLANS)",
+    shuffleBtn: "RESHUFFLE DATA",
     reset: "RESET",
-    scenario: "Scenario Core",
-    scale: "Territorial Scale",
-    category: "Category",
-    place: "Place",
-    poi: "Point of Interest",
-    civilization: "Civilization",
-    customScenarioLabel: "Additional Scenario Details (Manual Input)",
-    atmosphere: "Atmosphere & Render",
+    scenario: "SCENARIO CORE",
+    scale: "Scale",
+    place: "Geolocation",
+    civilization: "Civilization / Race",
+    atmosphere: "Atmosphere & Visual DNA",
     time: "Time",
     weather: "Weather",
-    tech: "Technique",
     style: "Visual Style",
     styleArt: "ARTISTIC",
     styleGame: "VIDEO GAMES",
     styleMedia: "MOVIES / TV",
-    customAtmosphereLabel: "Custom Visual DNA (Manual Input)",
-    format: "Format & Camera",
+    format: "Output Configuration",
     zoom: "Zoom",
     camera: "Angle",
     ratio: "Aspect Ratio",
-    videoSettings: "Video Dynamics",
-    movement: "Movement",
-    dynamics: "Elements",
-    rhythm: "Rhythm",
-    loop: "Loop",
-    enhance: "Optimize with AI",
-    genGameAssets: "GENERATE UI & ITEMS",
-    gameAssetsTitle: "GAME ASSETS PACK",
-    copy: "COPY",
-    copyAll: "COPY PACK (INSTRUCTION MODE)",
+    copy: "COPY PROMPT",
     copied: "COPIED",
-    noneOption: "--- Nothing selected ---",
-    customPlaceholder: "Type extra details here...",
+    noneOption: "--- Select ---",
+    customPlaceholder: "Additional Visual DNA (Technical details...)",
     designedBy: "Designed by",
     followMe: "Follow me on",
-    contactTitle: "Errors or improvement proposals?",
-    contactBtn: "CONTACT SUPPORT",
-    narrativeIntro: "Design a coherent experience. Build your world in phases: Environment, Interface, and Characters.",
-    enableAI: "ENABLE AI REFINEMENT (GEMINI)",
-    enableAIDesc: "Increases quality of each prompt individually. Slower process.",
-    assetMap: "TACTICAL MAP",
-    assetIso: "AERIAL PERSPECTIVE",
-    assetEntrance: "MAIN ENTRANCE",
-    assetVictory: "VICTORY SCENE",
-    assetUI: "USER INTERFACE (UI) KIT",
-    assetItems: "ITEM ICONS",
-    assetBoss: "BOSS / THREAT",
-    secretPlaceBtn: "RANDOMIZE DATA",
     stepScale: "1. SELECT SCALE",
-    stepPlace: "2. IDENTIFY PLACE",
-    stepCiv: "3. CIVILIZATION",
+    stepCiv: "2. CIVILIZATION / RACE",
+    stepPlace: "3. PLACE",
     stepStyle: "4. VISUAL STYLE",
     stepCamera: "5. CAMERA",
     stepRatio: "6. ASPECT RATIO",
-    ratioCinema: "Cinema (16:9)",
-    ratioMobile: "Mobile (9:16)",
-    ratioSquare: "Square (1:1)",
-    ratioUltra: "Ultra (21:9)",
-    modeAssistant: "ASSISTANT",
-    modeManual: "MANUAL",
-    manualPlacePlaceholder: "Ex: Floating Castle, Secret Lab...",
-    manualCivPlaceholder: "Ex: Cybernetic Vampires, Warrior Monks...",
-    manualDetailsPlaceholder: "Ex: Floating in void, underwater, ruins...",
-    manualContextTitle: "CUSTOM CONTEXT",
-    manualDetailsLabel: "CONCRETE DETAILS",
-    manualPOITitle: "POI DEFINITION",
-    suggestPOIsBtn: "AI: SUGGEST POIs",
-    manualPOIDesc: "Define 6 key locations. Auto-filled in Assistant mode.",
     storycrafterTitle: "STORYCRAFTER ENGINE",
-    
-    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials.\n\n**EXECUTION QUEUE:**\n"
+    themeFantasy: "FANTASY",
+    themeHistory: "HISTORICAL",
+    labelRace: "1A. RACE / SPECIES",
+    labelGeo: "1B. GEOLOCATION (NATURAL)",
+    labelCiv: "1A. CIVILIZATION",
+    labelEra: "1B. ERA / TIME",
+    labelSettlement: "1C. SETTLEMENT TYPE",
+    anachronismTitle: "ANACHRONISM DETECTED!",
+    anachronismDesc: "You've mixed an ancient civilization with a future era. What do you want to prioritize?",
+    anachronismStrict: "HISTORICAL RIGOR",
+    anachronismChaos: "IA CREATIVE CHAOS",
+    worldGenBtn: "EXECUTE ATLAS_CORE",
+    worldGenDesc: "Generate Full World",
+    modeAssistant: "AI ASSISTANT",
+    modeManual: "MANUAL MODE"
   }
 };
 
-// Maps Spanish internal values to English for the Prompt output
-export const PROMPT_TRANSLATIONS: Record<string, string> = {
-  // SCALES
-  'Micro (Bosque, Valle, Oasis)': 'Micro',
-  'Meso (Isla, Ciudad, Región)': 'Meso',
-  'Macro (Reino, Continente, Mundo)': 'Macro',
-  'Especial (Dimensión onírica, Plano astral)': 'Special Dimension',
-  
-  // CATEGORIES
-  'Militar / Control': 'Military / Control',
-  'Civil': 'Civil',
-  'Industrial / Tecnológico': 'Industrial / Technological',
-  'Religioso / Mágico': 'Religious / Magical',
-  'Especial / Sci-Fi': 'Special / Sci-Fi',
-  'Natural': 'Natural',
+export const SCALES = ['Micro (Bosque, Oasis)', 'Meso (Ciudad, Región)', 'Macro (Continente, Mundo)', 'Especial (Plano astral)'];
+export const TIMES = ['Amanecer', 'Mediodía', 'Atardecer', 'Noche', 'Eclipse', 'Aurora Boreal', 'Crepúsculo Eterno'];
+export const WEATHERS = ['Soleado', 'Tormenta eléctrica', 'Niebla densa', 'Nevando', 'Mágico/Bioluminiscente', 'Lluvia Ácida', 'Viento Huracanado'];
 
-  // PLACES (NEW & OLD)
-  'Prisión': 'Prison', 'Fortaleza': 'Fortress', 'Base militar': 'Military Base', 'Zona en cuarentena': 'Quarantine Zone', 'Muralla defensiva': 'Defensive Wall', 'Puesto avanzado': 'Outpost', 'Búnker Subterráneo': 'Underground Bunker', 'Campo de Entrenamiento': 'Training Camp',
-  'Ciudad': 'City', 'Pueblo': 'Village', 'Asentamiento': 'Settlement', 'Puerto': 'Harbor', 'Aeropuerto': 'Airport', 'Mercado': 'Market', 'Distrito urbano': 'Urban District', 'Universidad': 'University', 'Biblioteca': 'Library', 'Casino': 'Casino', 'Estadio': 'Stadium', 'Rascacielos': 'Skyscraper',
-  'Mina': 'Mine', 'Fábrica': 'Factory', 'Refinería': 'Refinery', 'Central energética': 'Power Plant', 'Laboratorio': 'Laboratory', 'Complejo científico': 'Science Complex', 'Desguace': 'Junkyard', 'Alcantarillado': 'Sewer System',
-  'Templo': 'Temple', 'Santuario': 'Sanctuary', 'Catedral': 'Cathedral', 'Monasterio': 'Monastery', 'Ziggurat': 'Ziggurat', 'Cementerio': 'Graveyard', 'Oráculo': 'Oracle', 'Academia de Magia': 'Magic Academy', 'Torre de Mago': 'Wizard Tower',
-  'Base espacial': 'Space Base', 'Construcciones alienígenas': 'Alien Construction', 'Ruinas antiguas': 'Ancient Ruins', 'Ciudad flotante': 'Floating City', 'Colmena orgánica': 'Organic Hive', 'Estructura viva': 'Living Structure', 'Nave Espacial (Interior)': 'Spaceship Interior', 'Base Lunar': 'Moon Base', 'Mazmorra': 'Dungeon', 'Guarida de Dragón': 'Dragon Lair',
-  'Bosque ancestral': 'Ancient Forest', 'Desierto abierto': 'Open Desert', 'Selva': 'Jungle', 'Cordillera': 'Mountain Range', 'Océano': 'Ocean', 'Entorno abierto': 'Open Environment', 'Volcán': 'Volcano', 'Cañón': 'Canyon', 'Pantano': 'Swamp', 'Cueva de Hielo': 'Ice Cave', 'Arrecife de Coral': 'Coral Reef',
-  'Cyberpunk Megacity': 'Cyberpunk Megacity',
+export const HISTORICAL_ERAS = [
+  'Dinosaurios (Jurásico)', 'Prehistoria', 'Edad de Piedra', 'Edad de los Metales', 'Edad del Bronce',
+  'Edad Antigua (Grecia/Roma)', 'Edad Media (Feudalismo)', 'Renacimiento', 'Siglo de Oro (Piratería)', 'Revolución Industrial', 
+  'Guerra Mundial (1940s)', 'Guerra Fría (1980s)', 'Año 2050 (Cyberpunk)', 'Año 3000 (Futuro Espacial)', 'Año 4000 (Transhumanismo)', 'Post-Apocalíptico'
+];
 
-  // POIs (Generic & Specific translations)
-  'Celda de máxima seguridad': 'Maximum security cell', 'Bloque de celdas comunes': 'Common cell block', 'Pabellón central': 'Central pavilion', 'Perímetro de seguridad': 'Security perimeter', 'Torres de vigilancia': 'Watchtowers', 'Zona de recreo': 'Recreation area', 'Centro de control': 'Control center',
-  'Murallas': 'Walls', 'Puerta principal': 'Main gate', 'Plaza interior': 'Inner square', 'Barracones': 'Barracks', 'Armería': 'Armory', 'Casa del gobernador': 'Governor house', 'Torre de vigilancia': 'Watchtower', 'Mazmorras': 'Dungeons',
-  'Plaza mayor': 'Main square', 'Distrito noble': 'Noble district', 'Barrio pobre': 'Slums', 'Mercado central': 'Central market', 'Distrito comercial': 'Commercial district', 'Zona industrial': 'Industrial zone', 'Palacio': 'Palace',
-  'Plaza central': 'Central plaza', 'Zona de viviendas': 'Housing area', 'Granero': 'Barn', 'Taberna': 'Tavern', 'Zona de ganado': 'Livestock area', 'Templo pequeño': 'Small temple', 'Muralla rudimentaria': 'Rudimentary wall',
-  'Zona de tiendas': 'Tent area', 'Hogueras comunales': 'Communal bonfires', 'Defensas improvisadas': 'Improvised defenses',
-  'Cuartel general': 'Headquarters', 'Pistas / hangares': 'Runways/Hangars', 'Zona de entrenamiento': 'Training zone', 'Almacenes': 'Warehouses', 'Centro de mando': 'Command center', 'Defensas perimetrales': 'Perimeter defenses',
-  'Punto de acceso controlado': 'Controlled access point', 'Hospital abandonado': 'Abandoned hospital', 'Zona cero': 'Ground zero', 'Campamento militar': 'Military camp', 'Calles bloqueadas': 'Blocked streets', 'Centro de investigación': 'Research center',
-  'Hangar': 'Hangar', 'Zona residencial': 'Residential zone', 'Laboratorios': 'Laboratories', 'Núcleo energético': 'Energy core', 'Muelles exteriores': 'Exterior docks',
-  'Núcleo orgánico': 'Organic core', 'Torre biomecánica': 'Biomechanical tower', 'Cámara de gestación': 'Gestation chamber', 'Pasillos vivos': 'Living corridors', 'Centro de colmena': 'Hive center',
-  'Entrada monumental': 'Monumental entrance', 'Sala principal': 'Main hall', 'Altar': 'Altar', 'Cámara secreta': 'Secret chamber', 'Criptas': 'Crypts', 'Patio ceremonial': 'Ceremonial courtyard',
-  'Palacio derruido': 'Ruined palace', 'Plaza colapsada': 'Collapsed square', 'Templo en ruinas': 'Ruined temple', 'Túneles subterráneos': 'Underground tunnels', 'Estatuas caídas': 'Fallen statues',
-  'Claro sagrado': 'Sacred glade', 'Árbol milenario': 'Millennial tree', 'Cueva': 'Cave', 'Cascada': 'Waterfall', 'Formación rocosa': 'Rock formation', 'Nido / guarida': 'Nest/Lair', 'Estructura central': 'Central structure', 'Zona periférica': 'Peripheral zone', 'Punto de observación': 'Observation point', 'Ruinas': 'Ruins', 'Sin POI específico': 'No specific POI', 'Torre de comunicaciones': 'Comms tower', 'Murallas principales': 'Main walls', 'Hangar central': 'Central Hangar',
-  'Entrada principal': 'Main Entrance',
-  // New POI Translations
-  'Sala de conferencias': 'Lecture Hall', 'Biblioteca magna': 'Grand Library', 'Dormitorios': 'Dormitories', 'Jardines del campus': 'Campus Gardens', 'Sala de máquinas': 'Engine Room', 'Puente de mando': 'Bridge', 'Esclusa de aire': 'Airfock', 'Invernadero': 'Greenhouse', 'Cráter': 'Crater', 'Lago de lava': 'Lava Lake', 'Trono': 'Throne', 'Tesoro': 'Treasure Hoard', 'Sala de los espejos': 'Hall of Mirrors', 'Cementerio de barcos': 'Ship Graveyard', 'Sala de operaciones': 'Operating Theater', 'Morgue': 'Morgue', 'Ruleta': 'Roulette Area', 'Bóveda': 'Vault', 'Gradas': 'Bleachers', 'Vestuarios': 'Locker Room', 'Campo de juego': 'Playing Field', 'Compactadora': 'Compactor', 'Tubería principal': 'Main Pipe', 'Altar de sacrificios': 'Sacrificial Altar', 'Sala de pociones': 'Potions Classroom', 'Observatorio': 'Observatory',
-  'Entrada blindada': 'Armored Entrance', 'Sala de filtros de aire': 'Air Filter Room', 'Dormitorios comunes': 'Common Dorms', 'Almacén de víveres': 'Food Storage', 'Sala de generadores': 'Generator Room', 'Centro de comunicaciones': 'Comms Center',
-  'Pista de obstáculos': 'Obstacle Course', 'Campo de tiro': 'Shooting Range', 'Barracones de reclutas': 'Recruit Barracks', 'Torre de instrucción': 'Instruction Tower', 'Comedor': 'Mess Hall',
-  'Edificio principal': 'Main Building', 'Laboratorios de prácticas': 'Practice Labs',
-  'Sala de lectura principal': 'Main Reading Room', 'Sección prohibida': 'Restricted Section', 'Estanterías infinitas': 'Infinite Shelves', 'Escritorios antiguos': 'Ancient Desks', 'Cúpula de cristal': 'Glass Dome',
-  'Sala de tragaperras': 'Slot Machine Room', 'Mesas de juego': 'Gambling Tables', 'Bar de lujo': 'Luxury Bar', 'Caja fuerte': 'Safe Deposit', 'Despacho del dueño': 'Owner Office', 'Escenario de espectáculos': 'Performance Stage',
-  'Palco VIP': 'VIP Box', 'Túnel de entrada': 'Entrance Tunnel', 'Marcador gigante': 'Giant Scoreboard',
-  'Lobby lujoso': 'Luxury Lobby', 'Oficinas': 'Offices', 'Ático ejecutivo': 'Executive Penthouse', 'Helipuerto': 'Helipad', 'Sala de servidores': 'Server Room', 'Hueco del ascensor': 'Elevator Shaft',
-  'Prensa hidráulica': 'Hydraulic Press', 'Montañas de chatarra': 'Scrap Mountains', 'Grúa magnética': 'Magnetic Crane', 'Caseta del guardia': 'Guard Booth', 'Coches apilados': 'Stacked Cars',
-  'Cruce de túneles': 'Tunnel Junction', 'Sala de válvulas': 'Valve Room', 'Guarida secreta': 'Secret Lair', 'Desagüe al río': 'River Outlet',
-  'Mausoleo central': 'Central Mausoleum', 'Tumbas antiguas': 'Ancient Graves', 'Capilla funeraria': 'Funeral Chapel', 'Entrada de hierro': 'Iron Gate', 'Zona de fosas comunes': 'Mass Graves',
-  'Fuente de visiones': 'Fountain of Visions', 'Sala de vapores': 'Steam Room', 'Trono de la vidente': 'Seer Throne', 'Estatuas de dioses': 'God Statues', 'Jardín sagrado': 'Sacred Garden',
-  'Aula de hechizos': 'Spell Classroom', 'Torre de astronomía': 'Astronomy Tower', 'Invernadero mágico': 'Magical Greenhouse', 'Comedor flotante': 'Floating Dining Hall', 'Biblioteca de grimorios': 'Grimoire Library',
-  'Laboratorio de alquimia': 'Alchemy Lab', 'Sala de invocación': 'Summoning Room', 'Biblioteca espiral': 'Spiral Library', 'Sótano de experimentos': 'Experiment Basement',
-  'Comedor de la tripulación': 'Crew Mess Hall', 'Cápsulas de escape': 'Escape Pods',
-  'Cúpula habitacional': 'Habitation Dome', 'Muelle de rovers': 'Rover Dock', 'Invernadero hidropónico': 'Hydroponic Greenhouse', 'Paneles solares': 'Solar Panels', 'Mina de hielo': 'Ice Mine',
-  'Celdas': 'Cells', 'Sala de tortura': 'Torture Room', 'Foso de trampa': 'Trap Pit', 'Sala del tesoro': 'Treasure Room', 'Entrada secreta': 'Secret Entrance',
-  'Montaña de oro': 'Mountain of Gold', 'Huesos de aventureros': 'Adventurer Bones', 'Plataforma de roca': 'Rock Platform', 'Entrada de la cueva': 'Cave Entrance',
-  'Cráter activo': 'Active Crater', 'Ríos de lava': 'Lava Rivers', 'Puente de roca negra': 'Black Rock Bridge', 'Templo del fuego': 'Fire Temple', 'Geiseres': 'Geysers',
-  'Puente colgante': 'Suspension Bridge', 'Río en el fondo': 'River at Bottom', 'Cueva en el acantilado': 'Cliff Cave', 'Formaciones rocosas': 'Rock Formations', 'Nido de águilas': 'Eagle Nest',
-  'Choza de bruja': 'Witch Hut', 'Árboles podridos': 'Rotten Trees', 'Aguas estancadas': 'Stagnant Waters', 'Ruinas hundidas': 'Sunken Ruins', 'Luces fatuas': 'Will-o-wisps',
-  'Estalactitas gigantes': 'Giant Stalactites', 'Lago congelado': 'Frozen Lake', 'Cristales azules': 'Blue Crystals', 'Restos congelados': 'Frozen Remains', 'Túnel de viento': 'Wind Tunnel',
-  'Barco hundido': 'Sunken Ship', 'Coral cerebro gigante': 'Giant Brain Coral', 'Cueva submarina': 'Underwater Cave', 'Banco de peces': 'School of Fish', 'Acantilado submarino': 'Underwater Cliff',
+export const FANTASY_RACES = [
+  'Humanos', 'Elfos Nobles', 'Elfos del Bosque', 'Elfos Oscuros (Drow)', 'Orcos', 'Goblins', 
+  'Enanos de Montaña', 'Enanos de Profundidad', 'Gnomos', 'Halflings', 
+  'Dracónidos', 'Tieflings (Demoníacos)', 'Aasimar (Celestiales)', 'No-Muertos', 
+  'Vampiros', 'Hombres Bestia', 'Constructos / Golems', 'Hadas / Feéricos', 
+  'Alienígenas Insectoides', 'Alienígenas Acuáticos', 'Cyborgs Mágicos'
+];
 
-  // FALLBACK GENERIC POIs (Ensure we have at least 6 here to mix in)
-  'Sala de Mapas': 'Map Room', 'Armería Antigua': 'Ancient Armory', 'Sala del Trono': 'Throne Room', 'Pasillo Oscuro': 'Dark Corridor', 'Habitación Oculta': 'Hidden Room', 'Mirador': 'Overlook', 'Cámara del Consejo': 'Council Chamber',
-  'Patio Interior': 'Inner Courtyard', 'Biblioteca Olvidada': 'Forgotten Library', 'Cocina': 'Kitchen',
+export const HISTORICAL_CIVS = [
+  'Humana (Genérica)', 'Inuit / Esquimales', 'Romana', 'Egipcia', 'Griega', 'Espartana', 
+  'Vikinga / Nórdica', 'Celta', 'Japonesa Feudal', 'China Imperial', 'Mongola', 
+  'Azteca', 'Maya', 'Inca', 'Persa', 'Zulú', 'India Antigua', 'Amerindia'
+];
 
-  // CIVILIZATIONS
-  'Humana genérica': 'Generic Human', 'Imperial': 'Imperial', 'Medieval': 'Medieval', 'Árabe': 'Arabian', 'Renacentista': 'Renaissance',
-  'Elfos': 'Elven', 'Orcos': 'Orc', 'Goblins': 'Goblin', 'Enanos': 'Dwarven', 'No-muertos': 'Undead', 'Demoníaca': 'Demonic',
-  'Futurista': 'Futuristic', 'Cyberpunk': 'Cyberpunk', 'Steampunk': 'Steampunk', 'Postindustrial': 'Post-industrial',
-  'Alienígena Orgánica': 'Organic Alien', 'Alienígena Biomecánica': 'Biomechanical Alien', 'Alienígena Cristalina': 'Crystalline Alien',
-  'Prehistórica': 'Prehistoric', 'Tribal': 'Tribal', 'Antigua desaparecida': 'Ancient Vanished', 'Piratas': 'Pirate', 'Guerreros': 'Warrior', 'Supervivientes': 'Survivor', 'Antigua': 'Ancient', 'Alienígena': 'Alien', 'Ninguna': 'None', 'Irreal': 'Unreal', 'Edad Media': 'Middle Ages', 'Tecnológica': 'Technological', 'Fantasía': 'Fantasy', 'Fantasía avanzada': 'High Fantasy', 'Nómadas': 'Nomadic',
+export const FANTASY_BUILDINGS = [
+  'Sin edificación (Entorno salvaje)', 'Campamento de viaje', 'Asentamiento primitivo', 'Aldea pequeña',
+  'Pueblo comercial', 'Ciudad amurallada', 'Gran Capital', 'Fortaleza militar',
+  'Torre solitaria', 'Templo / Santuario', 'Ruinas antiguas', 'Base secreta subterránea',
+  'Puesto de avanzada', 'Mercado itinerante', 'Puerto / Muelle'
+];
 
-  // TIME
-  'Amanecer': 'Sunrise', 'Mediodía': 'Noon', 'Atardecer': 'Sunset', 'Noche': 'Night', 'Noche profunda': 'Deep night', 'Crepúsculo': 'Twilight', 'Eclipse': 'Eclipse', 'Tiempo indefinido': 'Indefinite time',
+export const HISTORICAL_BUILDINGS = [
+  'Sin edificación', 'Campamento nómada', 'Asentamiento rural', 'Villa fortificada',
+  'Ciudad estado', 'Metrópolis', 'Castillo / Palacio', 'Zona Industrial',
+  'Lugar de Culto (Catedral/Templo)', 'Campo de batalla', 'Puerto comercial', 'Complejo minero'
+];
 
-  // WEATHER
-  'Soleado': 'Sunny', 'Nublado': 'Cloudy', 'Lluvia': 'Rain', 'Niebla': 'Fog', 'Nevando': 'Snowing', 'Tormenta eléctrica': 'Thunderstorm', 'Viento fuerte': 'Strong wind', 'Ceniza / arena': 'Ash/Sand', 'Mágico': 'Magical weather', 'Clima seco': 'Dry climate', 'Bruma': 'Mist', 'Cielo gris': 'Grey sky', 'Oscura': 'Dark', 'Silenciosa': 'Silent', 'Humo': 'Smoke', 'Lava': 'Lava', 'Cielo despejado': 'Clear sky', 'Colores cambiantes': 'Shifting colors', 'Polvo': 'Dust', 'Cielo apagado': 'Dull sky', 'Luz suave': 'Soft light', 'Tormentas de arena': 'Sandstorms', 'Variable': 'Variable', 'Tormenta de nieve': 'Snowstorm',
+export const SETTLEMENT_TYPES = [...FANTASY_BUILDINGS, ...HISTORICAL_BUILDINGS];
 
-  // ZOOM
-  'Vista épica global': 'Global epic view', 'Vista regional': 'Regional view', 'Vista urbana': 'City view', 'Vista distrital': 'District view', 'Vista focalizada': 'Focused view', 'Vista táctica': 'Tactical view', 'Vista global': 'Global view',
-
-  // CAMERA
-  'Cenital pura (top-down)': 'Top-down', 'Isométrica clásica': 'Isometric', 'Isométrica inclinada': 'Tilted isometric', 'Aérea ligeramente inclinada': 'Slightly tilted aerial', 'Perspectiva oblicua': 'Oblique perspective', 'Vista frontal diorama': 'Frontal diorama view', 'Cámara libre': 'Free camera', 'Aérea cinematográfica': 'Cinematic aerial', 'Isométrica': 'Isometric', 'Aérea': 'Aerial', 'Frontal oblicua': 'Oblique frontal', 'Aérea amplia': 'Wide aerial', 'Aérea suave': 'Soft aerial', 'Cenital': 'Top-down',
-
-  // VIDEO
-  'Zoom in': 'Zoom in', 'Zoom out': 'Zoom out', 'Paneo lateral': 'Lateral pan', 'Orbitar': 'Orbit', 'Descenso': 'Descent', 'Sobrevuelo': 'Flyover', 'Recorrido guiado': 'Guided tour',
-  'Nubes en movimiento': 'Moving clouds', 'Agua animada': 'Animated water', 'Humo / vapor': 'Smoke/Steam', 'Luces dinámicas': 'Dynamic lights', 'Criaturas lejanas': 'Distant creatures', 'Tráfico': 'Traffic',
-  'Lento': 'Slow', 'Constante': 'Constant', 'Épico': 'Epic', 'Cinematográfico': 'Cinematic'
+export const PLACES_BY_CIV: Record<string, string[]> = {
+  'Elfos Nobles': ['Valle de Cristal', 'Isla Flotante', 'Acantilados Blancos', 'Jardines Colgantes', 'Lago Espejo'],
+  'Elfos del Bosque': ['Bosque Ancestral', 'Claro Sagrado', 'Copa de los Árboles', 'Río Serpenteante', 'Cascadas Ocultas'],
+  'Elfos Oscuros (Drow)': ['Caverna de Hongos', 'Abismo Sin Fondo', 'Bosque Petrificado', 'Cueva de Cristal Negro', 'Lago Subterráneo'],
+  'Orcos': ['Estepa Árida', 'Cañón Rojo', 'Cráter Volcánico', 'Páramo de Ceniza', 'Acantilado Rocoso'],
+  'Goblins': ['Pantano Burbujeante', 'Cueva Húmeda', 'Vertedero Natural', 'Bosque de Espinas', 'Barranco'],
+  'Enanos de Montaña': ['Pico Nevado', 'Paso de Montaña', 'Entrada de Cueva', 'Valle Rocoso', 'Geiser Termal'],
+  'Enanos de Profundidad': ['Cámara de Magma', 'Túnel de Cristal', 'Gruta de Piedra', 'Río de Lava', 'Abismo'],
+  'Humanos': ['Llanura Fértil', 'Delta de Río', 'Costa Rocosa', 'Colinas Verdes', 'Bosque Templado'],
+  'No-Muertos': ['Cementerio Antiguo', 'Campo de Batalla', 'Páramo Muerto', 'Bosque Marchito', 'Pantano de Niebla'],
+  'Vampiros': ['Montaña Nublada', 'Bosque de Sangre', 'Acantilado Gótico', 'Valle de Sombras', 'Cueva de Murciélagos'],
+  'Dracónidos': ['Pico de Dragón', 'Volcán Activo', 'Isla Rocosa', 'Cueva de Tesoros', 'Desierto de Obsidiana'],
+  'Hadas / Feéricos': ['Bosque Encantado', 'Claro de Setas', 'Lago Luminoso', 'Pradera de Flores', 'Arcoiris Eterno'],
+  'Alienígenas Insectoides': ['Colmena Orgánica', 'Desierto de Ácido', 'Bosque de Esporas', 'Cráter de Impacto', 'Túneles de Mucosa'],
+  'Alienígenas Acuáticos': ['Arrecife de Coral', 'Fosa Abisal', 'Ciudad Sumergida', 'Bosque de Algas', 'Playa de Cristal'],
+  'DEFAULT': ['Bosque Denso', 'Montaña Alta', 'Desierto Árido', 'Isla Tropical', 'Cueva Profunda', 'Llanura Abierta', 'Costa', 'Pantano']
 };
-
-// --- BLOCK 1: SCENARIO ---
-
-export const SCALES = [
-  'Micro (Bosque, Valle, Oasis)',
-  'Meso (Isla, Ciudad, Región)',
-  'Macro (Reino, Continente, Mundo)',
-  'Especial (Dimensión onírica, Plano astral)'
-];
-
-export const PLACE_CATEGORIES = [
-  'Militar / Control',
-  'Civil',
-  'Industrial / Tecnológico',
-  'Religioso / Mágico', // Renamed
-  'Especial / Sci-Fi',
-  'Natural'
-];
-
-export const PLACES_BY_CATEGORY: Record<string, string[]> = {
-  'Militar / Control': ['Prisión', 'Fortaleza', 'Base militar', 'Zona en cuarentena', 'Muralla defensiva', 'Puesto avanzado', 'Búnker Subterráneo', 'Campo de Entrenamiento'],
-  'Civil': ['Ciudad', 'Pueblo', 'Asentamiento', 'Puerto', 'Aeropuerto', 'Mercado', 'Distrito urbano', 'Universidad', 'Biblioteca', 'Casino', 'Estadio', 'Rascacielos'],
-  'Industrial / Tecnológico': ['Mina', 'Fábrica', 'Refinería', 'Central energética', 'Laboratorio', 'Complejo científico', 'Desguace', 'Alcantarillado'],
-  'Religioso / Mágico': ['Templo', 'Santuario', 'Catedral', 'Monasterio', 'Ziggurat', 'Cementerio', 'Oráculo', 'Academia de Magia', 'Torre de Mago'],
-  'Especial / Sci-Fi': ['Base espacial', 'Construcciones alienígenas', 'Ruinas antiguas', 'Ciudad flotante', 'Colmena orgánica', 'Estructura viva', 'Nave Espacial (Interior)', 'Base Lunar', 'Mazmorra', 'Guarida de Dragón'],
-  'Natural': ['Bosque ancestral', 'Desierto abierto', 'Selva', 'Cordillera', 'Océano', 'Entorno abierto', 'Volcán', 'Cañón', 'Pantano', 'Cueva de Hielo', 'Arrecife de Coral']
-};
-
-export const POI_MAPPING: PoiMapping = {
-  // --- EXISTING ---
-  'Prisión': ['Celda de máxima seguridad', 'Bloque de celdas comunes', 'Pabellón central', 'Perímetro de seguridad', 'Torres de vigilancia', 'Zona de recreo', 'Centro de control'],
-  'Fortaleza': ['Murallas', 'Puerta principal', 'Plaza interior', 'Barracones', 'Armería', 'Casa del gobernador', 'Torre de vigilancia', 'Mazmorras'],
-  'Ciudad': ['Plaza mayor', 'Distrito noble', 'Barrio pobre', 'Puerto', 'Mercado central', 'Distrito comercial', 'Zona industrial', 'Palacio'],
-  'Pueblo': ['Plaza central', 'Zona de viviendas', 'Granero', 'Taberna', 'Zona de ganado', 'Templo pequeño', 'Muralla rudimentaria'],
-  'Asentamiento': ['Plaza central', 'Zona de tiendas', 'Hogueras comunales', 'Zona de ganado', 'Defensas improvisadas'],
-  'Base militar': ['Cuartel general', 'Pistas / hangares', 'Zona de entrenamiento', 'Almacenes', 'Centro de mando', 'Defensas perimetrales'],
-  'Zona en cuarentena': ['Punto de acceso controlado', 'Hospital abandonado', 'Zona cero', 'Campamento militar', 'Calles bloqueadas', 'Centro de investigación'],
-  'Base espacial': ['Hangar', 'Centro de control', 'Zona residencial', 'Laboratorios', 'Núcleo energético', 'Muelles exteriores'],
-  'Construcciones alienígenas': ['Núcleo orgánico', 'Torre biomecánica', 'Cámara de gestación', 'Pasillos vivos', 'Centro de colmena'],
-  'Templo': ['Entrada monumental', 'Sala principal', 'Altar', 'Cámara secreta', 'Criptas', 'Patio ceremonial'],
-  'Ruinas antiguas': ['Palacio derruido', 'Plaza colapsada', 'Templo en ruinas', 'Túneles subterráneos', 'Estatuas caídas'],
-  'Entorno natural': ['Claro sagrado', 'Árbol milenario', 'Cueva', 'Cascada', 'Formación rocosa', 'Nido / guarida'],
-  
-  // --- NEW ADDITIONS ---
-  'Búnker Subterráneo': ['Entrada blindada', 'Sala de filtros de aire', 'Dormitorios comunes', 'Almacén de víveres', 'Sala de generadores', 'Centro de comunicaciones'],
-  'Campo de Entrenamiento': ['Pista de obstáculos', 'Campo de tiro', 'Barracones de reclutas', 'Torre de instrucción', 'Comedor'],
-  'Universidad': ['Edificio principal', 'Sala de conferencias', 'Biblioteca magna', 'Dormitorios', 'Jardines del campus', 'Laboratorios de prácticas'],
-  'Biblioteca': ['Sala de lectura principal', 'Sección prohibida', 'Estanterías infinitas', 'Escritorios antiguos', 'Cúpula de cristal'],
-  'Casino': ['Sala de tragaperras', 'Mesas de juego', 'Bar de lujo', 'Caja fuerte', 'Despacho del dueño', 'Escenario de espectáculos'],
-  'Estadio': ['Campo de juego', 'Gradas', 'Palco VIP', 'Vestuarios', 'Túnel de entrada', 'Marcador gigante'],
-  'Rascacielos': ['Lobby lujoso', 'Oficinas', 'Ático ejecutivo', 'Helipuerto', 'Sala de servidores', 'Hueco del ascensor'],
-  'Desguace': ['Prensa hidráulica', 'Montañas de chatarra', 'Grúa magnética', 'Caseta del guardia', 'Coches apilados'],
-  'Alcantarillado': ['Tubería principal', 'Cruce de túneles', 'Sala de válvulas', 'Guarida secreta', 'Desagüe al río'],
-  'Cementerio': ['Mausoleo central', 'Tumbas antiguas', 'Capilla funeraria', 'Entrada de hierro', 'Zona de fosas comunes'],
-  'Oráculo': ['Fuente de visiones', 'Sala de vapores', 'Trono de la vidente', 'Estatuas de dioses', 'Jardín sagrado'],
-  'Academia de Magia': ['Aula de hechizos', 'Torre de astronomía', 'Invernadero mágico', 'Comedor flotante', 'Biblioteca de grimorios'],
-  'Torre de Mago': ['Laboratorio de alquimia', 'Observatorio', 'Sala de invocación', 'Biblioteca espiral', 'Sótano de experimentos'],
-  'Nave Espacial (Interior)': ['Puente de mando', 'Sala de máquinas', 'Enfermería', 'Comedor de la tripulación', 'Cápsulas de escape', 'Esclusa de aire'],
-  'Base Lunar': ['Cúpula habitacional', 'Muelle de rovers', 'Invernadero hidropónico', 'Paneles solares', 'Mina de hielo'],
-  'Mazmorra': ['Celdas', 'Sala de tortura', 'Foso de trampa', 'Sala del tesoro', 'Entrada secreta'],
-  'Guarida de Dragón': ['Montaña de oro', 'Huesos de aventureros', 'Plataforma de roca', 'Lago de lava', 'Entrada de la cueva'],
-  'Volcán': ['Cráter activo', 'Ríos de lava', 'Puente de roca negra', 'Templo del fuego', 'Geiseres'],
-  'Cañón': ['Puente colgante', 'Río en el fondo', 'Cueva en el acantilado', 'Formaciones rocosas', 'Nido de águilas'],
-  'Pantano': ['Choza de bruja', 'Árboles podridos', 'Aguas estancadas', 'Ruinas hundidas', 'Luces fatuas'],
-  'Cueva de Hielo': ['Estalactitas gigantes', 'Lago congelado', 'Cristales azules', 'Restos congelados', 'Túnel de viento'],
-  'Arrecife de Coral': ['Barco hundido', 'Coral cerebro gigante', 'Cueva submarina', 'Banco de peces', 'Acantilado submarino'],
-
-  // Fallbacks for others - EXPANDED to ensure uniqueness
-  'DEFAULT': ['Estructura central', 'Entrada principal', 'Zona periférica', 'Punto de observación', 'Ruinas', 'Sin POI específico', 'Sala de Mapas', 'Armería Antigua', 'Sala del Trono', 'Pasillo Oscuro', 'Habitación Oculta', 'Mirador', 'Cámara del Consejo', 'Patio Interior', 'Biblioteca Olvidada']
-};
-
-export const CIVILIZATIONS = [
-  'Humana genérica', 'Imperial', 'Medieval', 'Árabe', 'Renacentista',
-  'Elfos', 'Orcos', 'Goblins', 'Enanos', 'No-muertos', 'Demoníaca',
-  'Futurista', 'Cyberpunk', 'Steampunk', 'Postindustrial',
-  'Alienígena Orgánica', 'Alienígena Biomecánica', 'Alienígena Cristalina',
-  'Prehistórica', 'Tribal', 'Antigua desaparecida', 'Piratas'
-];
-
-// --- BLOCK 2: ATMOSPHERE ---
-
-export const TIMES = ['Amanecer', 'Mediodía', 'Atardecer', 'Noche', 'Noche profunda', 'Crepúsculo', 'Eclipse', 'Tiempo indefinido'];
-export const WEATHERS = ['Soleado', 'Nublado', 'Lluvia', 'Niebla', 'Nevando', 'Tormenta eléctrica', 'Viento fuerte', 'Ceniza / arena', 'Mágico'];
-export const RENDER_TECHS = [
-    'Pixel art', 'Dibujado a mano', 'Ilustración', '3D render', 'Low poly', 'Blueprint', 'Isométrico', 'Tabletop map', 
-    'Unreal Engine 5', 'Acuarela', 'Óleo', 'Carboncillo', 'Boceto a lápiz', 'Voxel Art'
-];
-
-// --- NEW STYLE LISTS ---
 
 export const STYLES_ARTISTIC = [
     'Realista cinematográfico', 'Ilustración Digital', 'Óleo Clásico', 'Acuarela', 'Boceto a Lápiz', 
     'Anime / Manga', 'Cómic Americano', 'Low Poly', 'Voxel Art', 'Pixel Art', 
     'Isométrico', 'Blueprint', 'Cyberpunk', 'Steampunk', 'Solarpunk', 
-    'Noir / B&W', 'Psicodélico', 'Surrealismo', 'Art Nouveau', 'Ukiyo-e'
+    'Noir / B&W', 'Psicodélico', 'Surrealismo', 'Art Nouveau', 'Ukiyo-e', 'Grabado Medieval', 'Minimalista Vectorial'
 ];
 
 export const STYLES_GAMES = [
     'Elden Ring', 'Dark Souls', 'Bloodborne', 'Cyberpunk 2077', 'The Witcher 3', 
     'Skyrim', 'Fallout', 'BioShock', 'Mass Effect', 'Halo', 
     'Destiny', 'Overwatch', 'Fortnite', 'World of Warcraft', 'Zelda: BOTW', 
-    'Mario Odyssey', 'Minecraft', 'Terraria', 'Stardew Valley', 'Hollow Knight'
+    'Mario Odyssey', 'Minecraft', 'Terraria', 'Stardew Valley', 'Hollow Knight',
+    'Final Fantasy VII', 'Dishonored', 'Assassin\'s Creed', 'God of War', 'League of Legends'
 ];
 
 export const STYLES_MEDIA = [
     'Arcane (LoL)', 'Spider-Verse', 'Pixar 3D', 'Disney Classic (2D)', 'Studio Ghibli', 
     'Stranger Things', 'Game of Thrones', 'Lord of the Rings', 'Harry Potter', 'Star Wars', 
     'Dune', 'Blade Runner', 'The Matrix', 'Mad Max', 'Wes Anderson', 
-    'Tim Burton', 'The Simpsons', 'Rick and Morty', 'Futurama', 'Adventure Time'
+    'Tim Burton', 'The Simpsons', 'Rick and Morty', 'Futurama', 'Adventure Time',
+    'Akira', 'Ghost in the Shell', 'Moebius', 'Love, Death & Robots'
 ];
 
-// Combine all for default artStyle prompt logic if needed, but UI uses separated lists
 export const ART_STYLES = [...STYLES_ARTISTIC, ...STYLES_GAMES, ...STYLES_MEDIA];
 
-// --- BLOCK 3: FORMAT ---
+export const ZOOMS = ['Mundo (Macro)', 'Región (Medio)', 'Distrito (Cerca)', 'Escena (Detalle)'];
+export const CAMERAS = ['Cenital (90º)', 'Isométrica (45º)', 'Perspectiva Heroica', 'Ojo de Pez'];
+export const RATIOS = ['16:9 (Panorámico)', '9:16 (Móvil)', '1:1 (Cuadrado)', '21:9 (Cine)'];
 
-export const ZOOMS = ['Vista épica global', 'Vista regional', 'Vista urbana', 'Vista distrital', 'Vista focalizada', 'Vista táctica'];
-export const CAMERAS = ['Cenital pura (top-down)', 'Isométrica clásica', 'Isométrica inclinada', 'Aérea ligeramente inclinada', 'Perspectiva oblicua', 'Vista frontal diorama', 'Cámara libre', 'Aérea cinematográfica', 'Isométrica', 'Aérea', 'Frontal oblicua', 'Aérea amplia', 'Aérea suave', 'Cenital'];
-export const RATIOS = ['16:9', '9:16', '1:1', '21:9', '4:3', '3:4', '3:2', '2:3'];
+// 1) PUEBLO HUMANO / ASENTAMIENTO
+const BUCKET_1 = [
+  "Villa de Solsticio", "Aldea de Valderroble", "Puerto del Rey", "Ciudadela de Piedra", "Asentamiento de la Colina",
+  "Refugio de Pastores", "Mercado de Cruce de Caminos", "Fuerte de la Frontera", "Pueblo de Pescadores", "Aldea del Valle",
+  "Villa de los Artesanos", "Burgo Medieval", "Torre del Vigía", "Granja Fortificada", "Asentamiento Fluvial"
+].map(name => ({
+  name,
+  description: "Asentamiento humano próspero y lleno de vida.",
+  tags: ["Humano", "Ciudad", "Vida"],
+  config: { placeType: "Llanura Fértil", civilization: "Humana (Genérica)", buildingType: "Aldea pequeña", artStyle: "The Witcher 3", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
 
-// --- BLOCK 4: VIDEO ---
-export const VIDEO_MOVEMENTS = ['Zoom in', 'Zoom out', 'Paneo lateral', 'Orbitar', 'Descenso', 'Sobrevuelo', 'Recorrido guiado'];
-export const VIDEO_DYNAMICS = ['Nubes en movimiento', 'Agua animada', 'Humo / vapor', 'Luces dinámicas', 'Criaturas lejanas', 'Tráfico'];
-export const VIDEO_RHYTHMS = ['Lento', 'Constante', 'Épico', 'Cinematográfico'];
+// 2) RUINAS / DESIERTO / ORCOS
+const BUCKET_2 = [
+  "Cráter de la Desolación", "Fuerte de Huesos", "Ruinas de Karak", "Campamento de Saqueadores", "Templo de Arena",
+  "Oasis Maldito", "Cañón de Sangre", "Estepa de Hierro", "Mina de Azufre", "Altar de Guerra",
+  "Cementerio de Gigantes", "Puesto de Avanzada Orco", "Ciudad Enterrada", "Dunas de Fuego", "Acantilado de la Horda"
+].map(name => ({
+  name,
+  description: "Territorio hostil, ruinas y civilización agresiva.",
+  tags: ["Desierto", "Orcos", "Ruinas"],
+  config: { placeType: "Desierto Árido", civilization: "Orcos", buildingType: "Ruinas antiguas", artStyle: "Mad Max", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
 
-// --- PRESETS ---
+// 3) COSTA / DOTHRAKI / PUERTO
+const BUCKET_3 = [
+  "Bahía de los Corsarios", "Puerto de la Serpiente", "Costa de los Nómadas", "Acantilados de Sal", "Playa de los Naufragios",
+  "Mercado Flotante", "Delta de los Contrabandistas", "Isla de los Ladrones", "Cala Escondida", "Puerto de Guerra",
+  "Asentamiento Costero", "Campamento de Playa", "Astillero Clandestino", "Faro Abandonado", "Ruta de las Mareas"
+].map(name => ({
+  name,
+  description: "Zonas costeras, puertos peligrosos y rutas marítimas.",
+  tags: ["Mar", "Costa", "Nómada"],
+  config: { placeType: "Costa", civilization: "Humana (Genérica)", buildingType: "Puerto / Muelle", artStyle: "Assassin's Creed", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
 
-export const PRESETS: Preset[] = [
-  {
-    name: "Asentamiento nómada",
-    description: "A orillas de un oasis al atardecer.",
-    tags: ["RPG", "Exploración", "Narrativa"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Asentamiento", poi: "Zona de tiendas", civilization: "Tribal", time: "Atardecer", weather: "Soleado", artStyle: "Realista cinematográfico", zoom: "Vista distrital", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Prisión de máxima seguridad",
-    description: "Zona desértica, muros altos y vigilancia.",
-    tags: ["Estrategia", "Sci-Fi", "Táctico"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Prisión", poi: "Perímetro de seguridad", civilization: "Futurista", time: "Mediodía", weather: "Soleado", artStyle: "Realista cinematográfico", zoom: "Vista focalizada", camera: "Isométrica inclinada" }
-  },
-  {
-    name: "Mundo salvaje",
-    description: "Naturaleza indómita, bosques y niebla.",
-    tags: ["Worldbuilding", "Fantasía"],
-    config: { scale: "Macro (Reino, Continente, Mundo)", placeType: "Entorno natural", poi: "Sin POI específico", civilization: "Elfos", time: "Amanecer", weather: "Niebla", artStyle: "Studio Ghibli", zoom: "Vista épica global", camera: "Cámara libre" }
-  },
-  {
-    name: "Ciudad Alienígena Gélida",
-    description: "Planeta exterior bajo tormenta de nieve.",
-    tags: ["Sci-Fi", "Exploración"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Construcciones alienígenas", poi: "Núcleo energético", civilization: "Alienígena Cristalina", time: "Noche", weather: "Nevando", artStyle: "Starcraft", zoom: "Vista urbana", camera: "Isométrica clásica" }
-  },
-  {
-    name: "Fortaleza de Montaña",
-    description: "Murallas medievales en picos altos.",
-    tags: ["Estrategia", "Fantasía"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Fortaleza", poi: "Murallas", civilization: "Medieval", time: "Mediodía", weather: "Nublado", artStyle: "Age of Empires", zoom: "Vista focalizada", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Puerto Pirata",
-    description: "Tabernas, barcos y bruma marina.",
-    tags: ["RPG", "Narrativa"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Puerto", poi: "Mercado central", civilization: "Humana genérica", time: "Atardecer", weather: "Niebla", artStyle: "Cartoon estilizado", zoom: "Vista urbana", camera: "Isométrica clásica" }
-  },
-  {
-    name: "Reino en Ruinas",
-    description: "Capital destruida tras una gran guerra.",
-    tags: ["Narrativa", "Dark Fantasy"],
-    config: { scale: "Macro (Reino, Continente, Mundo)", placeType: "Ruinas antiguas", poi: "Palacio derruido", civilization: "Humana genérica", time: "Crepúsculo", weather: "Ceniza / arena", artStyle: "Dark fantasy", zoom: "Vista regional", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Base Espacial Abandonada",
-    description: "Oscuridad, silencio y tecnología muerta.",
-    tags: ["Sci-Fi", "Exploración"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Base espacial", poi: "Hangar", civilization: "Postindustrial", time: "Noche profunda", weather: "Mágico", artStyle: "Realista cinematográfico", zoom: "Vista focalizada", camera: "Perspectiva oblicua" }
-  },
-  {
-    name: "Archipiélago Volcánico",
-    description: "Tribus guerreras entre lava y humo.",
-    tags: ["RPG", "Estrategia"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Asentamiento", poi: "Hogueras comunales", civilization: "Orcos", time: "Noche", weather: "Ceniza / arena", artStyle: "World of Warcraft", zoom: "Vista regional", camera: "Cenital pura (top-down)" }
-  },
-  {
-    name: "Cyberpunk Megacity",
-    description: "Luces de neón, lluvia y cúpulas.",
-    tags: ["Sci-Fi", "Narrativa"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Ciudad", poi: "Distrito comercial", civilization: "Cyberpunk", time: "Noche", weather: "Lluvia", artStyle: "Realista cinematográfico", zoom: "Vista urbana", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Bosque Mágico",
-    description: "Criaturas, luces suaves y árboles milenarios.",
-    tags: ["Fantasía", "RPG"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Bosque ancestral", poi: "Árbol milenario", civilization: "Elfos", time: "Amanecer", weather: "Niebla", artStyle: "Ilustración", zoom: "Vista focalizada", camera: "Isométrica clásica" }
-  },
-  {
-    name: "Mina de los Goblins",
-    description: "Túneles oscuros, antorchas y maquinaria.",
-    tags: ["Táctico", "RPG"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Mina", poi: "Cámara secreta", civilization: "Goblins", time: "Noche profunda", weather: "Mágico", artStyle: "Dark fantasy", zoom: "Vista táctica", camera: "Cenital pura (top-down)" }
-  },
-  {
-    name: "Zona de Cuarentena",
-    description: "Post-desastre biológico, lluvia ácida.",
-    tags: ["Narrativa", "Postapocalíptico"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Zona en cuarentena", poi: "Hospital abandonado", civilization: "Humana genérica", time: "Atardecer", weather: "Lluvia", artStyle: "Realista cinematográfico", zoom: "Vista distrital", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Ciudad Flotante",
-    description: "Sobre un mar infinito, cielo despejado.",
-    tags: ["Worldbuilding", "Fantasía"],
-    config: { scale: "Meso (Isla, Ciudad, Región)", placeType: "Ciudad flotante", poi: "Plaza mayor", civilization: "Imperial", time: "Mediodía", weather: "Soleado", artStyle: "D&D", zoom: "Vista urbana", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Dimensión Onírica",
-    description: "Formas imposibles, colores cambiantes.",
-    tags: ["Creatividad", "Experimental"],
-    config: { scale: "Especial (Dimensión onírica, Plano astral)", placeType: "Entorno abierto", poi: "Sin POI específico", civilization: "Antigua desaparecida", time: "Tiempo indefinido", weather: "Mágico", artStyle: "D&D", zoom: "Vista épica global", camera: "Cámara libre" }
-  },
-  {
-    name: "Capital Imperial",
-    description: "Murallas colosales, orden y poder.",
-    tags: ["Estrategia", "Narrativa"],
-    config: { scale: "Macro (Reino, Continente, Mundo)", placeType: "Ciudad", poi: "Palacio", civilization: "Imperial", time: "Mediodía", weather: "Soleado", artStyle: "Civilization", zoom: "Vista urbana", camera: "Isométrica clásica" }
-  },
-  {
-    name: "Ruinas Tecnológicas",
-    description: "Asentamiento superviviente entre chatarra.",
-    tags: ["RPG", "Narrativa"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Asentamiento", poi: "Defensas improvisadas", civilization: "Postindustrial", time: "Atardecer", weather: "Viento fuerte", artStyle: "Realista cinematográfico", zoom: "Vista distrital", camera: "Isométrica inclinada" }
-  },
-  {
-    name: "Templo Perdido",
-    description: "Oculto en la selva, niebla y misterio.",
-    tags: ["Exploración", "RPG"],
-    config: { scale: "Micro (Bosque, Valle, Oasis)", placeType: "Templo", poi: "Entrada monumental", civilization: "Antigua desaparecida", time: "Amanecer", weather: "Niebla", artStyle: "Dibujado a mano", zoom: "Vista focalizada", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Planeta Desértico",
-    description: "Ciudades subterráneas y tormentas de arena.",
-    tags: ["Sci-Fi", "Estrategia"],
-    config: { scale: "Macro (Reino, Continente, Mundo)", placeType: "Desierto abierto", poi: "Entrada principal", civilization: "Alienígena Orgánica", time: "Mediodía", weather: "Tormenta eléctrica", artStyle: "Star Wars", zoom: "Vista regional", camera: "Aérea ligeramente inclinada" }
-  },
-  {
-    name: "Terra Incognita",
-    description: "Continente desconocido, mapa virgen.",
-    tags: ["Worldbuilding", "Exploración"],
-    config: { scale: "Macro (Reino, Continente, Mundo)", placeType: "Entorno abierto", poi: "Sin POI específico", civilization: "Prehistórica", time: "Tiempo indefinido", weather: "Soleado", artStyle: "Tabletop map", zoom: "Vista épica global", camera: "Cenital pura (top-down)" }
-  }
-];
+// 4) SUBTERRÁNEO / MINA ENANA
+const BUCKET_4 = [
+  "Abismo de Hierro", "Forja de las Profundidades", "Túneles de Cristal", "Ciudad de Piedra", "Mina de Mithril",
+  "Cámara del Rey Bajo la Montaña", "Puente de Khazad", "Grieta de Magma", "Bóveda del Tesoro", "Salones de los Ancestros",
+  "Galería de los Mineros", "Fundición Subterránea", "Cueva de los Ecos", "Santuario de la Roca", "Prisión de la Profundidad"
+].map(name => ({
+  name,
+  description: "Arquitectura masiva subterránea y minería.",
+  tags: ["Mina", "Enanos", "Subsuelo"],
+  config: { placeType: "Cueva Profunda", civilization: "Enanos de Montaña", buildingType: "Base secreta subterránea", artStyle: "Lord of the Rings", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+// 5) FORTALEZA / MILITAR
+const BUCKET_5 = [
+  "Bastión del Norte", "Castillo de la Tormenta", "Muro de los Lamentos", "Fortaleza Imperial", "Torre del Hechicero",
+  "Cuartel General", "Puesto de Defensa", "Muralla Infinita", "Ciudadela de Acero", "Fuerte de la Legión",
+  "Batería Costera", "Castillo en la Roca", "Puerta Negra", "Torre de Vigilancia", "Palacio de Invierno"
+].map(name => ({
+  name,
+  description: "Estructuras defensivas masivas y bases militares.",
+  tags: ["Militar", "Castillo", "Defensa"],
+  config: { placeType: "Montaña Alta", civilization: "Humana (Genérica)", buildingType: "Fortaleza militar", artStyle: "Game of Thrones", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+// 6) ELFO / NATURALEZA / CIUDAD
+const BUCKET_6 = [
+  "Santuario del Bosque", "Ciudad de las Copas", "Claro de Luna", "Valle de los Espíritus", "Jardines Colgantes",
+  "Templo del Agua", "Árbol Madre", "Aldea Fluvial", "Bosque Encantado", "Cascadas de Cristal",
+  "Refugio Druídico", "Camino de las Flores", "Círculo de Piedras", "Puente de Raíces", "Palacio de Hojas"
+].map(name => ({
+  name,
+  description: "Alta fantasía, naturaleza integrada y magia.",
+  tags: ["Elfos", "Naturaleza", "Magia"],
+  config: { placeType: "Bosque Ancestral", civilization: "Elfos Nobles", buildingType: "Templo / Santuario", artStyle: "Zelda: BOTW", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+// 7) ALIEN / SCI-FI
+const BUCKET_7 = [
+  "Nexo Biomecánico", "Colmena Zerg", "Ruinas Protheanas", "Base Lunar Alpha", "Planeta X",
+  "Laboratorio de Clonación", "Refinería de Especia", "Ciudad Cyberpunk", "Estación Espacial", "Cráter de Impacto",
+  "Pantano Alienígena", "Bosque de Hongos Gigantes", "Estructura Monolítica", "Portal Dimensional", "Zona de Cuarentena"
+].map(name => ({
+  name,
+  description: "Entornos extraterrestres y tecnología avanzada.",
+  tags: ["Alien", "Sci-Fi", "Espacio"],
+  config: { placeType: "Colmena Orgánica", civilization: "Alienígenas Insectoides", buildingType: "Base secreta subterránea", artStyle: "Starcraft II", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+// 8) MAPA DEL TESORO / MANO ALZADA
+const BUCKET_8 = [
+  "Mapa de la Isla Calavera", "Ruta del Contrabandista", "Pergamino Antiguo", "Mapa del Tesoro Enterrado", "Carta de Navegación",
+  "Croquis de la Mazmorra", "Plano de la Ciudad Perdida", "Mapa de Piel de Dragón", "Ruta de la Seda", "Mapa de las Tierras Salvajes",
+  "Carta Astral", "Mapa de Invasión", "Reliquia Cartográfica", "Mapa Quemado", "Guía del Explorador"
+].map(name => ({
+  name,
+  description: "Estilo pergamino, tinta y dibujo a mano.",
+  tags: ["Mapa", "Pergamino", "Pirata"],
+  config: { placeType: "Isla Tropical", civilization: "Humana (Genérica)", buildingType: "Sin edificación", artStyle: "Acuarela", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+// 9) BLUEPRINT / TÉCNICO
+const BUCKET_9 = [
+  "Plano del Búnker", "Esquema del Laboratorio", "Blueprint de la Nave", "Plano de Seguridad", "Mapa Táctico Holográfico",
+  "Diseño del Reactor", "Plano del Metro", "Esquema de la Base", "Mapa de Sensores", "Grid de Combate",
+  "Plano de Evacuación", "Arquitectura de la Torre", "Diagrama de Flujo", "Plano de la Prisión", "Esquema del Complejo"
+].map(name => ({
+  name,
+  description: "Planos técnicos, blueprints y diagramas.",
+  tags: ["Técnico", "Blueprint", "Moderno"],
+  config: { placeType: "Base secreta subterránea", civilization: "Humana (Genérica)", buildingType: "Zona Industrial", artStyle: "Blueprint", camera: "Cenital (90º)", aspectRatio: "16:9" }
+}));
+
+
+export const PRESET_BUCKETS: Record<number, Preset[]> = {
+  1: BUCKET_1,
+  2: BUCKET_2,
+  3: BUCKET_3,
+  4: BUCKET_4,
+  5: BUCKET_5,
+  6: BUCKET_6,
+  7: BUCKET_7,
+  8: BUCKET_8,
+  9: BUCKET_9
+};
