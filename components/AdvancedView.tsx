@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { MapConfig, MediaType, Language } from '../types';
 import * as C from '../constants';
+import StyleSelector from './StyleSelector';
 
 interface AdvancedViewProps {
   config: MapConfig;
@@ -46,7 +47,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
     <div className="pb-8 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
       
       {/* Block 1: Scenario */}
-      <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden group">
+      <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden group h-full flex flex-col">
         <div className="absolute top-0 left-0 w-1 h-full bg-accent-900 group-hover:bg-accent-500 transition-colors"></div>
         <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-white flex items-center font-mono">
@@ -115,7 +116,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
         
         <SelectGroup label={t.civilization} field="civilization" options={C.CIVILIZATIONS} />
         
-        <div className="mt-6 border-t border-gray-800 pt-4">
+        <div className="mt-auto border-t border-gray-800 pt-4">
            <label className="block text-xs font-mono font-bold text-gray-500 uppercase tracking-widest mb-2">
             {t.customScenarioLabel}
            </label>
@@ -128,8 +129,8 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
         </div>
       </div>
 
-      {/* Block 2: Atmosphere */}
-      <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden group">
+      {/* Block 2: Atmosphere & Style */}
+      <div className="bg-gray-900/50 p-6 tech-border backdrop-blur-sm relative overflow-hidden group h-full flex flex-col">
          <div className="absolute top-0 left-0 w-1 h-full bg-purple-600 group-hover:bg-purple-500 transition-colors"></div>
          <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-white flex items-center font-mono">
@@ -138,15 +139,25 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, mediaType, onChange
             </h3>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
              <SelectGroup label={t.time} field="time" options={C.TIMES} />
              <SelectGroup label={t.weather} field="weather" options={C.WEATHERS} />
         </div>
 
-        <SelectGroup label={t.style} field="artStyle" options={C.ART_STYLES} />
-        <SelectGroup label={t.tech} field="renderTech" options={C.RENDER_TECHS} />
+        {/* REPLACED DROPDOWNS WITH STYLE SELECTOR */}
+        <div className="mb-4 flex-grow">
+            <StyleSelector 
+              selectedStyle={config.artStyle}
+              onSelect={(val) => {
+                  onChange('artStyle', val);
+                  onChange('renderTech', ''); // Clear renderTech as StyleSelector covers it
+              }}
+              lang={lang}
+              isSimpleMode={false} // Full list
+            />
+        </div>
 
-         <div className="mt-6 border-t border-gray-800 pt-4">
+         <div className="mt-auto border-t border-gray-800 pt-4">
            <label className="block text-xs font-mono font-bold text-gray-500 uppercase tracking-widest mb-2">
             {t.customAtmosphereLabel}
            </label>

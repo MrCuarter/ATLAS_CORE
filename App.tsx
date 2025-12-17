@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppMode, MediaType, PromptType, MapConfig, Preset, Language, PromptCollectionItem } from './types';
+import { AppMode, MediaType, PromptType, MapConfig, Preset, Language, PromptCollectionItem, NarrativeMode } from './types';
 import * as C from './constants';
 import SimpleView from './components/SimpleView';
 import PresetsView from './components/PresetsView';
@@ -31,7 +31,8 @@ const getInitialConfig = (): MapConfig => ({
   videoDynamics: '',
   videoRhythm: '',
   videoLoop: true,
-  tags: []
+  tags: [],
+  manualDetails: ''
 });
 
 const App: React.FC = () => {
@@ -185,7 +186,7 @@ const App: React.FC = () => {
     }, 100);
   };
 
-  const handleNarrativeGeneration = async (useAI: boolean) => {
+  const handleNarrativeGeneration = async (useAI: boolean, mode: NarrativeMode) => {
       if (!config.placeType) {
           alert(lang === Language.ES ? "Selecciona un Lugar primero" : "Select a Place first");
           return;
@@ -195,15 +196,12 @@ const App: React.FC = () => {
       setNarrativeCollection([]); // Clear previous
 
       try {
-        // 1. Generate Base Collection (Instant)
-        let collection = generateNarrativeCollection(config, promptType, lang);
+        // 1. Generate Base Collection (Instant) based on selected mode
+        let collection = generateNarrativeCollection(config, promptType, lang, mode);
 
         // 2. If AI mode is enabled, enhance each prompt
         if (useAI) {
-            // Process in parallel blocks to speed it up, but not all at once to avoid rate limits
-            // Since we have ~13 items, we can do them in batches or simple Promise.all if quota allows.
-            // Let's do Promise.all for now as Gemini 2.5 is fast.
-            
+            // Process in parallel blocks to speed it up
             const enhancementPromises = collection.map(async (item) => {
                 try {
                     const enhancedText = await enhancePromptWithGemini(item.prompt, promptType);
@@ -464,29 +462,32 @@ const App: React.FC = () => {
             </div>
 
             {/* --- GLOBAL WORLD GEN BUTTON (RE-DESIGNED) --- */}
-            <div className="w-full max-w-6xl mb-8 flex justify-center animate-fade-in">
-                <div className="flex flex-col items-center">
-                    <button
-                        onClick={() => { handleWorldGen(); playPowerUp(); }}
-                        className="group relative inline-flex flex-col items-center justify-center px-12 py-4 text-sm font-bold text-amber-100 transition-all duration-300 bg-[#1c160b] border border-amber-600/40 hover:bg-amber-900/20 hover:border-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] rounded-sm overflow-hidden min-w-[280px]"
-                    >
-                            {/* Simple border accents */}
-                        <span className="absolute w-1 h-1 bg-amber-500 top-0 left-0"></span>
-                        <span className="absolute w-1 h-1 bg-amber-500 bottom-0 right-0"></span>
-                        
-                        {/* Main Title Row */}
-                        <div className="flex items-center relative z-10 mb-1">
-                            <span className="mr-2 text-lg text-amber-500 group-hover:rotate-90 transition-transform duration-500">❖</span>
-                            <span className="font-mono tracking-[0.1em] font-bold text-sm md:text-base">{t.worldGenBtn}</span>
-                        </div>
-                        
-                        {/* Subtitle Description */}
-                        <span className="relative z-10 text-[9px] text-amber-500/60 font-mono uppercase tracking-widest group-hover:text-amber-400/80 transition-colors">
-                            {t.worldGenDesc}
-                        </span>
-                    </button>
+            {/* HIDE IN NARRATIVE MODE */}
+            {mode !== AppMode.NARRATIVE && (
+                <div className="w-full max-w-6xl mb-8 flex justify-center animate-fade-in">
+                    <div className="flex flex-col items-center">
+                        <button
+                            onClick={() => { handleWorldGen(); playPowerUp(); }}
+                            className="group relative inline-flex flex-col items-center justify-center px-12 py-4 text-sm font-bold text-amber-100 transition-all duration-300 bg-[#1c160b] border border-amber-600/40 hover:bg-amber-900/20 hover:border-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] rounded-sm overflow-hidden min-w-[280px]"
+                        >
+                                {/* Simple border accents */}
+                            <span className="absolute w-1 h-1 bg-amber-500 top-0 left-0"></span>
+                            <span className="absolute w-1 h-1 bg-amber-500 bottom-0 right-0"></span>
+                            
+                            {/* Main Title Row */}
+                            <div className="flex items-center relative z-10 mb-1">
+                                <span className="mr-2 text-lg text-amber-500 group-hover:rotate-90 transition-transform duration-500">❖</span>
+                                <span className="font-mono tracking-[0.1em] font-bold text-sm md:text-base">{t.worldGenBtn}</span>
+                            </div>
+                            
+                            {/* Subtitle Description */}
+                            <span className="relative z-10 text-[9px] text-amber-500/60 font-mono uppercase tracking-widest group-hover:text-amber-400/80 transition-colors">
+                                {t.worldGenDesc}
+                            </span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Status Bar / Active Config Info */}
             <div className="w-full mb-8 flex items-center justify-between border-b border-gray-800 pb-2">
@@ -536,6 +537,7 @@ const App: React.FC = () => {
                       lang={lang}
                       onGenerate={handleNarrativeGeneration}
                       isGenerating={isGeneratingNarrative}
+                      onRandom={handleWorldGen} // PASSING RANDOM HANDLER DOWN
                     />
                     <CollectionDisplay collection={narrativeCollection} lang={lang} />
                   </>
@@ -554,6 +556,22 @@ const App: React.FC = () => {
       
        {/* FOOTER */}
       <footer className="border-t border-gray-800 bg-[#06090f] py-8 mt-auto relative z-10 pb-8">
+        
+        {/* NEW CONTACT SECTION */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <div className="flex flex-col items-center justify-center p-6 bg-gray-900/50 border border-gray-800 rounded-lg backdrop-blur-sm">
+                <p className="text-gray-400 text-xs uppercase tracking-widest font-mono mb-3">{t.contactTitle}</p>
+                <a 
+                    href="mailto:hola@mistercuarter.es"
+                    className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-white transition-all duration-300 bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500 rounded-sm overflow-hidden"
+                >
+                    <span className="font-mono tracking-wider">{t.contactBtn}</span>
+                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </a>
+                <p className="text-gray-600 text-[10px] mt-2 font-mono">hola@mistercuarter.es</p>
+            </div>
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 

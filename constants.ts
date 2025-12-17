@@ -7,10 +7,10 @@ export const UI_TEXT = {
     appTitle: "Atlas_Core",
     subtitle: "SYSTEM MATRIX | By Mr. Cuarter",
     appDescription: "Generador profesional de prompts para mapas de juego. Diseña escenarios para RPG, Estrategia y Worldbuilding con control total sobre estilo, atmósfera y narrativa.",
-    presets: "PRESETS", // New label
-    simple: "CONSTRUCTOR", // Renamed from RÁPIDO implies building
-    advanced: "ARQUITECTO", // Renamed from AVANZADO
-    narrative: "STORYCRAFTER", // Renamed from NARRATIVA
+    presets: "PRESETS", 
+    simple: "CONSTRUCTOR", 
+    advanced: "ARQUITECTO", 
+    narrative: "STORYCRAFTER", 
     image: "IMAGEN",
     video: "VÍDEO",
     generic: "GENÉRICO",
@@ -18,8 +18,9 @@ export const UI_TEXT = {
     surpriseTitle: "", 
     surpriseDesc: "", 
     surpriseBtn: "EJECUTAR PROTOCOLO ATLAS",
-    worldGenBtn: "EJECUTAR ATLAS_CORE", // Branding Update
-    worldGenDesc: "Crea un escenario aleatorio", // Updated description
+    worldGenBtn: "EJECUTAR ATLAS_CORE", 
+    worldGenDesc: "Crea un escenario aleatorio",
+    worldGenCompact: "AUTO-COMPLETAR DATOS", // Compact button text 
     generateAssetsBtn: "GENERAR PACK DE ASSETS",
     processing: "PROCESANDO...",
     presetsTitle: "Protocolos Predefinidos",
@@ -36,8 +37,11 @@ export const UI_TEXT = {
     time: "Hora",
     weather: "Clima",
     tech: "Técnica",
-    style: "Estilo",
-    customAtmosphereLabel: "Detalles adicionales de atmósfera (Input manual)",
+    style: "Estilo Visual",
+    styleArt: "ARTÍSTICO",
+    styleGame: "VIDEOJUEGOS",
+    styleMedia: "CINE / SERIES",
+    customAtmosphereLabel: "ADN Visual Personalizado (Input manual)",
     format: "Formato y Cámara",
     zoom: "Zoom",
     camera: "Ángulo",
@@ -48,8 +52,8 @@ export const UI_TEXT = {
     rhythm: "Ritmo",
     loop: "Loop",
     enhance: "Optimizar con IA",
-    genGameAssets: "GENERAR UI & ITEMS", // New Button
-    gameAssetsTitle: "PACK DE ELEMENTOS DE JUEGO", // New Section Title
+    genGameAssets: "GENERAR UI & ITEMS", 
+    gameAssetsTitle: "PACK DE ELEMENTOS DE JUEGO", 
     copy: "COPIAR",
     copyAll: "COPIAR PACK (MODO INSTRUCCIÓN)",
     copied: "COPIADO",
@@ -57,7 +61,10 @@ export const UI_TEXT = {
     customPlaceholder: "Escribe aquí detalles extra...",
     designedBy: "Diseñado por",
     followMe: "Sígueme en",
-    narrativeIntro: "Diseña una experiencia coherente. Genera 13 assets visuales del mismo mundo para construir tu narrativa.",
+    contactTitle: "¿Errores o propuestas de mejora?",
+    contactBtn: "CONTACTAR SOPORTE",
+    // UPDATED NARRATIVE INTRO
+    narrativeIntro: "Diseña una experiencia coherente. Construye tu mundo por fases: Entorno, Interfaz y Personajes.",
     enableAI: "ACTIVAR REFINAMIENTO IA (GEMINI)",
     enableAIDesc: "Aumenta la calidad de cada prompt individualmente. Proceso más lento.",
     assetMap: "MAPA TÁCTICO",
@@ -66,7 +73,8 @@ export const UI_TEXT = {
     assetVictory: "ESCENA DE VICTORIA",
     assetUI: "KIT DE INTERFAZ (UI)",
     assetItems: "ICONOS DE OBJETOS",
-    secretPlaceBtn: "ALEATORIZAR DATOS", // Kept for fallback, unused in main UI now
+    assetBoss: "JEFE / AMENAZA", // New Asset 13
+    secretPlaceBtn: "ALEATORIZAR DATOS", 
     stepScale: "1. SELECCIONA ESCALA",
     stepPlace: "2. IDENTIFICA EL LUGAR",
     stepCiv: "3. CIVILIZATION",
@@ -77,8 +85,19 @@ export const UI_TEXT = {
     ratioMobile: "Móvil (9:16)",
     ratioSquare: "Cuadrado (1:1)",
     ratioUltra: "Ultra (21:9)",
-    // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate 13 high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials in every single image.\n3. **Format:** ALL images must be 16:9.\n\n**EXECUTION QUEUE:**\n"
+    modeAssistant: "ASISTENTE",
+    modeManual: "MANUAL",
+    manualPlacePlaceholder: "Ej: Castillo Flotante, Laboratorio Secreto...",
+    manualCivPlaceholder: "Ej: Vampiros Cibernéticos, Monjes Guerreros...",
+    manualDetailsPlaceholder: "Ej: Flotando en el vacío, bajo el agua, en ruinas...",
+    manualContextTitle: "CONTEXTO PERSONALIZADO",
+    manualDetailsLabel: "DETALLES CONCRETOS",
+    manualPOITitle: "DEFINICIÓN DE POIs",
+    suggestPOIsBtn: "IA: PROPONER POIs",
+    manualPOIDesc: "Define los 6 lugares clave. En Asistente se autocompletan.",
+    storycrafterTitle: "STORYCRAFTER ENGINE", // New Header Title
+    
+    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials.\n\n**EXECUTION QUEUE:**\n"
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -95,8 +114,9 @@ export const UI_TEXT = {
     surpriseTitle: "", 
     surpriseDesc: "", 
     surpriseBtn: "EXECUTE ATLAS PROTOCOL", 
-    worldGenBtn: "EXECUTE ATLAS_CORE", // Branding Update
+    worldGenBtn: "EXECUTE ATLAS_CORE", 
     worldGenDesc: "Create a random scenario",
+    worldGenCompact: "AUTO-COMPLETE DATA",
     generateAssetsBtn: "GENERATE ASSET PACK",
     processing: "PROCESSING...",
     presetsTitle: "Predefined Protocols",
@@ -113,8 +133,11 @@ export const UI_TEXT = {
     time: "Time",
     weather: "Weather",
     tech: "Technique",
-    style: "Style",
-    customAtmosphereLabel: "Additional Atmosphere Details (Manual Input)",
+    style: "Visual Style",
+    styleArt: "ARTISTIC",
+    styleGame: "VIDEO GAMES",
+    styleMedia: "MOVIES / TV",
+    customAtmosphereLabel: "Custom Visual DNA (Manual Input)",
     format: "Format & Camera",
     zoom: "Zoom",
     camera: "Angle",
@@ -134,7 +157,9 @@ export const UI_TEXT = {
     customPlaceholder: "Type extra details here...",
     designedBy: "Designed by",
     followMe: "Follow me on",
-    narrativeIntro: "Design a coherent experience. Generate 13 visual assets from the same world to build your narrative.",
+    contactTitle: "Errors or improvement proposals?",
+    contactBtn: "CONTACT SUPPORT",
+    narrativeIntro: "Design a coherent experience. Build your world in phases: Environment, Interface, and Characters.",
     enableAI: "ENABLE AI REFINEMENT (GEMINI)",
     enableAIDesc: "Increases quality of each prompt individually. Slower process.",
     assetMap: "TACTICAL MAP",
@@ -143,6 +168,7 @@ export const UI_TEXT = {
     assetVictory: "VICTORY SCENE",
     assetUI: "USER INTERFACE (UI) KIT",
     assetItems: "ITEM ICONS",
+    assetBoss: "BOSS / THREAT",
     secretPlaceBtn: "RANDOMIZE DATA",
     stepScale: "1. SELECT SCALE",
     stepPlace: "2. IDENTIFY PLACE",
@@ -154,8 +180,19 @@ export const UI_TEXT = {
     ratioMobile: "Mobile (9:16)",
     ratioSquare: "Square (1:1)",
     ratioUltra: "Ultra (21:9)",
-    // Instructions for the AI when pasting the full pack
-    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate 13 high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials in every single image.\n3. **Format:** ALL images must be 16:9.\n\n**EXECUTION QUEUE:**\n"
+    modeAssistant: "ASSISTANT",
+    modeManual: "MANUAL",
+    manualPlacePlaceholder: "Ex: Floating Castle, Secret Lab...",
+    manualCivPlaceholder: "Ex: Cybernetic Vampires, Warrior Monks...",
+    manualDetailsPlaceholder: "Ex: Floating in void, underwater, ruins...",
+    manualContextTitle: "CUSTOM CONTEXT",
+    manualDetailsLabel: "CONCRETE DETAILS",
+    manualPOITitle: "POI DEFINITION",
+    suggestPOIsBtn: "AI: SUGGEST POIs",
+    manualPOIDesc: "Define 6 key locations. Auto-filled in Assistant mode.",
+    storycrafterTitle: "STORYCRAFTER ENGINE",
+    
+    copyInstructionHeader: "⚠️ **STORYCRAFTER EXECUTION PROTOCOL**\n\n**ROLE:** Expert Art Director & Prompt Engineer.\n**TASK:** Generate high-fidelity game assets based on the provided technical prompts.\n\n**STRICT RULES:**\n1. **Sequential Execution:** Generate images ONE BY ONE. Wait for my 'Next' command.\n2. **Visual DNA Compliance:** Stick strictly to the defined Palette, Lighting, and Materials.\n\n**EXECUTION QUEUE:**\n"
   }
 };
 
@@ -239,13 +276,6 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
 
   // WEATHER
   'Soleado': 'Sunny', 'Nublado': 'Cloudy', 'Lluvia': 'Rain', 'Niebla': 'Fog', 'Nevando': 'Snowing', 'Tormenta eléctrica': 'Thunderstorm', 'Viento fuerte': 'Strong wind', 'Ceniza / arena': 'Ash/Sand', 'Mágico': 'Magical weather', 'Clima seco': 'Dry climate', 'Bruma': 'Mist', 'Cielo gris': 'Grey sky', 'Oscura': 'Dark', 'Silenciosa': 'Silent', 'Humo': 'Smoke', 'Lava': 'Lava', 'Cielo despejado': 'Clear sky', 'Colores cambiantes': 'Shifting colors', 'Polvo': 'Dust', 'Cielo apagado': 'Dull sky', 'Luz suave': 'Soft light', 'Tormentas de arena': 'Sandstorms', 'Variable': 'Variable', 'Tormenta de nieve': 'Snowstorm',
-
-  // RENDER
-  'Pixel art': 'Pixel art', 'Dibujado a mano': 'Hand-drawn map', 'Ilustración': 'Illustration', '3D render': '3D render', 'Low poly': 'Low poly', 'Blueprint': 'Blueprint', 'Isométrico': 'Isometric', 'Tabletop map': 'Tabletop map', 'Fantástica': 'Fantasy', 'Sci-Fi realista': 'Realistic Sci-Fi', 'Sci-Fi cinematográfico': 'Cinematic Sci-Fi', 'Fantasía épica': 'Epic Fantasy', 'Fantasía ilustrada': 'Illustrated Fantasy', 'Histórico épico': 'Epic Historical', 'Aventuras clásicas': 'Classic Adventure', 'Sci-Fi épico': 'Epic Sci-Fi', 'Mapa ilustrado': 'Illustrated Map',
-
-  // STYLE
-  'Realista cinematográfico': 'Cinematic Realistic', 'Cartoon estilizado': 'Stylized Cartoon', 'Dark fantasy': 'Dark Fantasy', 'Fantasía realista': 'Realistic Fantasy', 'Surrealista': 'Surrealist', 'Postapocalíptico': 'Post-apocalyptic',
-  'Age of Empires': 'Age of Empires style', 'Civilization': 'Civilization style', 'D&D': 'Dungeons and Dragons style', 'World of Warcraft': 'World of Warcraft style', 'Starcraft': 'Starcraft style', 'Star Wars': 'Star Wars style', 'Fortnite': 'Fortnite style', 'Sims': 'The Sims style', 'Studio Ghibli': 'Studio Ghibli style',
 
   // ZOOM
   'Vista épica global': 'Global epic view', 'Vista regional': 'Regional view', 'Vista urbana': 'City view', 'Vista distrital': 'District view', 'Vista focalizada': 'Focused view', 'Vista táctica': 'Tactical view', 'Vista global': 'Global view',
@@ -341,8 +371,36 @@ export const CIVILIZATIONS = [
 
 export const TIMES = ['Amanecer', 'Mediodía', 'Atardecer', 'Noche', 'Noche profunda', 'Crepúsculo', 'Eclipse', 'Tiempo indefinido'];
 export const WEATHERS = ['Soleado', 'Nublado', 'Lluvia', 'Niebla', 'Nevando', 'Tormenta eléctrica', 'Viento fuerte', 'Ceniza / arena', 'Mágico'];
-export const RENDER_TECHS = ['Pixel art', 'Dibujado a mano', 'Ilustración', '3D render', 'Low poly', 'Blueprint', 'Isométrico', 'Tabletop map'];
-export const ART_STYLES = ['Age of Empires', 'Civilization', 'D&D', 'World of Warcraft', 'Starcraft', 'Star Wars', 'Fortnite', 'Sims', 'Studio Ghibli', 'Dark fantasy', 'Realista cinematográfico', 'Cartoon estilizado'];
+export const RENDER_TECHS = [
+    'Pixel art', 'Dibujado a mano', 'Ilustración', '3D render', 'Low poly', 'Blueprint', 'Isométrico', 'Tabletop map', 
+    'Unreal Engine 5', 'Acuarela', 'Óleo', 'Carboncillo', 'Boceto a lápiz', 'Voxel Art'
+];
+
+// --- NEW STYLE LISTS ---
+
+export const STYLES_ARTISTIC = [
+    'Realista cinematográfico', 'Ilustración Digital', 'Óleo Clásico', 'Acuarela', 'Boceto a Lápiz', 
+    'Anime / Manga', 'Cómic Americano', 'Low Poly', 'Voxel Art', 'Pixel Art', 
+    'Isométrico', 'Blueprint', 'Cyberpunk', 'Steampunk', 'Solarpunk', 
+    'Noir / B&W', 'Psicodélico', 'Surrealismo', 'Art Nouveau', 'Ukiyo-e'
+];
+
+export const STYLES_GAMES = [
+    'Elden Ring', 'Dark Souls', 'Bloodborne', 'Cyberpunk 2077', 'The Witcher 3', 
+    'Skyrim', 'Fallout', 'BioShock', 'Mass Effect', 'Halo', 
+    'Destiny', 'Overwatch', 'Fortnite', 'World of Warcraft', 'Zelda: BOTW', 
+    'Mario Odyssey', 'Minecraft', 'Terraria', 'Stardew Valley', 'Hollow Knight'
+];
+
+export const STYLES_MEDIA = [
+    'Arcane (LoL)', 'Spider-Verse', 'Pixar 3D', 'Disney Classic (2D)', 'Studio Ghibli', 
+    'Stranger Things', 'Game of Thrones', 'Lord of the Rings', 'Harry Potter', 'Star Wars', 
+    'Dune', 'Blade Runner', 'The Matrix', 'Mad Max', 'Wes Anderson', 
+    'Tim Burton', 'The Simpsons', 'Rick and Morty', 'Futurama', 'Adventure Time'
+];
+
+// Combine all for default artStyle prompt logic if needed, but UI uses separated lists
+export const ART_STYLES = [...STYLES_ARTISTIC, ...STYLES_GAMES, ...STYLES_MEDIA];
 
 // --- BLOCK 3: FORMAT ---
 

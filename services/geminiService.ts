@@ -139,3 +139,44 @@ export const generateGameAssetsPrompt = async (contextDescription: string): Prom
         return "";
     }
 }
+
+export const generatePOISuggestions = async (place: string, civ: string): Promise<string[]> => {
+    console.log("🚀 Solicitando sugerencias de POIs a Gemini...");
+    try {
+        const apiKey = getApiKey();
+        if (!apiKey) return [];
+
+        const ai = new GoogleGenAI({ apiKey });
+        const modelId = "gemini-2.5-flash";
+
+        const systemInstruction = `You are an expert Worldbuilder for RPG games.
+        Given a specific PLACE and CIVILIZATION/THEME, your task is to list 6 distinct, creative "Points of Interest" (POIs) or rooms found inside that location.
+        
+        INPUT PLACE: "${place}"
+        INPUT CIV/THEME: "${civ}"
+
+        Return strictly a JSON array of 6 strings. Example:
+        ["Throne Room", "Secret Armory", "Gardens", "Dungeon Cell", "Kitchen", "Watchtower"]
+        
+        Do not add any other text.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: modelId,
+            contents: "Generate POIs.",
+            config: {
+                systemInstruction: systemInstruction,
+                temperature: 0.7,
+                responseMimeType: "application/json"
+            }
+        });
+
+        const text = response.text?.trim();
+        if (!text) return [];
+        return JSON.parse(text);
+
+    } catch (error) {
+        console.error("❌ Error generating POI suggestions:", error);
+        return [];
+    }
+}

@@ -10,10 +10,17 @@ export enum PromptType {
 }
 
 export enum AppMode {
-  PRESETS = 'Presets', // New Mode
-  SIMPLE = 'Simple',   // Now the Wizard Mode
+  PRESETS = 'Presets', 
+  SIMPLE = 'Simple',   
   ADVANCED = 'Avanzado',
   NARRATIVE = 'Narrativa',
+}
+
+// New Enum for the 3 buttons
+export enum NarrativeMode {
+  WORLD = 'WORLD',
+  UI = 'UI',
+  CHARACTERS = 'CHARACTERS'
 }
 
 export enum Language {
@@ -24,18 +31,18 @@ export enum Language {
 export interface MapConfig {
   // Block 1: Scenario
   scale: string;
-  placeType: string; // The specific place (e.g., Prison, Forest)
-  placeCategory: string; // The category (Military, Nature, etc) - helper
+  placeType: string; 
+  placeCategory: string; 
   poi: string;
   civilization: string;
-  customScenario: string; // New custom input
+  customScenario: string; 
   
   // Block 2: Atmosphere
   time: string;
   weather: string;
   renderTech: string;
   artStyle: string;
-  customAtmosphere: string; // New custom input
+  customAtmosphere: string; 
   
   // Block 3: Format
   zoom: string;
@@ -51,11 +58,15 @@ export interface MapConfig {
   // Metadata for display
   presetName?: string;
   tags?: string[];
+  
+  // Storycrafter Specific Data
+  manualPOIs?: string[]; 
+  manualDetails?: string; // Replaces scale in manual mode
 }
 
 export interface Preset {
   name: string;
-  description: string; // derived from summary
+  description: string;
   config: Partial<MapConfig>;
   tags: string[];
 }
@@ -72,6 +83,6 @@ export interface PoiMapping {
 
 export interface PromptCollectionItem {
   title: string;
-  type: 'MAP' | 'PERSPECTIVE' | 'SCENE' | 'VICTORY';
+  type: 'MAP' | 'PERSPECTIVE' | 'SCENE' | 'VICTORY' | 'BOSS' | 'UI' | 'CHARACTER' | 'BADGE';
   prompt: string;
 }

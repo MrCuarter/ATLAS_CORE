@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { MapConfig, Language } from '../types';
-import { UI_TEXT, SCALES, CIVILIZATIONS, ART_STYLES, CAMERAS, PLACES_BY_CATEGORY, PLACE_CATEGORIES } from '../constants';
+import { UI_TEXT, SCALES, CAMERAS, PLACES_BY_CATEGORY, PLACE_CATEGORIES } from '../constants';
 import { playTechClick } from '../services/audioService';
+import StyleSelector from './StyleSelector';
 
 interface SimpleViewProps {
   config: MapConfig;
@@ -29,11 +30,6 @@ const FAST_PLACES = [
 const FAST_CIVS = [
   'Humana genérica', 'Medieval', 'Futurista', 'Cyberpunk', 
   'Elfos', 'Orcos', 'Imperial', 'Alienígena Orgánica'
-];
-
-const FAST_STYLES = [
-  'Realista cinematográfico', 'Cartoon estilizado', '3D render', 
-  'Isométrico', 'Pixel art', 'Dark fantasy', 'Blueprint', 'Studio Ghibli'
 ];
 
 const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
@@ -134,12 +130,19 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
       )}
 
       {/* 4. STYLE - Revealed when Civ is selected */}
-      {renderSection(
-        t.stepStyle, 
-        FAST_STYLES, 
-        config.artStyle, 
-        (val) => onChange('artStyle', val), 
-        !!config.civilization
+      {!!config.civilization && (
+        <div className="mb-8 animate-fade-in bg-gray-900/30 border border-gray-800 p-6 rounded-lg backdrop-blur-sm">
+           <div className="mb-4">
+             <span className="text-xs font-bold text-gray-500 uppercase mr-2">4.</span>
+             {/* Title inside StyleSelector handles the main label */}
+           </div>
+           <StyleSelector 
+             selectedStyle={config.artStyle}
+             onSelect={(val) => onChange('artStyle', val)}
+             lang={lang}
+             isSimpleMode={true}
+           />
+        </div>
       )}
 
       {/* 5. CAMERA - Revealed when Style is selected */}
