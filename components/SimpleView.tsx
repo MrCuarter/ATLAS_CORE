@@ -78,7 +78,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
                 key={item}
                 onClick={() => { onSelect(item); playTechClick(); }}
                 className={`
-                  relative px-4 py-3 text-xs sm:text-sm font-medium transition-all duration-200 border rounded
+                  relative px-2 py-2 text-xs sm:text-sm font-medium transition-all duration-200 border rounded
+                  flex items-center justify-center text-center h-14 leading-tight break-words
                   ${isSelected 
                     ? 'bg-accent-900/40 border-accent-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
                     : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900'
@@ -87,7 +88,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
               >
                 {/* Selection marker */}
                 {isSelected && (
-                    <div className="absolute top-0 right-0 -mt-1 -mr-1 w-2 h-2 bg-accent-400 rounded-full shadow-[0_0_5px_rgba(34,211,238,0.8)]"></div>
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-accent-400 rounded-full shadow-[0_0_5px_rgba(34,211,238,0.8)]"></div>
                 )}
                 {item}
               </button>
@@ -172,7 +173,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
                         key={opt.val}
                         onClick={() => { onChange('aspectRatio', opt.val); playTechClick(); }}
                         className={`
-                        flex flex-col items-center justify-center p-4 border rounded transition-all duration-200
+                        flex flex-col items-center justify-center p-2 border rounded transition-all duration-200 h-24
                         ${config.aspectRatio.includes(opt.val) 
                             ? 'bg-accent-900/40 border-accent-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
                             : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900'
@@ -185,7 +186,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang }) => {
                             opt.icon === 'vertical' ? 'w-5 h-8' :
                             opt.icon === 'square' ? 'w-6 h-6' : 'w-10 h-4'
                         }`}></div>
-                        <span className="text-xs font-bold">{opt.label}</span>
+                        <span className="text-xs font-bold text-center">{opt.label}</span>
                     </button>
                 ))}
             </div>

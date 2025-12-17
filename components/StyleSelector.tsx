@@ -86,7 +86,8 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({ selectedStyle, onSelect, 
                 key={style}
                 onClick={() => { onSelect(style); playTechClick(); }}
                 className={`
-                  relative px-3 py-2 text-[10px] sm:text-xs font-mono text-left transition-all duration-200 border rounded
+                  relative px-2 py-1 text-[10px] sm:text-xs font-mono transition-all duration-200 border rounded
+                  flex items-center justify-center text-center h-12 leading-tight break-words
                   ${isSelected 
                     ? 'bg-purple-900/30 border-purple-400 text-white shadow-[0_0_10px_rgba(168,85,247,0.2)]' 
                     : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200'
