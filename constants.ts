@@ -215,7 +215,11 @@ export const ZOOMS = ['Mundo (Macro)', 'Región (Medio)', 'Distrito (Cerca)', 'E
 export const CAMERAS = ['Cenital (90º)', 'Isométrica (45º)', 'Perspectiva Heroica', 'Ojo de Pez'];
 export const RATIOS = ['16:9 (Panorámico)', '9:16 (Móvil)', '1:1 (Cuadrado)', '21:9 (Cine)'];
 
-// 1) PUEBLO HUMANO / ASENTAMIENTO
+// =================================================================
+// CARTOGRAPHER PRESETS (9 BUCKETS x 15 ITEMS)
+// =================================================================
+
+// 1) PUEBLO / ASENTAMIENTO HUMANO
 const BUCKET_1 = [
   "Villa de Solsticio", "Aldea de Valderroble", "Puerto del Rey", "Ciudadela de Piedra", "Asentamiento de la Colina",
   "Refugio de Pastores", "Mercado de Cruce de Caminos", "Fuerte de la Frontera", "Pueblo de Pescadores", "Aldea del Valle",
@@ -239,7 +243,7 @@ const BUCKET_2 = [
   config: { placeType: "Desierto Árido", civilization: "Orcos", buildingType: "Ruinas antiguas", artStyle: "Mad Max", camera: "Cenital (90º)", aspectRatio: "16:9" }
 }));
 
-// 3) COSTA / DOTHRAKI / PUERTO
+// 3) COSTA / PUERTO / MARINO
 const BUCKET_3 = [
   "Bahía de los Corsarios", "Puerto de la Serpiente", "Costa de los Nómadas", "Acantilados de Sal", "Playa de los Naufragios",
   "Mercado Flotante", "Delta de los Contrabandistas", "Isla de los Ladrones", "Cala Escondida", "Puerto de Guerra",
@@ -322,7 +326,6 @@ const BUCKET_9 = [
   tags: ["Técnico", "Blueprint", "Moderno"],
   config: { placeType: "Base secreta subterránea", civilization: "Humana (Genérica)", buildingType: "Zona Industrial", artStyle: "Blueprint", camera: "Cenital (90º)", aspectRatio: "16:9" }
 }));
-
 
 export const PRESET_BUCKETS: Record<number, Preset[]> = {
   1: BUCKET_1,

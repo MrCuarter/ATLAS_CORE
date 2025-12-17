@@ -13,8 +13,6 @@ const getVisualDNA = (config: MapConfig): string => {
     const era = t(config.era);
     const manual = config.manualDetails ? `CUSTOM DETAILS: ${config.manualDetails}.` : "";
     const manualPOI = config.manualPOIs && config.manualPOIs[0] ? `KEY FEATURE: ${config.manualPOIs[0]}.` : "";
-
-    const detail = "Ultra-detailed textures, intricate cartographic markers, professional level design layout, 8k resolution, tactical grid overlay, realistic pbr materials.";
     
     return `**Visual DNA: ${style}**. Cultural Context: ${civ} heritage during the era of ${era}. [Render Engine: Unreal Engine 5.4] [Visual Density: High] ${manual} ${manualPOI} [Atmosphere: ${config.customAtmosphere || 'Default atmospheric depth'}]`;
 };
@@ -29,12 +27,11 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
     const arValue = config.aspectRatio?.split(' ')[0] || '16:9';
     const dna = getVisualDNA(config);
 
-    // CRITICAL: NEGATIVE PROMPT INJECTION
-    // Even if models don't support --no, we instruct the model to exclude them.
-    const negativeConstraints = "STRICT EXCLUSIONS: NO TEXT, NO UI, NO HUD, NO LABELS, NO WATERMARKS, NO BUTTONS, NO MENU BARS. PURE VISUAL ASSET ONLY.";
+    // CRITICAL: NEGATIVE PROMPT INJECTION FOR ALL MODES
+    const negativeConstraints = "STRICT NEGATIVE PROMPT (DO NOT INCLUDE): Text, typography, letters, watermarks, signatures, UI elements, HUD, interface, buttons, menu bars, floating icons, health bars, speech bubbles, blurry areas, low quality.";
 
     if (promptType === PromptType.MIDJOURNEY) {
-        return `**MAP PROTOCOL: ${t(config.artStyle)}** :: Top-down tactical game map of ${place} featuring ${settlement} inhabited by ${civ} :: Era: ${era} :: ${dna} :: ${zoom}, ${camera} --ar ${arValue} --v 6.0 --stylize 400 --no text ui hud watermarks`;
+        return `**MAP PROTOCOL: ${t(config.artStyle)}** :: Top-down tactical game map of ${place} featuring ${settlement} inhabited by ${civ} :: Era: ${era} :: ${dna} :: ${zoom}, ${camera} --ar ${arValue} --v 6.0 --stylize 400 --no text ui hud watermarks interface`;
     } else {
         return `${getPersonaInstruction()}
 ---
@@ -54,12 +51,21 @@ export const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random()
 
 export const generateNarrativeCollection = (config: MapConfig, promptType: PromptType, lang: Language, mode: NarrativeMode): PromptCollectionItem[] => {
     const baseMap = generatePrompt(config, MediaType.IMAGE, promptType);
+    const dna = getVisualDNA(config);
+    
+    // UPDATED BACKGROUND INSTRUCTION: Priority Transparency > White
+    const backgroundInstruction = "BACKGROUND PROTOCOL: ISOLATED ON TRANSPARENT BACKGROUND (PNG ALPHA). IF ALPHA IS NOT POSSIBLE, USE SOLID PURE WHITE (#FFFFFF). NO SHADOWS, NO GRADIENTS, NO CHECKERBOARD.";
+    const noText = "NO TEXT, NO UI, NO HUD.";
+
     const items: PromptCollectionItem[] = [];
     
     if (mode === NarrativeMode.WORLD) {
         items.push({ title: "Mapa Táctico de Campaña", type: 'MAP', prompt: baseMap });
-        items.push({ title: "Vista de Perspectiva Épica", type: 'PERSPECTIVE', prompt: `${baseMap} -- Cinematic aerial view, epic wide angle perspective.` });
-        items.push({ title: "Entrada Principal al Escenario", type: 'SCENE', prompt: `Concept art of the main entrance to ${t(config.placeType)}. ${getVisualDNA(config)}. Ground level perspective.` });
+        items.push({ title: "Vista de Perspectiva Épica", type: 'PERSPECTIVE', prompt: `${baseMap} -- Cinematic aerial view, epic wide angle perspective. ${noText}` });
+        items.push({ title: "Entrada Principal al Escenario", type: 'SCENE', prompt: `Concept art of the main entrance to ${t(config.placeType)}. ${dna}. Ground level perspective. ${noText}` });
     }
+    
+    // Future expansion for CHARACTERS or UI would use the backgroundInstruction here.
+    
     return items;
 };

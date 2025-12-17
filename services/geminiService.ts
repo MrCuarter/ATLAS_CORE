@@ -17,7 +17,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     Use "Neo-Medieval" or "Techno-Organic" keywords. 
 
     ### BACKGROUND PROTOCOL (FOR CHARACTERS/ASSETS)
-    Always request: "Isolated on transparent background (PNG alpha). FALLBACK: If alpha is not possible, use ONLY SOLID PURE WHITE (#FFFFFF). NO shadows, NO background clutter, NO checkerboard, NO false transparency."
+    Always request: "ISOLATED ON TRANSPARENT BACKGROUND (PNG ALPHA). FALLBACK IF IMPOSSIBLE: SOLID PURE WHITE (#FFFFFF). NO shadows, NO background clutter."
 
     ### OUTPUT
     Aspect Ratio must match original or be 16:9. For Midjourney, use '::' structure. Output ONLY text.`;
@@ -44,7 +44,7 @@ export const generateGameAssetsPrompt = async (context: string): Promise<string>
         const systemInstruction = `You are a Lead Game Artist. Generate Midjourney prompts for a professional Game UI Kit based on: "${context}".
         
         ### REQUIREMENTS
-        - BACKGROUND: Strict Transparent (PNG Alpha) or Solid Pure White (#FFFFFF). No checkerboard. No false transparency.
+        - BACKGROUND: Strict Transparent (PNG Alpha). If not supported, use Solid Pure White (#FFFFFF). No checkerboard. No false transparency.
         - STYLE: Must match the context's art style exactly.
         
         - UI COMPONENTS TO INCLUDE:

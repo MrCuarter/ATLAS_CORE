@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MapConfig, Language, NarrativeMode, ThemeMode } from '../types';
 import * as C from '../constants';
-import { playSwitch, playTechClick } from '../services/audioService';
+import { playSwitch } from '../services/audioService';
 import StyleSelector from './StyleSelector';
 
 interface NarrativeViewProps {
@@ -206,15 +206,29 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     )}
                 </div>
 
-                {/* MANUAL EXTRA DETAILS FOR BOTH MODES */}
-                {isManual && (
-                    <div className="animate-fade-in">
-                         <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold text-accent-400">DETALLE PERSONALIZADO</label>
-                         <textarea 
-                            value={config.manualPOIs?.[0] || ''} 
-                            onChange={(e) => onChange('manualPOIs', [e.target.value])} 
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none resize-none h-20" 
-                            placeholder={theme === ThemeMode.FANTASY ? "Ej: Un árbol gigante con runas brillantes flotando..." : "Ej: Un búnker de la guerra fría oculto bajo la arena..."} 
+                {/* DETALLE PERSONALIZADO (AÑADIDO PARA MANUAL FANTASÍA) */}
+                {theme === ThemeMode.FANTASY && isManual && (
+                     <div className="animate-fade-in pt-2">
+                        <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold text-purple-400">DETALLE PERSONALIZADO</label>
+                        <textarea 
+                           value={config.manualPOIs?.[0] || ''} 
+                           onChange={(e) => onChange('manualPOIs', [e.target.value])} 
+                           className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-purple-500 outline-none resize-none h-16 rounded-sm" 
+                           placeholder="Ej: Un árbol gigante con runas brillantes, una estatua de un dios olvidado..." 
+                       />
+                   </div>
+                )}
+
+                {/* HISTORICAL PLACE EXTRA (Since it doesn't fit in 1B which is Era) */}
+                {theme === ThemeMode.HISTORICAL && isManual && (
+                    <div>
+                         <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">DETALLE GEOGRÁFICO (MANUAL)</label>
+                         <input 
+                            type="text" 
+                            value={config.placeType} 
+                            onChange={(e) => onChange('placeType', e.target.value)} 
+                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
+                            placeholder="Ej: Costa del Mediterráneo, Desierto del Gobi..." 
                         />
                     </div>
                 )}
