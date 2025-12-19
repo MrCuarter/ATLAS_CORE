@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { MapConfig, Language, NarrativeMode, ThemeMode } from '../types';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { MapConfig, Language, NarrativeMode, ThemeMode, PromptType } from '../types';
 import * as C from '../constants';
-import { playSwitch } from '../services/audioService';
-import StyleSelector from './StyleSelector';
+import { playSwitch, playTechClick, playSuccess } from '../services/audioService';
+import { generatePOISuggestions } from '../services/geminiService';
 
 interface NarrativeViewProps {
   config: MapConfig;
@@ -10,22 +11,78 @@ interface NarrativeViewProps {
   lang: Language;
   onGenerate: (useAI: boolean, mode: NarrativeMode) => void;
   isGenerating?: boolean; 
-  onRandom: () => void; 
+  onRandom: () => void;
+  promptType: PromptType;
+  setPromptType: (type: PromptType) => void;
 }
 
-const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, onGenerate, isGenerating }) => {
+const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, onGenerate, isGenerating, onRandom, promptType, setPromptType }) => {
   const t = C.UI_TEXT[lang];
-  const [isManual, setIsManual] = useState(false);
+  const [pois, setPois] = useState<string[]>(config.manualPOIs || Array(6).fill(''));
+  const [isLoadingPois, setIsLoadingPois] = useState(false);
+  
+  // Default to Fantasy if undefined, allow toggle
   const theme = config.themeMode || ThemeMode.FANTASY;
 
-  // Check for anachronisms
-  const showAnachronism = useMemo(() => {
-    if (theme === ThemeMode.FANTASY) return false;
-    const futureEras = ['Año 2050', 'Año 3000', 'Año 4000', 'Cyberpunk', 'Futuro'];
-    // Simple check if civ is ancient and era is future
-    const ancientCivs = ['Egipcia', 'Griega', 'Romana', 'Azteca', 'Maya', 'Inca', 'Vikinga'];
-    return futureEras.some(e => config.era.includes(e)) && ancientCivs.some(c => config.civilization.includes(c));
-  }, [config.civilization, config.era, theme]);
+  // Lists based on theme
+  const civList = theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS;
+  const buildingList = theme === ThemeMode.FANTASY ? C.FANTASY_BUILDINGS : C.HISTORICAL_BUILDINGS;
+  
+  const placeList = useMemo(() => {
+    if (theme === ThemeMode.FANTASY) {
+        return C.PLACES_BY_CIV[config.civilization] || C.PLACES_BY_CIV['DEFAULT'];
+    }
+    // Historical uses Locations
+    return C.LOCATIONS;
+  }, [config.civilization, theme]);
+
+  // Sync internal POIs with config
+  useEffect(() => {
+    if (config.manualPOIs && config.manualPOIs.length > 0) {
+        setPois(prev => {
+             if (prev[0] === '' && config.manualPOIs && config.manualPOIs[0] !== '') return config.manualPOIs;
+             return prev;
+        });
+    }
+  }, [config.manualPOIs]);
+
+  // OFFLINE AUTO-POIS: When Civilization changes, update POIs with Predefined ones (no AI)
+  useEffect(() => {
+    if (config.civilization) {
+         const predefined = C.getPredefinedPOIs(config.civilization);
+         // Only update if current POIs are empty or basic default
+         setPois(predefined);
+         onChange('manualPOIs', predefined);
+    }
+  }, [config.civilization, config.placeType]);
+
+  const handlePoiChange = (index: number, value: string) => {
+    const newPois = [...pois];
+    newPois[index] = value;
+    setPois(newPois);
+    onChange('manualPOIs', newPois);
+  };
+
+  const handleGeneratePois = async () => {
+    if (!config.placeType || !config.civilization) return;
+    playTechClick();
+    setIsLoadingPois(true);
+    try {
+        const suggestions = await generatePOISuggestions(config.placeType, config.civilization);
+        if (suggestions && suggestions.length > 0) {
+            const safeSuggestions = suggestions.slice(0, 6);
+            while (safeSuggestions.length < 6) safeSuggestions.push("");
+            
+            setPois(safeSuggestions);
+            onChange('manualPOIs', safeSuggestions);
+            playSuccess();
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsLoadingPois(false);
+    }
+  };
 
   const handleThemeToggle = (newTheme: ThemeMode) => {
     onChange('themeMode', newTheme);
@@ -35,250 +92,273 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     playSwitch();
   };
 
-  const handleModeToggle = (manual: boolean) => {
-      setIsManual(manual);
-      playSwitch();
-  }
-
-  const dynamicPlaces = useMemo(() => {
-    if (theme === ThemeMode.FANTASY) {
-        return C.PLACES_BY_CIV[config.civilization] || C.PLACES_BY_CIV['DEFAULT'];
+  // HANDLER FOR WIZARD STYLE FIELDS (Block 2)
+  const handleWizardChange = (field: keyof MapConfig, value: string) => {
+    playTechClick();
+    onChange(field, value);
+    
+    // Cascade resets
+    if (field === 'styleCategory') {
+        onChange('styleReference', '');
+        onChange('styleVibe', '');
+        onChange('styleFinish', '');
     }
-    return C.PLACES_BY_CIV['DEFAULT'];
-  }, [config.civilization, theme]);
+  };
+
+  const Select = ({ label, value, options, onChangeVal, disabled = false }: { label: string, value: string, options: string[], onChangeVal: (val: string) => void, disabled?: boolean }) => (
+    <div className="mb-4">
+        <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
+        <select 
+            value={value} 
+            onChange={(e) => { playTechClick(); onChangeVal(e.target.value); }}
+            disabled={disabled}
+            className={`w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors rounded-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            <option value="">{t.noneOption}</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+    </div>
+  );
 
   return (
-    <div className="animate-fade-in pb-8 max-w-5xl mx-auto">
+    <div className="animate-fade-in pb-8 max-w-6xl mx-auto">
       
-      {/* HEADER & TOGGLES */}
+      {/* HEADER TITLE */}
       <div className="text-center mb-10">
-        <h2 className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-6">{t.storycrafterTitle}</h2>
-        
-        <div className="flex flex-col md:flex-row justify-center items-center gap-6">
-            {/* THEME TOGGLE */}
-            <div className="bg-gray-900 border border-gray-800 p-1 rounded-full flex shadow-xl">
-                <button 
-                    onClick={() => handleThemeToggle(ThemeMode.FANTASY)} 
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${theme === ThemeMode.FANTASY ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                    {t.themeFantasy}
-                </button>
-                <button 
-                    onClick={() => handleThemeToggle(ThemeMode.HISTORICAL)} 
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${theme === ThemeMode.HISTORICAL ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                    {t.themeHistory}
-                </button>
-            </div>
-
-            {/* MODE TOGGLE (Assistant vs Manual) */}
-            <div className="bg-gray-900 border border-gray-800 p-1 rounded-full flex shadow-xl">
-                 <button 
-                    onClick={() => handleModeToggle(false)} 
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${!isManual ? 'bg-accent-600 text-white shadow-lg shadow-accent-900/50' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                    {t.modeAssistant}
-                </button>
-                <button 
-                    onClick={() => handleModeToggle(true)} 
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${isManual ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                    {t.modeManual}
-                </button>
-            </div>
-        </div>
+        <h2 className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">{t.storycrafterTitle}</h2>
+        <p className="text-xs text-gray-500 font-mono tracking-widest uppercase">MOTOR DE GENERACIÓN NARRATIVA MULTI-ASSET</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        
-        {/* BLOQUE 1: NÚCLEO DE ESCENARIO */}
-        <div className={`bg-gray-900/50 p-6 border border-gray-800 border-t-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-t-purple-600' : 'border-t-orange-600'}`}>
-            <h3 className={`text-lg font-bold text-white mb-6 font-mono flex items-center gap-2 uppercase tracking-tighter`}>
-                <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>1.</span> {t.scenario}
-            </h3>
+      {/* ROW 1: CORE + VISUAL DNA (SIDE BY SIDE) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             
-            <div className="space-y-4">
-                {/* 1A */}
-                <div>
-                    <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">
-                        {theme === ThemeMode.FANTASY ? t.labelRace : t.labelCiv}
-                    </label>
-                    {!isManual ? (
-                        <select 
-                            value={config.civilization} 
-                            onChange={(e) => onChange('civilization', e.target.value)}
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors"
-                        >
-                            <option value="">{t.noneOption}</option>
-                            {(theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS).map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                    ) : (
-                        <input 
-                            type="text" 
-                            value={config.civilization} 
-                            onChange={(e) => onChange('civilization', e.target.value)} 
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
-                            placeholder={theme === ThemeMode.FANTASY ? "Ej: Enanos de Lava, Hadas del Hielo..." : "Ej: Imperio Otomano, Mayas..."} 
-                        />
-                    )}
-                </div>
-
-                {/* 1B */}
-                <div>
-                    <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">
-                        {theme === ThemeMode.FANTASY ? t.labelGeo : t.labelEra}
-                    </label>
+            {/* BLOQUE 1: NÚCLEO DE ESCENARIO */}
+            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-l-purple-600' : 'border-l-orange-600'} relative`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className={`text-sm font-bold text-white font-mono flex items-center gap-2 uppercase tracking-tighter`}>
+                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>01.</span> {t.scenario}
+                    </h3>
                     
-                    {theme === ThemeMode.FANTASY ? (
-                        // FANTASY 1B: GEOLOCATION
-                        !isManual ? (
-                            <select 
-                                value={config.placeType} 
-                                onChange={(e) => onChange('placeType', e.target.value)}
-                                className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500"
-                            >
-                                <option value="">{t.noneOption}</option>
-                                {dynamicPlaces.map(o => <option key={o} value={o}>{o}</option>)}
-                            </select>
-                        ) : (
-                            <input 
-                                type="text" 
-                                value={config.placeType} 
-                                onChange={(e) => onChange('placeType', e.target.value)} 
-                                className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
-                                placeholder="Ej: Bosque de Cristal, Montaña Flotante..." 
-                            />
-                        )
-                    ) : (
-                        // HISTORICAL 1B: ERA
-                        !isManual ? (
-                            <select 
-                                value={config.era} 
-                                onChange={(e) => onChange('era', e.target.value)}
-                                className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500"
-                            >
-                                <option value="">{t.noneOption}</option>
-                                {C.HISTORICAL_ERAS.map(o => <option key={o} value={o}>{o}</option>)}
-                            </select>
-                        ) : (
-                            <input 
-                                type="text" 
-                                value={config.era} 
-                                onChange={(e) => onChange('era', e.target.value)} 
-                                className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
-                                placeholder="Ej: Año 3000, Siglo XVIII..." 
-                            />
-                        )
-                    )}
+                    {/* RANDOM BUTTON NEXT TO TITLE */}
+                    <button 
+                        onClick={() => { playSwitch(); onRandom(); }}
+                        className="bg-gray-800 hover:bg-gray-700 text-white p-1.5 rounded transition-all border border-gray-700 hover:border-gray-500"
+                        title="Randomize Scenario & Style"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                    </button>
                 </div>
 
-                {/* Anachronism Warning for Historical Mode */}
-                {theme === ThemeMode.HISTORICAL && showAnachronism && (
-                    <div className="p-3 bg-orange-950/20 border border-orange-500/50 rounded animate-fade-in shadow-lg">
-                        <p className="text-[10px] font-bold text-orange-400 mb-1 flex items-center gap-2">⚠️ {t.anachronismTitle}</p>
-                        <div className="flex gap-2 mt-2">
-                            <button onClick={() => onChange('anachronismPolicy', 'STRICT')} className={`flex-1 py-1 text-[9px] font-bold border rounded ${config.anachronismPolicy === 'STRICT' ? 'bg-orange-600 border-orange-500 text-white' : 'border-orange-500/50 text-orange-500'}`}>{t.anachronismStrict}</button>
-                            <button onClick={() => onChange('anachronismPolicy', 'CHAOS')} className={`flex-1 py-1 text-[9px] font-bold border rounded ${config.anachronismPolicy === 'CHAOS' ? 'bg-orange-600 border-orange-500 text-white' : 'border-orange-500/50 text-orange-500'}`}>{t.anachronismChaos}</button>
-                        </div>
-                    </div>
-                )}
+                {/* Theme Toggle */}
+                <div className="flex bg-gray-950 border border-gray-800 rounded mb-4 p-0.5">
+                    <button 
+                        onClick={() => handleThemeToggle(ThemeMode.FANTASY)} 
+                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.FANTASY ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        {t.themeFantasy}
+                    </button>
+                    <button 
+                        onClick={() => handleThemeToggle(ThemeMode.HISTORICAL)} 
+                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.HISTORICAL ? 'bg-orange-900/50 text-orange-300 border border-orange-500/30' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        {t.themeHistory}
+                    </button>
+                </div>
+                
+                <Select 
+                    label={theme === ThemeMode.FANTASY ? t.labelRace : t.labelCiv} 
+                    value={config.civilization} 
+                    options={civList} 
+                    onChangeVal={(v) => onChange('civilization', v)} 
+                />
 
-                {/* 1C: EDIFICATION */}
-                <div>
-                    <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{t.labelSettlement}</label>
-                    {!isManual ? (
-                        <select 
-                            value={config.buildingType} 
-                            onChange={(e) => onChange('buildingType', e.target.value)}
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500"
-                        >
-                             <option value="">{t.noneOption}</option>
-                            {(theme === ThemeMode.FANTASY ? C.FANTASY_BUILDINGS : C.HISTORICAL_BUILDINGS).map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
+                <Select 
+                    label={theme === ThemeMode.FANTASY ? t.labelGeo : "GEOLOCALIZACIÓN"} 
+                    value={config.placeType} 
+                    options={placeList} 
+                    onChangeVal={(v) => onChange('placeType', v)} 
+                />
+
+                <Select 
+                    label={t.labelSettlement} 
+                    value={config.buildingType} 
+                    options={buildingList} 
+                    onChangeVal={(v) => onChange('buildingType', v)} 
+                />
+            </div>
+
+            {/* BLOQUE 2: ADN VISUAL (WIZARD DROPDOWNS) */}
+            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-l-purple-600' : 'border-l-orange-600'}`}>
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className={`text-sm font-bold text-white font-mono uppercase tracking-tighter flex items-center gap-2`}>
+                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>02.</span> ADN VISUAL
+                    </h3>
+                </div>
+                
+                {/* 1. Category */}
+                <Select 
+                    label="CATEGORÍA / MEDIO" 
+                    value={config.styleCategory || ''} 
+                    options={C.STYLE_WIZARD_DATA.categories} 
+                    onChangeVal={(v) => handleWizardChange('styleCategory', v)} 
+                />
+
+                {/* 2. Reference (Dependent on Category) */}
+                <Select 
+                    label="REFERENTE VISUAL" 
+                    value={config.styleReference || ''} 
+                    options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} 
+                    onChangeVal={(v) => handleWizardChange('styleReference', v)}
+                    disabled={!config.styleCategory} 
+                />
+
+                {/* 3. Vibe */}
+                <Select 
+                    label="SENSACIÓN / ATMÓSFERA" 
+                    value={config.styleVibe || ''} 
+                    options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} 
+                    onChangeVal={(v) => handleWizardChange('styleVibe', v)}
+                    disabled={!config.styleReference} 
+                />
+
+                {/* 4. Finish */}
+                <Select 
+                    label="ACABADO FINAL" 
+                    value={config.styleFinish || ''} 
+                    options={C.STYLE_WIZARD_DATA.finish.map(f => f.label)} 
+                    onChangeVal={(v) => handleWizardChange('styleFinish', v)} 
+                    disabled={!config.styleVibe}
+                />
+            </div>
+      </div>
+
+      {/* ROW 2: POIS (FULL WIDTH) */}
+      <div className={`mb-8 bg-gray-900/50 p-6 border border-gray-800 border-t-4 rounded-lg ${theme === ThemeMode.FANTASY ? 'border-t-purple-600' : 'border-t-orange-600'}`}>
+            <div className="flex justify-between items-center mb-6">
+                <h3 className={`text-sm font-bold text-white font-mono uppercase tracking-tighter flex items-center gap-2`}>
+                    <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>03.</span> {t.poiTitle}
+                </h3>
+                
+                {/* BOTON REGENERATE */}
+                <button 
+                    onClick={handleGeneratePois}
+                    disabled={isLoadingPois || !config.placeType}
+                    className="px-4 py-2 bg-gray-950 border border-gray-700 hover:border-accent-500 hover:text-accent-400 text-gray-400 font-mono font-bold text-[10px] rounded transition-all flex items-center gap-2 uppercase tracking-wider"
+                >
+                    {isLoadingPois ? (
+                        <span className="flex items-center gap-2"><svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg> GENERANDO...</span>
                     ) : (
+                        <span>✨ GENERAR POIS CON IA</span>
+                    )}
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pois.map((poi, idx) => (
+                    <div key={idx} className="relative group">
+                        <span className="absolute left-3 top-3 text-[10px] font-mono text-gray-600 font-bold">0{idx + 1}</span>
                         <input 
-                            type="text" 
-                            value={config.buildingType} 
-                            onChange={(e) => onChange('buildingType', e.target.value)} 
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
-                            placeholder="Ej: Base lunar, Templo en ruinas..." 
-                        />
-                    )}
-                </div>
-
-                {/* DETALLE PERSONALIZADO (AÑADIDO PARA MANUAL FANTASÍA) */}
-                {theme === ThemeMode.FANTASY && isManual && (
-                     <div className="animate-fade-in pt-2">
-                        <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold text-purple-400">DETALLE PERSONALIZADO</label>
-                        <textarea 
-                           value={config.manualPOIs?.[0] || ''} 
-                           onChange={(e) => onChange('manualPOIs', [e.target.value])} 
-                           className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-purple-500 outline-none resize-none h-16 rounded-sm" 
-                           placeholder="Ej: Un árbol gigante con runas brillantes, una estatua de un dios olvidado..." 
-                       />
-                   </div>
-                )}
-
-                {/* HISTORICAL PLACE EXTRA (Since it doesn't fit in 1B which is Era) */}
-                {theme === ThemeMode.HISTORICAL && isManual && (
-                    <div>
-                         <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">DETALLE GEOGRÁFICO (MANUAL)</label>
-                         <input 
-                            type="text" 
-                            value={config.placeType} 
-                            onChange={(e) => onChange('placeType', e.target.value)} 
-                            className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white placeholder-gray-600 focus:border-accent-500 outline-none" 
-                            placeholder="Ej: Costa del Mediterráneo, Desierto del Gobi..." 
+                            type="text"
+                            value={poi}
+                            onChange={(e) => handlePoiChange(idx, e.target.value)}
+                            placeholder={`Punto de Interés ${idx + 1}`}
+                            className="w-full bg-gray-950 border border-gray-800 p-3 pl-8 text-sm text-white placeholder-gray-700 focus:border-accent-500 outline-none transition-colors rounded-sm"
                         />
                     </div>
-                )}
+                ))}
             </div>
-        </div>
+      </div>
 
-        {/* BLOQUE 2: ADN VISUAL */}
-        <div className={`bg-gray-900/50 p-6 border border-gray-800 border-t-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-t-purple-600' : 'border-t-orange-600'}`}>
-            <h3 className={`text-lg font-bold text-white mb-6 font-mono uppercase tracking-tighter flex items-center gap-2`}>
-                 <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>2.</span> ADN VISUAL
-            </h3>
-            
-            <StyleSelector selectedStyle={config.artStyle} onSelect={(val) => onChange('artStyle', val)} lang={lang} />
-            
-            <div className="grid grid-cols-2 gap-4 mt-6">
-                <div>
-                     <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{t.time}</label>
-                     <select value={config.time} onChange={(e) => onChange('time', e.target.value)} className="w-full bg-gray-950 border border-gray-800 p-2.5 text-xs text-gray-400 outline-none focus:border-accent-500">
-                        <option value="">{t.noneOption}</option>
-                        {C.TIMES.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{t.weather}</label>
-                    <select value={config.weather} onChange={(e) => onChange('weather', e.target.value)} className="w-full bg-gray-950 border border-gray-800 p-2.5 text-xs text-gray-400 outline-none focus:border-accent-500">
-                        <option value="">{t.noneOption}</option>
-                        {C.WEATHERS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                </div>
-            </div>
+      {/* ROW 3: PLATFORM SELECTOR (Now before Generation Buttons) */}
+      <div className="mb-8 bg-gray-900/30 border border-gray-800 rounded-lg p-6">
+        <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
+             <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">04.</span> 
+             {t.stepPlatform}
+        </h3>
+        <p className="text-xs text-gray-500 mb-6 font-mono border-b border-gray-800 pb-4">{t.stepPlatformSubtitle}</p>
 
-            {isManual && (
-                <div className="mt-4">
-                     <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">ATMÓSFERA Y TÉCNICA</label>
-                     <textarea value={config.manualDetails} onChange={(e) => onChange('manualDetails', e.target.value)} className="w-full bg-gray-950 border border-gray-800 p-3 text-sm text-white h-20 resize-none placeholder-gray-600 focus:border-accent-500 outline-none" placeholder="Ej: Niebla volumétrica, render Unreal Engine 5, iluminación dramática..." />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+                onClick={() => { playTechClick(); setPromptType(PromptType.UNIVERSAL); }}
+                className={`p-4 rounded border text-left transition-all relative overflow-hidden group
+                ${promptType === PromptType.UNIVERSAL ? 'bg-blue-900/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-gray-950 border-gray-800 hover:border-gray-600'}`}
+            >
+                <div className="font-bold font-mono text-sm mb-1 text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    {t.formatUniversal}
                 </div>
-            )}
+                <div className="text-[10px] text-gray-400">{t.formatUniversalDesc}</div>
+            </button>
+
+            <button
+                onClick={() => { playTechClick(); setPromptType(PromptType.MIDJOURNEY); }}
+                className={`p-4 rounded border text-left transition-all relative overflow-hidden group
+                ${promptType === PromptType.MIDJOURNEY ? 'bg-purple-900/30 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'bg-gray-950 border-gray-800 hover:border-gray-600'}`}
+            >
+                <div className="font-bold font-mono text-sm mb-1 text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    {t.formatMJ}
+                </div>
+                <div className="text-[10px] text-gray-400">{t.formatMJDesc}</div>
+            </button>
+
+            <button
+                onClick={() => { playTechClick(); setPromptType(PromptType.ADVANCED); }}
+                className={`p-4 rounded border text-left transition-all relative overflow-hidden group
+                ${promptType === PromptType.ADVANCED ? 'bg-orange-900/30 border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]' : 'bg-gray-950 border-gray-800 hover:border-gray-600'}`}
+            >
+                <div className="font-bold font-mono text-sm mb-1 text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    {t.formatAdvanced}
+                </div>
+                <div className="text-[10px] text-gray-400">{t.formatAdvancedDesc}</div>
+            </button>
         </div>
       </div>
 
-      <div className="flex gap-4 max-w-2xl mx-auto">
-          <button 
-            onClick={() => onGenerate(true, NarrativeMode.WORLD)} 
-            disabled={isGenerating || !config.artStyle}
-            className={`flex-1 py-5 rounded-sm font-mono font-bold text-sm tracking-[0.2em] transition-all shadow-2xl uppercase
-              ${!config.artStyle ? 'bg-gray-800 text-gray-500' : 'bg-accent-600 hover:bg-accent-500 text-white shadow-accent-500/20'}
-            `}
-          >
-            {isGenerating ? 'PROCESANDO...' : t.worldGenBtn}
-          </button>
+      {/* ROW 4: GENERATION BUTTONS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            
+            {/* 1. MUNDO */}
+            <button 
+                onClick={() => onGenerate(false, NarrativeMode.WORLD)} // Changed to false (No AI) by default
+                disabled={isGenerating || !config.styleReference || !config.civilization}
+                className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
+                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-cyan-900/20 border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]'}
+                `}
+            >
+                <div className="text-2xl mb-2">🌍</div>
+                <div className="font-mono font-bold text-sm tracking-widest text-cyan-400 mb-1">GENERAR MUNDO</div>
+                <p className="text-[10px] text-cyan-200/50 leading-tight">Mapa Cenital + Isométrico + 6 Escenas (POIs).</p>
+                {isGenerating && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div></div>}
+            </button>
+
+            {/* 2. UI */}
+            <button 
+                onClick={() => onGenerate(false, NarrativeMode.UI)} // Changed to false (No AI) by default
+                disabled={isGenerating || !config.styleReference}
+                className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
+                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]'}
+                `}
+            >
+                <div className="text-2xl mb-2">🔮</div>
+                <div className="font-mono font-bold text-sm tracking-widest text-purple-400 mb-1">GENERAR UI</div>
+                <p className="text-[10px] text-purple-200/50 leading-tight">Menú, Inventario, Diálogos y Botones.</p>
+            </button>
+
+            {/* 3. PERSONAJES */}
+            <button 
+                onClick={() => onGenerate(false, NarrativeMode.CHARACTERS)} // Changed to false (No AI) by default
+                disabled={isGenerating || !config.styleReference || !config.civilization}
+                className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
+                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-pink-900/20 border-pink-500/30 hover:bg-pink-900/40 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]'}
+                `}
+            >
+                <div className="text-2xl mb-2">⚔️</div>
+                <div className="font-mono font-bold text-sm tracking-widest text-pink-400 mb-1">GENERAR CHARS</div>
+                <p className="text-[10px] text-pink-200/50 leading-tight">Héroes (3 poses acción) + Villanos + Mascota.</p>
+            </button>
+
       </div>
 
     </div>

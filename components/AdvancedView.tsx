@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { MapConfig, MediaType, Language, ThemeMode } from '../types';
+import { MapConfig, MediaType, Language, ThemeMode, PromptType } from '../types';
 import * as C from '../constants';
 import StyleSelector from './StyleSelector';
 import { playSwitch } from '../services/audioService';
@@ -9,9 +9,11 @@ interface AdvancedViewProps {
   mediaType: MediaType;
   onChange: (field: keyof MapConfig, value: any) => void;
   lang: Language;
+  promptType: PromptType;
+  setPromptType: (type: PromptType) => void;
 }
 
-const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) => {
+const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang, mediaType, promptType, setPromptType }) => {
   const t = C.UI_TEXT[lang];
   const theme = config.themeMode || ThemeMode.FANTASY;
 
@@ -23,16 +25,13 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
     playSwitch();
   };
 
-  // Determine lists based on theme (Mirroring Storycrafter logic)
   const civilizationOptions = theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS;
   const buildingOptions = theme === ThemeMode.FANTASY ? C.FANTASY_BUILDINGS : C.HISTORICAL_BUILDINGS;
   
-  // Dynamic places based on selected Civ
   const placeOptions = useMemo(() => {
     if (theme === ThemeMode.FANTASY) {
         return C.PLACES_BY_CIV[config.civilization] || C.PLACES_BY_CIV['DEFAULT'];
     }
-    // For Historical, we default to the standard list or could expand later
     return C.PLACES_BY_CIV['DEFAULT'];
   }, [config.civilization, theme]);
 
@@ -40,7 +39,7 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
     <div className={`mb-4 ${className}`}>
       <label className="block text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest mb-1">{label}</label>
       <select
-        value={config[field] as string}
+        value={config[field] as string || ''}
         onChange={(e) => onChange(field, e.target.value)}
         className="w-full bg-gray-950 border border-gray-800 text-gray-300 text-xs p-2 focus:border-accent-500 outline-none transition-colors"
       >
@@ -59,7 +58,6 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
             <span className={theme === ThemeMode.FANTASY ? 'text-purple-600' : 'text-orange-600'}>01</span> {t.scenario}
         </h3>
 
-        {/* Interruptor Fantasía / Histórico */}
         <div className="flex bg-gray-950 border border-gray-800 rounded mb-6 p-0.5">
             <button 
                 onClick={() => handleThemeToggle(ThemeMode.FANTASY)} 
@@ -75,10 +73,8 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
             </button>
         </div>
 
-        {/* Escala */}
         <Select label={t.scale} field="scale" options={C.SCALES} />
         
-        {/* Lógica Storycrafter: 1A, 1B, 1C */}
         <Select 
             label={theme === ThemeMode.FANTASY ? t.labelRace : t.labelCiv} 
             field="civilization" 
@@ -104,6 +100,19 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
           <Select label={t.weather} field="weather" options={C.WEATHERS} />
         </div>
         <StyleSelector selectedStyle={config.artStyle} civilization={config.civilization} onSelect={(val) => onChange('artStyle', val)} lang={lang} />
+        
+        {mediaType === MediaType.VIDEO && (
+            <div className="mt-6 p-4 bg-red-900/20 border border-red-900/50 rounded animate-fade-in">
+                 <h4 className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                     <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                     {t.videoMoveLabel}
+                 </h4>
+                 <div className="grid grid-cols-2 gap-4">
+                     <Select label={t.videoMoveLabel} field="videoMovement" options={C.VIDEO_MOTIONS.map(m => m.label)} className="mb-0" />
+                     <Select label={t.videoDynLabel} field="videoDynamics" options={C.VIDEO_DYNAMICS} className="mb-0" />
+                 </div>
+            </div>
+        )}
       </div>
 
       {/* 03. FORMATO (Narrow, Yellow accent) */}
@@ -111,13 +120,25 @@ const AdvancedView: React.FC<AdvancedViewProps> = ({ config, onChange, lang }) =
         <h3 className="text-sm font-bold text-white mb-6 font-mono uppercase tracking-tighter flex items-center gap-2">
             <span className="text-amber-500">03</span> {t.format}
         </h3>
+        
+        {/* NEW FORMAT SELECTOR IN ADVANCED */}
+        <div className="mb-4">
+             <label className="block text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest mb-1">PLATAFORMA</label>
+             <div className="flex flex-col gap-1">
+                 <button onClick={() => setPromptType(PromptType.UNIVERSAL)} className={`p-2 text-xs border rounded text-left ${promptType === PromptType.UNIVERSAL ? 'border-blue-500 text-blue-400 bg-blue-900/20' : 'border-gray-800 text-gray-500'}`}>UNIVERSAL</button>
+                 <button onClick={() => setPromptType(PromptType.MIDJOURNEY)} className={`p-2 text-xs border rounded text-left ${promptType === PromptType.MIDJOURNEY ? 'border-purple-500 text-purple-400 bg-purple-900/20' : 'border-gray-800 text-gray-500'}`}>MIDJOURNEY</button>
+                 <button onClick={() => setPromptType(PromptType.ADVANCED)} className={`p-2 text-xs border rounded text-left ${promptType === PromptType.ADVANCED ? 'border-orange-500 text-orange-400 bg-orange-900/20' : 'border-gray-800 text-gray-500'}`}>TÉCNICO (SD)</button>
+             </div>
+        </div>
+
         <Select label={t.zoom} field="zoom" options={C.ZOOMS} />
         <Select label={t.camera} field="camera" options={C.CAMERAS} />
         <Select label={t.ratio} field="aspectRatio" options={C.RATIOS} />
+        
         <div className="mt-6 border-t border-gray-800 pt-4">
            <label className="block text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest mb-2">{t.customPlaceholder}</label>
            <textarea 
-            placeholder="Ej: Niebla volumétrica, iluminación cenital dramática..."
+            placeholder="Ej: Niebla volumétrica..."
             value={config.customAtmosphere} 
             onChange={(e) => onChange('customAtmosphere', e.target.value)}
             className="w-full bg-gray-950 border border-gray-800 text-gray-400 text-xs p-3 h-28 resize-none focus:border-amber-500 outline-none transition-all placeholder:italic"

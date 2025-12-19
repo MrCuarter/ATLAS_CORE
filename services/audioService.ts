@@ -18,41 +18,43 @@ const resumeContext = async () => {
   return ctx;
 };
 
+// SHORT BLIP (For navigation/interaction)
 export const playTechClick = async () => {
   try {
     const ctx = await resumeContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
+    // Pure Sine for "clean" UI feel
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.05);
-
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+    // Very short high frequency blip (2000Hz)
+    osc.frequency.setValueAtTime(2000, ctx.currentTime);
+    
+    // Quick decay envelope
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.05);
-  } catch (e) {
-    // Ignore audio errors (e.g. if user hasn't interacted yet)
-  }
+    osc.stop(ctx.currentTime + 0.03);
+  } catch (e) {}
 };
 
+// POSITIVE SWITCH (For toggles/modes)
 export const playSwitch = async () => {
   try {
     const ctx = await resumeContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(200, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.1);
+    // Sine wave, slightly lower pitch than click, distinct "on" sound
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
 
-    gain.gain.setValueAtTime(0.05, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -62,28 +64,29 @@ export const playSwitch = async () => {
   } catch (e) {}
 };
 
+// SUCCESS CHIME
 export const playSuccess = async () => {
   try {
     const ctx = await resumeContext();
     
-    // Play a major triad arpeggio quickly
-    const notes = [440, 554.37, 659.25]; // A4, C#5, E5
+    // Positive major triad, quick arpeggio (C6, E6, G6)
+    const notes = [1046.50, 1318.51, 1567.98]; 
     notes.forEach((freq, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        const start = ctx.currentTime + (i * 0.05);
+        const start = ctx.currentTime + (i * 0.04);
 
         osc.type = 'sine';
         osc.frequency.value = freq;
         
         gain.gain.setValueAtTime(0.05, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.2);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(start);
-        osc.stop(start + 0.3);
+        osc.stop(start + 0.2);
     });
   } catch (e) {}
 };
@@ -94,25 +97,17 @@ export const playPowerUp = async () => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // Frequency sweep up
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(100, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
-
-    // Filter to make it sound "wooshy"
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(200, ctx.currentTime);
-    filter.frequency.linearRampToValueAtTime(2000, ctx.currentTime + 0.3);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4);
 
     gain.gain.setValueAtTime(0.05, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
 
-    osc.connect(filter);
-    filter.connect(gain);
+    osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    osc.stop(ctx.currentTime + 0.4);
   } catch (e) {}
 };

@@ -1,18 +1,19 @@
+
 export enum MediaType {
   IMAGE = 'Imagen',
   VIDEO = 'Vídeo',
 }
 
 export enum PromptType {
-  GENERIC = 'Genérico',
+  UNIVERSAL = 'Universal (DALL-E / Gemini)',
   MIDJOURNEY = 'Midjourney',
+  ADVANCED = 'Técnico (SD / ComfyUI)',
 }
 
 export enum AppMode {
-  PRESETS = 'Presets', 
-  SIMPLE = 'Simple',   
-  ADVANCED = 'Avanzado',
-  NARRATIVE = 'Narrativa',
+  CONSTRUCTOR = 'Constructor', // Formerly Presets
+  ARCHITECT = 'Architect',     // Formerly Simple
+  STORYCRAFTER = 'Storycrafter' // Formerly Narrative
 }
 
 export enum NarrativeMode {
@@ -32,6 +33,7 @@ export enum Language {
 }
 
 export interface MapConfig {
+  assetType?: 'MAP' | 'SCENE';
   scale: string;
   placeType: string; 
   placeCategory: string; 
@@ -41,7 +43,16 @@ export interface MapConfig {
   time: string;
   weather: string;
   renderTech: string;
-  artStyle: string;
+  artStyle: string; 
+  
+  // WIZARD FIELDS
+  styleCategory?: string;
+  styleReference?: string;
+  styleVibe?: string;
+  styleDetail?: string;
+  styleClarity?: string;
+  styleFinish?: string;
+
   customAtmosphere: string; 
   zoom: string;
   camera: string;
@@ -75,4 +86,12 @@ export interface PromptCollectionItem {
   title: string;
   type: 'MAP' | 'PERSPECTIVE' | 'SCENE' | 'VICTORY' | 'BOSS' | 'UI' | 'CHARACTER' | 'BADGE';
   prompt: string;
+}
+
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  prompt: string;
+  type: PromptType;
+  tags: string[];
 }
