@@ -1,4 +1,5 @@
 
+
 import { PoiMapping, Preset, Language } from './types';
 
 export const PROMPT_TRANSLATIONS: Record<string, string> = {
@@ -80,6 +81,11 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Montañas de Niebla': 'Misty Mountains',
   'Mazmorra': 'Dungeon',
   'Valle de Cristal': 'Crystal Valley',
+  // SPACE LOCATIONS
+  'Espacio Exterior': 'Deep Outer Space',
+  'Planeta Extraterrestre': 'Alien Planet Surface',
+  'Construcción Espacial': 'Space Station Construction',
+  'Base Lunar': 'Lunar Moon Base',
 
   // BUILDINGS
   'Castillo / Fortaleza': 'Castle / Fortress',
@@ -419,8 +425,20 @@ const LOCATIONS_CIVILIZED = [
     'Bosque Denso', 'Selva Tropical', 'Desierto de Dunas', 'Caverna Subterránea',
     'Tundra Helada', 'Páramo Volcánico', 'Pantano/Ciénaga', 'Llanura Abierta'
 ];
-export const LOCATIONS = LOCATIONS_CIVILIZED; 
-export const getLocationsByEra = (era: string) => LOCATIONS_CIVILIZED; 
+
+const SPACE_LOCATIONS = [
+    'Espacio Exterior', 'Planeta Extraterrestre', 'Construcción Espacial', 'Base Lunar'
+];
+
+export const LOCATIONS = [...LOCATIONS_CIVILIZED, ...SPACE_LOCATIONS]; 
+
+export const getLocationsByEra = (era: string) => {
+    // Add Space locations to Future eras
+    if (era.includes('Futuro') || era.includes('Año 4000')) {
+        return [...LOCATIONS_CIVILIZED, ...SPACE_LOCATIONS];
+    }
+    return LOCATIONS_CIVILIZED;
+}; 
 
 const BUILDINGS_HISTORIC = [
     'Castillo / Fortaleza', 'Aldea / Asentamiento', 'Gran Ciudad / Capital',
@@ -444,7 +462,8 @@ export const PREDEFINED_POIS: Record<string, string[]> = {
     'Orcos': ['Foso de Lucha', 'Campamento de Guerra', 'Altar de Huesos', 'Herrería de Sangre', 'Torre de Vigía Tribal', 'Jaulas de Wargs'],
     'No-Muertos (Lich)': ['Cripta Real', 'Laboratorio de Nigromancia', 'Trono de Hueso', 'Foso de Almas', 'Jardín Marchito', 'Torre del Silencio'],
     'Cyberpunk': ['Bar de Neón', 'Clínica de Implantes', 'Callejón Lluvioso', 'Torre Corporativa', 'Mercado Negro de Datos', 'Apartamento Cápsula'],
-    
+    'Sci-Fi': ['Puente de Mando', 'Hangar de Naves', 'Laboratorio Hidropónico', 'Cámara Criogénica', 'Reactor de Fusión', 'Domo de Observación'],
+
     // HISTORICAL
     'Antiguo Egipto': ['Sala del Faraón', 'Cámara del Sarcófago', 'Templo de Ra', 'Orilla del Nilo', 'Obelisco', 'Cámara del Tesoro'],
     'Vikingos': ['Gran Salón de Hidromiel', 'Muelle de Drakkars', 'Altar de Odín', 'Herrería', 'Casa del Jarl', 'Círculo de Runas'],
@@ -618,15 +637,12 @@ export const VIDEO_MOTIONS = [
 ];
 
 export const VIDEO_DYNAMICS = ['Normal', 'Slow', 'Fast'];
-export const PLACES_BY_CIV: Record<string, string[]> = { 'DEFAULT': LOCATIONS_CIVILIZED }; 
+export const PLACES_BY_CIV: Record<string, string[]> = { 'DEFAULT': LOCATIONS }; 
 export const SETTLEMENT_TYPES = BUILDINGS_HISTORIC;
 export const ZOOMS = ['Macro', 'Meso', 'Micro'];
 export const RATIOS = ['16:9'];
 
-// --- RANDOM ARCHETYPES FOR DYNAMIC PRESET GENERATION ---
-// This ensures that "Random" isn't "Chaos". 
-// A "High Fantasy" archetype won't accidentally pick "Cyberpunk" styles.
-
+// ... Rest of archetype definitions ...
 export const ARCHETYPE_DEFINITIONS = [
     {
         name: "Alta Fantasía",

@@ -30,6 +30,8 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
            - MUST specify "Quadruped" or "Beast".
            - MUST specify "Vertical Layout" and "Three distinct poses: Top, Center, Bottom".
            - MUST use "--ar 9:16".
+        9. **NO PEOPLE / SCENERY ONLY**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
+        10. **VARIETY**: Use diverse vocabulary. Avoid starting every prompt with "Cinematic shot of...". Mix sentence structures.
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
         // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
@@ -43,11 +45,12 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         4. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
         5. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
         6. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
+        7. **NO PEOPLE**: If the prompt is for a MAP or SCENE, explicit state: "The scene is devoid of people. No characters present. Focus on environment and architecture."
         
         ENHANCEMENT STRATEGY:
         - Translate to English.
         - Improve the lighting and texture descriptions (e.g. "subsurface scattering", "weathered textures", "dynamic shadows") to match the requested mood.
-        - Keep the description focused and professional.
+        - **VARIETY**: Do not use the same sentence structure for every request. Vary the opening phrase (e.g., "A desolate...", "Visualizing a...", "Concept art of...").
         `;
     } else {
         // TYPE C: ADVANCED/TECHNICAL ENHANCER (Tokens)
@@ -65,7 +68,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     const response = await ai.models.generateContent({
       model: modelId,
       contents: `CURRENT PROMPT:\n${currentPrompt}`,
-      config: { systemInstruction, temperature: 0.5 } // Lower temperature for more adherence to instructions
+      config: { systemInstruction, temperature: 0.7 } // Increased temperature slightly for variety
     });
     return response.text?.trim() || currentPrompt;
   } catch (error) {

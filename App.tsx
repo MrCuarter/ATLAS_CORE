@@ -29,7 +29,7 @@ const getInitialConfig = (): MapConfig => ({
   aspectRatio: '16:9',
   era: 'Edad Media',
   buildingType: 'Aldea medieval',
-  themeMode: ThemeMode.FANTASY,
+  themeMode: undefined, // Changed from ThemeMode.FANTASY to undefined to force selection
   anachronismPolicy: 'STRICT',
   tags: [],
   manualDetails: '',
@@ -130,6 +130,7 @@ const App: React.FC = () => {
         scale: getRandomElement(C.SCALES),
         civilization: randomCiv,
         placeType: randomPlace,
+        themeMode: ThemeMode.FANTASY, // Preset sets a theme
         // Set detailed wizard fields
         styleCategory: randomCat,
         styleReference: randomRefObj?.label,

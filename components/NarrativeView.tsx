@@ -329,7 +329,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             >
                 <div className="text-2xl mb-2">🌍</div>
                 <div className="font-mono font-bold text-sm tracking-widest text-cyan-400 mb-1">GENERAR MUNDO</div>
-                <p className="text-[10px] text-cyan-200/50 leading-tight">Mapa Cenital + Isométrico + 6 Escenas (POIs).</p>
+                <p className="text-[10px] text-cyan-200/50 leading-tight">Pack completo de Escenarios Vacíos: Mapa Cenital + Mapa Isométrico (Zoom Detalle) + 6 Interiores/Exteriores Sin Personajes.</p>
                 {isGenerating && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div></div>}
             </button>
 
@@ -342,8 +342,8 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                 `}
             >
                 <div className="text-2xl mb-2">🔮</div>
-                <div className="font-mono font-bold text-sm tracking-widest text-purple-400 mb-1">GENERAR UI</div>
-                <p className="text-[10px] text-purple-200/50 leading-tight">Menú, Inventario, Diálogos y Botones.</p>
+                <div className="font-mono font-bold text-sm tracking-widest text-purple-400 mb-1">GENERAR INTERFAZ DE JUEGO</div>
+                <p className="text-[10px] text-purple-200/50 leading-tight">Kit completo de UI: Botones, Ventanas de Diálogo, Iconos y Paneles. Layout en rejilla limpio.</p>
             </button>
 
             {/* 3. PERSONAJES */}

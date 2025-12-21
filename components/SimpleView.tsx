@@ -209,10 +209,10 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </button>
                 <button
                     onClick={() => handleSelection(2, 'themeMode', ThemeMode.HISTORICAL, step3Ref)}
-                    className={`p-4 rounded border text-left transition-all ${!isFantasy ? 'bg-orange-900/20 border-orange-500 text-white' : 'bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-600'}`}
+                    className={`p-4 rounded border text-left transition-all ${isHistorical ? 'bg-orange-900/20 border-orange-500 text-white' : 'bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-600'}`}
                 >
                     <div className="font-bold font-mono text-xs mb-1 text-orange-400">HISTÓRICO</div>
-                    <div className="text-[10px] opacity-70">Roma, Vikingos, Japón...</div>
+                    <div className="text-[10px] opacity-70">Roma, Vikingos, Japón, Sci-Fi...</div>
                 </button>
             </div>
         </div>
@@ -220,7 +220,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
   };
 
   const renderBlock3 = () => {
-    if (!config.assetType) return null;
+    if (!config.assetType || !config.themeMode) return null; // Added check for themeMode
     const nextRef = isHistorical ? stepEraRef : step4Ref;
     return (
         <div ref={step3Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 3 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
@@ -272,7 +272,9 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
       );
   }
 
-  const renderBlock4 = () => (
+  const renderBlock4 = () => {
+    if (!config.themeMode) return null;
+    return (
     <div ref={step4Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 4 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
             <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">4</span> 
@@ -291,9 +293,12 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             ))}
         </div>
     </div>
-  );
+    );
+  };
 
-  const renderBlock5 = () => (
+  const renderBlock5 = () => {
+    if (!config.themeMode) return null;
+    return (
     <div ref={step5Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 5 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-mono font-bold text-accent-400 uppercase tracking-widest flex items-center">
@@ -316,9 +321,12 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             ))}
         </div>
     </div>
-  );
+    );
+  };
 
-  const renderBlock6 = () => (
+  const renderBlock6 = () => {
+    if (!config.themeMode) return null;
+    return (
     <div ref={step6Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 6 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-mono font-bold text-accent-400 uppercase tracking-widest flex items-center">
@@ -404,9 +412,12 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             </div>
         </div>
     </div>
-  );
+    );
+  };
 
-  const renderBlock7 = () => (
+  const renderBlock7 = () => {
+    if (!config.themeMode) return null;
+    return (
     <div ref={step7Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 7 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
             <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">7</span> 
@@ -425,10 +436,13 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             ))}
         </div>
     </div>
-  );
+    );
+  };
 
   // === NEW BLOCK 8: OUTPUT FORMAT (IMAGE / VIDEO) ===
-  const renderBlock8 = () => (
+  const renderBlock8 = () => {
+    if (!config.themeMode) return null;
+    return (
       <div ref={step8Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 7 && config.camera ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
              <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">8</span> 
@@ -454,7 +468,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             </button>
         </div>
       </div>
-  );
+    );
+  };
 
   // === NEW BLOCK 9: VIDEO MOTION (CONDITIONAL) ===
   const renderBlock9 = () => {
@@ -484,7 +499,9 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
   };
 
   // === NEW BLOCK 10: PLATFORM ===
-  const renderBlock10 = () => (
+  const renderBlock10 = () => {
+      if (!config.themeMode) return null;
+      return (
       <div ref={step10Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 8 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
         <h3 className="text-sm font-mono font-bold text-accent-400 mb-2 uppercase tracking-widest flex items-center">
              <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">10</span> 
@@ -530,7 +547,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             </button>
         </div>
       </div>
-  );
+      );
+  };
 
   return (
     <div className="pb-8 max-w-5xl mx-auto pt-4 px-2">

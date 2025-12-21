@@ -1,6 +1,6 @@
 
 import { MapConfig, MediaType, PromptType, PromptCollectionItem, Language, NarrativeMode } from '../types';
-import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA } from '../constants';
+import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA, PREDEFINED_POIS } from '../constants';
 
 const t = (val: string): string => PROMPT_TRANSLATIONS[val] || val || '';
 
@@ -52,9 +52,23 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
     const building = t(config.buildingType);
     const poi = (config.manualPOIs && config.manualPOIs[0]) ? config.manualPOIs[0] : building;
     
+    // DETECT SPACE CONTEXT TO OVERRIDE WEATHER
+    const isSpace = config.placeType && (
+        config.placeType.includes('Espacio') || 
+        config.placeType.includes('Planeta') || 
+        config.placeType.includes('Lunar')
+    );
+
     // Ensure all variables passed to string templates are translated
-    const time = config.time ? `${t(config.time)}` : 'daytime';
-    const weather = config.weather ? `${t(config.weather)}` : 'clear weather';
+    let time = config.time ? `${t(config.time)}` : 'daytime';
+    let weather = config.weather ? `${t(config.weather)}` : 'clear weather';
+    
+    // Override for space
+    if (isSpace) {
+        time = "Eternal Starlight / Deep Space Void";
+        weather = "Vacuum of space, Starry background, Nebulas";
+    }
+
     const camera = t(config.camera) || (isScene ? 'Cinematic Eye-Level Shot' : 'Top-down Map View');
     const ar = config.aspectRatio?.split(' ')[0] || '16:9';
     const tokens = getStyleToken(config);
@@ -119,8 +133,20 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     const items: PromptCollectionItem[] = [];
     const civ = t(config.civilization);
     const place = t(config.placeType);
-    const time = config.time ? `${t(config.time)}` : 'daytime';
-    const weather = config.weather ? `${t(config.weather)}` : 'clear';
+    let time = config.time ? `${t(config.time)}` : 'daytime';
+    let weather = config.weather ? `${t(config.weather)}` : 'clear';
+
+    // DETECT SPACE CONTEXT FOR STORYCRAFTER
+    const isSpace = config.placeType && (
+        config.placeType.includes('Espacio') || 
+        config.placeType.includes('Planeta') || 
+        config.placeType.includes('Lunar')
+    );
+
+    if (isSpace) {
+        time = "Eternal Starlight / Deep Space Void";
+        weather = "Vacuum of space, Starry background, Nebulas";
+    }
     
     // Detailed Wizard Tokens
     const tokens = getStyleToken(config);
@@ -138,9 +164,24 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         const techLine = `${view}. ${extraTech}`;
         const ar = customAr;
 
+        // VARIATIONS SYSTEM for Universal Prompts (To reduce repetition)
+        const VARIATIONS = [
+            `Create a high-resolution ${assetType} showing ${subject}.`,
+            `A highly detailed ${assetType} depicting ${subject}.`,
+            `Design a professional ${assetType} representing ${subject}.`,
+            `Visual asset: ${assetType} of ${subject}.`
+        ];
+        // Pick a random intro
+        const intro = VARIATIONS[Math.floor(Math.random() * VARIATIONS.length)];
+
+        // NO PEOPLE LOGIC
+        const noPeopleTag = isWorldMode ? "NO PEOPLE, NO CHARACTERS, empty scenery, environmental focus." : "";
+        const mjNoPeople = isWorldMode ? "--no people characters figures" : "--no text ui interface";
+        const sdNoPeople = isWorldMode ? "(no humans, no people, empty scenery)," : "";
+
         // 1. UNIVERSAL
         if (promptType === PromptType.UNIVERSAL) {
-            return `Create a high-resolution ${assetType} showing ${subject}. The setting belongs to the ${civ} civilization.
+            return `${intro} The setting belongs to the ${civ} civilization.
             
             The art direction is inspired by ${styleRef}. ${cleanRef}.
             The scene features a ${tokens.vibe.toLowerCase()} atmosphere with ${tokens.finish.toLowerCase()}.
@@ -148,12 +189,13 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             
             Technical details: ${techLine}.
             ${safetyMargin}
+            ${noPeopleTag}
             Aspect Ratio: ${ar}`;
         }
 
         // 2. MIDJOURNEY
         if (promptType === PromptType.MIDJOURNEY) {
-            return `${assetType} of ${subject}, ${civ} style :: ${context}, Time: ${time}, Weather: ${weather} :: **${styleRef} Style** :: ${cleanRef} :: ${tokens.vibe}, ${tokens.finish} :: ${techLine}, Balanced composition, Natural blending --ar ${ar} --v 6.0 --stylize 250 --no text ui interface`;
+            return `${assetType} of ${subject}, ${civ} style :: ${context}, Time: ${time}, Weather: ${weather} :: **${styleRef} Style** :: ${cleanRef} :: ${tokens.vibe}, ${tokens.finish} :: ${techLine}, Balanced composition, Natural blending --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
         }
 
         // 3. TECHNICAL (Stable Diffusion)
@@ -161,7 +203,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             const quality = "(masterpiece, best quality, 8k, highres),";
             const isolationTag = isWorldMode ? "" : ", isolated on white background, simple background";
             const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
-            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
         }
 
         return "";
@@ -181,24 +223,38 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             )
         });
 
-        // 2. Isometric Map
+        // 2. Isometric Map (UPDATED: ZOOMED IN)
         items.push({
-            title: "MAP: Isometric View",
+            title: "MAP: Isometric View (Zoom)",
             type: 'MAP',
             prompt: formatAsset(
                 "isometric environment", 
-                `${place} with ${civ} architecture`, 
+                `the main ${config.buildingType || 'structure'} of ${place} (${civ} architecture)`, 
                 `${place} terrain`, 
-                "45-degree isometric view, tactical RPG perspective"
+                "45-degree isometric view, Macro-Zoom focused on the central structure, detailed architecture close-up, tactical RPG perspective"
             )
         });
 
         // 3. POIs (Scenes)
-        const pois = (config.manualPOIs && config.manualPOIs.some(p => p !== '')) 
+        let pois = (config.manualPOIs && config.manualPOIs.some(p => p !== '')) 
             ? config.manualPOIs.filter(p => p !== '') 
             : ['Main Entrance', 'Market Square', 'Throne Room', 'Secret Passage', 'Armory', 'Living Quarters'];
+        
+        // POI OVERRIDE FOR SPACE IF DEFAULT
+        if (isSpace && (!config.manualPOIs || config.manualPOIs.every(p => p === ''))) {
+             pois = PREDEFINED_POIS['Sci-Fi'] || pois;
+        }
 
         pois.forEach((poiName, idx) => {
+            // Add slight randomness to camera descriptions for variety
+            const camVars = [
+                "Cinematic Eye-Level Shot", 
+                "Wide Angle establishing shot", 
+                "Low angle immersive shot",
+                "Atmospheric perspective"
+            ];
+            const randomCam = camVars[idx % camVars.length];
+
             items.push({
                 title: `SCENE ${idx + 1}: ${poiName}`,
                 type: 'SCENE',
@@ -206,7 +262,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                     "concept art image", 
                     `${poiName} located within ${place}`, 
                     `Interior/Exterior of ${poiName}`, 
-                    "Cinematic Eye-Level Shot, immersive perspective"
+                    `${randomCam}, immersive perspective`
                 )
             });
         });
@@ -214,19 +270,55 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
 
     // --- MODE 2: UI (Interface) ---
     if (mode === NarrativeMode.UI) {
-        const uiElements = ['Main Menu Screen', 'Inventory Slot Frame', 'Dialogue Box Background', 'Health and Mana Bars', 'Action Button Icons'];
-        
-        uiElements.forEach((el, idx) => {
-             items.push({
-                title: `UI: ${el}`,
-                type: 'UI',
-                prompt: formatAsset(
-                    "Game UI Asset", 
-                    `${el} interface element`, 
-                    `User Interface design`, 
-                    "Flat vector graphic, front view, UI design"
-                )
-            });
+        // 1. UI BUTTONS PACK
+        items.push({
+            title: `UI: Buttons & Icons Pack`,
+            type: 'UI',
+            prompt: formatAsset(
+                "Game UI Buttons Pack",
+                `Complete collection of buttons and icons for a ${civ} style game`,
+                `User Interface design`,
+                `The image must show a full collection of buttons and icons arranged in a clean grid layout.
+                Content required:
+                – Large primary buttons: PLAY, UPGRADE, SHOP, QUESTS, BATTLE, COLLECT, BUY
+                – Medium icons: Level, Star, Heart, Coin, Gem, Flag
+                – Small actions: Confirm, Cancel, Gift, Inventory, Craft, Chest, Consumables
+                – Circular utility: Mail, Edit, Settings, Help, Close, Add, Back, Energy.
+                Layout: Clear rows by category. No text inside buttons unless explicitly written. All buttons empty inside except labels/icons.`,
+                "16:9"
+            )
+        });
+
+        // 2. DIALOGUE BOXES PACK
+        items.push({
+            title: `UI: Windows & Dialogues`,
+            type: 'UI',
+            prompt: formatAsset(
+                "Game UI Windows & Dialogue Pack",
+                `Set of empty UI windows and dialogue frames for a ${civ} style game`,
+                `User Interface design`,
+                `The image must show a full set of empty UI windows and dialogue frames.
+                Content required:
+                – Large windows: Main dialogue window (wide), Secondary info window (medium)
+                – Speech boxes: Bottom dialogue box, Small speech bubble, Tooltip
+                – Panels: Title banner, Notification panel, Confirmation window
+                – Input frames: Small and Medium text boxes.
+                Layout: Empty inside (no text), rounded corners, decorative borders matching the style. Clear visual hierarchy.`,
+                "16:9"
+            )
+        });
+
+        // 3. HUD (Health/Mana)
+         items.push({
+            title: `UI: HUD & Bars`,
+            type: 'UI',
+            prompt: formatAsset(
+                "Game HUD Elements", 
+                `Health bar, Mana bar, and XP bar with ${civ} ornamentation`, 
+                `User Interface design`, 
+                "Isolated health and energy bars, decorative frames, status indicators. Flat vector graphic style.",
+                "16:9"
+            )
         });
     }
 
