@@ -8,9 +8,11 @@ interface CollectionDisplayProps {
   lang: Language;
   onEnhance?: () => void;
   isEnhancing?: boolean;
+  isEnhanced?: boolean;
+  onReset?: () => void;
 }
 
-const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang, onEnhance, isEnhancing }) => {
+const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang, onEnhance, isEnhancing, isEnhanced, onReset }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const t = UI_TEXT[lang];
@@ -24,13 +26,23 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang,
   };
 
   const handleCopyAll = () => {
-    // Construct the structured prompt for the AI agent
-    const intro = t.copyInstructionHeader;
-    const body = collection.map((c, i) => `### ${i+1}. ${c.title}\n${c.prompt}`).join('\n\n');
+    // Construct the structured Agent-Instruction prompt
+    const agentInstruction = `*** BATCH IMAGE GENERATION TASK ***
+
+Please act as an Image Generation Agent.
+I will provide a list of prompt descriptions below.
+YOUR TASK: Generate an image for EACH item in the list sequentially.
+Do not stop until you have generated all images.
+
+--- START OF PROMPT LIST ---
+
+${collection.map((c, i) => `[IMAGE ${i+1}: ${c.title}]\n${c.prompt}`).join('\n\n')}
+
+--- END OF PROMPT LIST ---
+
+Please start generating Image 1 now.`;
     
-    const fullText = `${intro}\n${body}`;
-    
-    navigator.clipboard.writeText(fullText);
+    navigator.clipboard.writeText(agentInstruction);
     setCopiedAll(true);
     setTimeout(() => setCopiedAll(false), 2000);
   };
@@ -58,7 +70,7 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang,
                         </>
                     ) : (
                         <>
-                            <span>✨ {t.enhanceCollection}</span>
+                            <span>{isEnhanced ? "✅ MEJORADO (IA)" : `✨ ${t.enhanceCollection}`}</span>
                         </>
                     )}
                 </button>
@@ -68,7 +80,7 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang,
             onClick={handleCopyAll}
             className={`px-6 py-2 rounded text-xs font-bold font-mono tracking-widest transition-all flex items-center gap-2 border ${copiedAll ? 'bg-green-900/20 border-green-500 text-green-400' : 'bg-gray-900 border-accent-500 text-accent-400 hover:bg-accent-900/20'}`}
             >
-            {copiedAll ? t.copied : t.copyAll}
+            {copiedAll ? t.copied : (isEnhanced ? "COPIAR COLECCIÓN MEJORADA (IA)" : t.copyAll)}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
             </svg>
@@ -76,7 +88,7 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang,
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         {collection.map((item, idx) => (
           <div key={idx} className="bg-gray-900 border border-gray-800 p-4 relative group hover:border-accent-500/30 transition-all flex flex-col h-full">
             <div className="flex justify-between items-start mb-3">
@@ -102,12 +114,25 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({ collection, lang,
             </div>
             
             <h4 className="text-sm font-bold text-white mb-2 font-mono uppercase truncate" title={item.title}>{item.title}</h4>
-            <div className="bg-gray-950 p-2 text-xs text-gray-400 font-mono overflow-y-auto max-h-32 border border-gray-800 rounded mb-2 flex-grow custom-scrollbar">
+            <div className={`bg-gray-950 p-2 text-xs text-gray-400 font-mono overflow-y-auto max-h-32 border border-gray-800 rounded mb-2 flex-grow custom-scrollbar ${isEnhanced ? 'text-purple-300' : ''}`}>
               {item.prompt}
             </div>
           </div>
         ))}
       </div>
+
+      {/* RESET BUTTON CENTERED */}
+      {onReset && (
+          <div className="flex justify-center mt-8">
+              <button
+                onClick={onReset}
+                className="px-8 py-3 bg-red-900/10 hover:bg-red-900/30 border border-red-900/50 hover:border-red-500 text-red-500 text-xs font-mono font-bold uppercase tracking-widest rounded transition-all flex items-center gap-2 group"
+              >
+                  <svg className="w-4 h-4 group-hover:-rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  RESTABLECER VALORES
+              </button>
+          </div>
+      )}
     </div>
   );
 };

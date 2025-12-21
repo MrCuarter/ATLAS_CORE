@@ -14,26 +14,33 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
     let systemInstruction = "";
 
     if (promptType === PromptType.MIDJOURNEY) {
-        // TYPE B: MIDJOURNEY ENHANCER
+        // TYPE B: MIDJOURNEY ENHANCER - STRICT PRESERVATION
         systemInstruction = `You are a Midjourney V6 Prompt Expert.
-        TASK: Optimize the input prompt specifically for Midjourney V6.
+        TASK: Optimize the input prompt by translating to English and adding high-quality texture/lighting keywords, BUT YOU MUST PRESERVE THE USER'S CORE SELECTIONS.
         
-        RULES:
-        1. Keep the '::' separator structure if present.
-        2. Enhance the 'Artistic keywords' to be more evocative (e.g. change "red" to "crimson, vermilion").
-        3. Ensure '--ar' and '--v 6.0' flags are at the very end.
-        4. Do NOT remove the subject or the core style.
+        CRITICAL RULES:
+        1. **TRANSLATE TO ENGLISH**: All Spanish text must be translated.
+        2. **PRESERVE STYLE**: If the prompt says specific style references (e.g. "**Disney/Pixar Style**", "Arcane", "Pixel Art"), YOU MUST KEEP THEM EXACTLY AS IS.
+        3. **PRESERVE CAMERA**: If the prompt says "Top-Down View", "Isometric", or "Side View", YOU MUST KEEP THAT EXACT CAMERA TOKEN. Do not change "Top-Down" to generic "High angle".
+        4. **STRUCTURE**: Keep the '::' separators.
+        5. **ENHANCE**: Add technical keywords (e.g. "volumetric lighting", "octane render", "8k") ONLY if they fit the requested style.
+        6. **NO HALLUCINATIONS**: Do not change the Civilization or Place type.
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
-        // TYPE A: UNIVERSAL ENHANCER (Conversational)
-        systemInstruction = `You are a Creative Writing Assistant for Generative AI.
-        TASK: Rewrite the prompt to be a flowing, descriptive paragraph.
+        // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
+        systemInstruction = `You are a Technical Art Director for Game Assets (DALL-E 3 / Gemini).
+        TASK: Rewrite the prompt into a rich English description, but strictly adhere to the technical constraints provided in the input.
         
-        RULES:
-        1. Use natural language (English).
-        2. Focus on lighting, texture, and mood.
-        3. Remove technical jargon like "Visual DNA:" or brackets [].
-        4. Ensure the first sentence clearly states the subject and view (e.g. "Create a high-resolution image of...").
+        STRICT CONSTRAINTS (DO NOT IGNORE):
+        1. **PERSPECTIVE IS SACRED**: If the input specifies "Top-Down View (90º)" or "Isometric", the output MUST explicitly state "Top-Down View" or "Isometric view". Do NOT change this to "high angle" or "bird's eye". It must be accurate for a game map.
+        2. **STYLE FIDELITY**: If the input mentions a specific influence (e.g. "Disney / Pixar", "Elden Ring", "Blueprint"), the output must explicitly mention "in the style of [Reference]".
+        3. **SUBJECT**: Keep the exact Civilization (e.g. "Orcs") and Location (e.g. "Sand Dunes").
+        4. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
+        
+        ENHANCEMENT STRATEGY:
+        - Translate to English.
+        - Improve the lighting and texture descriptions (e.g. "subsurface scattering", "weathered textures", "dynamic shadows") to match the requested mood.
+        - Keep the description focused and professional.
         `;
     } else {
         // TYPE C: ADVANCED/TECHNICAL ENHANCER (Tokens)
@@ -41,17 +48,17 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         TASK: Optimize the comma-separated token list.
         
         RULES:
-        1. Keep the format: (quality tags), subject, style, technical.
-        2. Add danbooru-style tags where appropriate for the requested style.
-        3. Ensure the 'Negative prompt:' section is preserved at the end.
-        4. Do NOT convert to sentences. Keep it as a list of tags.
+        1. **TRANSLATE TO ENGLISH**.
+        2. **PRESERVE CORE TOKENS**: Do not remove the camera type (Top-down/Isometric), the Style Reference, or the Civilization.
+        3. **EXPAND**: Add danbooru-style tags for lighting and texture (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
+        4. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
         `;
     }
 
     const response = await ai.models.generateContent({
       model: modelId,
       contents: `CURRENT PROMPT:\n${currentPrompt}`,
-      config: { systemInstruction, temperature: 0.7 }
+      config: { systemInstruction, temperature: 0.5 } // Lower temperature for more adherence to instructions
     });
     return response.text?.trim() || currentPrompt;
   } catch (error) {
@@ -90,7 +97,7 @@ export const generatePOISuggestions = async (place: string, civ: string): Promis
         if (!apiKey) return [];
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-3-flash-preview";
-        const systemInstruction = `List 6 creative "Points of Interest" inside "${place}" for a "${civ}" theme. Return strictly as a JSON array of strings. No extra text.`;
+        const systemInstruction = `List 6 creative "Points of Interest" inside "${place}" for a "${civ}" theme. Return strictly as a JSON array of strings. No extra text. Keep names in the original language if it adds flavor, but prefer English if generic.`;
         const response = await ai.models.generateContent({
             model: modelId,
             contents: "Generate.",
@@ -111,7 +118,7 @@ export const generateDerivedScene = async (currentPrompt: string, mediaType: Med
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-3-flash-preview";
         
-        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list).`;
+        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed.`;
 
         const response = await ai.models.generateContent({
             model: modelId,

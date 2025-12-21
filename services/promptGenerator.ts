@@ -129,7 +129,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     
     // --- FORMATTING HELPER BASED ON PROMPT TYPE ---
     const formatAsset = (assetType: string, subject: string, context: string, view: string, extraTech: string = ""): string => {
-        const safetyMargin = "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING.";
+        // LOGIC: Isolated background is ONLY for Characters and UI, NOT for World maps/scenes
+        const isWorldMode = mode === NarrativeMode.WORLD;
+        const safetyMargin = isWorldMode 
+            ? "High quality, wide aspect ratio, professional game asset." 
+            : "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING.";
+        
         const techLine = `${view}. ${extraTech}`;
         const ar = "16:9";
 
@@ -142,7 +147,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
             
             Technical details: ${techLine}.
-            High quality, wide ${ar} aspect ratio, professional game asset. ${safetyMargin}`;
+            ${safetyMargin}`;
         }
 
         // 2. MIDJOURNEY
@@ -153,8 +158,9 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         // 3. TECHNICAL (Stable Diffusion)
         if (promptType === PromptType.ADVANCED) {
             const quality = "(masterpiece, best quality, 8k, highres),";
+            const isolationTag = isWorldMode ? "" : ", isolated on white background, simple background";
             const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
-            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}, isolated on white background, ${tokens.clarity} \n${neg}`;
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
         }
 
         return "";

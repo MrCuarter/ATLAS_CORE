@@ -53,6 +53,7 @@ const App: React.FC = () => {
   const [narrativeCollection, setNarrativeCollection] = useState<PromptCollectionItem[]>([]);
   const [isGeneratingNarrative, setIsGeneratingNarrative] = useState(false);
   const [isEnhancingCollection, setIsEnhancingCollection] = useState(false);
+  const [isCollectionEnhanced, setIsCollectionEnhanced] = useState(false);
 
   // Load history on mount
   useEffect(() => {
@@ -149,6 +150,7 @@ const App: React.FC = () => {
   const handleNarrativeGeneration = async (useAI: boolean, nMode: NarrativeMode) => {
       setIsGeneratingNarrative(true);
       setNarrativeCollection([]);
+      setIsCollectionEnhanced(false); // Reset enhanced state on new generation
       try {
         let collection = generateNarrativeCollection(config, promptType, lang, nMode);
         if (useAI) {
@@ -157,6 +159,7 @@ const App: React.FC = () => {
                 return { ...item, prompt: enhancedText };
             });
             collection = await Promise.all(enhancementPromises);
+            setIsCollectionEnhanced(true);
         }
         setNarrativeCollection(collection);
         playSuccess();
@@ -178,12 +181,19 @@ const App: React.FC = () => {
 
         const newCollection = await Promise.all(enhancedPromises);
         setNarrativeCollection(newCollection);
+        setIsCollectionEnhanced(true);
         playSuccess();
     } catch (e) {
         console.error("Error enhancing collection:", e);
     } finally {
         setIsEnhancingCollection(false);
     }
+  };
+
+  const handleResetCollection = () => {
+      setNarrativeCollection([]);
+      setIsCollectionEnhanced(false);
+      playSwitch();
   };
 
   const t = C.UI_TEXT[lang];
@@ -248,7 +258,7 @@ const App: React.FC = () => {
                 
                 {/* 1. CONSTRUCTOR (Verde) */}
                 <button 
-                    onClick={() => { setMode(AppMode.CONSTRUCTOR); setNarrativeCollection([]); playSwitch(); }} 
+                    onClick={() => { setMode(AppMode.CONSTRUCTOR); setNarrativeCollection([]); setIsCollectionEnhanced(false); playSwitch(); }} 
                     className={`group relative p-6 rounded-lg border text-left transition-all duration-300 overflow-hidden
                         ${mode === AppMode.CONSTRUCTOR 
                             ? 'bg-green-900/20 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.15)] scale-[1.02]' 
@@ -269,7 +279,7 @@ const App: React.FC = () => {
 
                 {/* 2. ARQUITECTO (Azul) */}
                 <button 
-                    onClick={() => { setMode(AppMode.ARCHITECT); setNarrativeCollection([]); playSwitch(); }} 
+                    onClick={() => { setMode(AppMode.ARCHITECT); setNarrativeCollection([]); setIsCollectionEnhanced(false); playSwitch(); }} 
                     className={`group relative p-6 rounded-lg border text-left transition-all duration-300 overflow-hidden
                         ${mode === AppMode.ARCHITECT 
                             ? 'bg-cyan-900/20 border-cyan-500 shadow-[0_0_20px_rgba(34,211,238,0.15)] scale-[1.02]' 
@@ -317,7 +327,14 @@ const App: React.FC = () => {
                 {mode === AppMode.STORYCRAFTER && (
                   <>
                     <NarrativeView config={config} onChange={handleConfigChange} lang={lang} onGenerate={handleNarrativeGeneration} isGenerating={isGeneratingNarrative} onRandom={handleWorldGen} promptType={promptType} setPromptType={setPromptType} />
-                    <CollectionDisplay collection={narrativeCollection} lang={lang} onEnhance={handleEnhanceCollection} isEnhancing={isEnhancingCollection} />
+                    <CollectionDisplay 
+                        collection={narrativeCollection} 
+                        lang={lang} 
+                        onEnhance={handleEnhanceCollection} 
+                        isEnhancing={isEnhancingCollection}
+                        isEnhanced={isCollectionEnhanced}
+                        onReset={handleResetCollection}
+                    />
                   </>
                 )}
             </div>
