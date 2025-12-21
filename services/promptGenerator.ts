@@ -75,7 +75,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
 
         return `Create a ${typeStr} ${subjectStr}. The setting belongs to the ${civ} civilization.
         
-        ${config.styleReference ? `The art direction is inspired by ${config.styleReference}. ${cleanRef}.` : ''}
+        The art direction is inspired by ${config.styleReference}. ${cleanRef}.
         The scene features a ${tokens.vibe.toLowerCase()} atmosphere with ${tokens.finish.toLowerCase()}.
         Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
         
@@ -119,17 +119,46 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     const items: PromptCollectionItem[] = [];
     const civ = t(config.civilization);
     const place = t(config.placeType);
+    const time = config.time ? `${t(config.time)}` : 'daytime';
+    const weather = config.weather ? `${t(config.weather)}` : 'clear';
     
     // Detailed Wizard Tokens
     const tokens = getStyleToken(config);
     const styleRef = config.styleReference || config.artStyle || 'Fantasy';
     const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
     
-    // MANDATORY CUTOUT INSTRUCTION (Strict & Visible)
-    const safetyMargin = "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING. High contrast.";
-    
-    // Platform specifics
-    const mjSuffix = "--ar 16:9 --v 6.0 --stylize 250";
+    // --- FORMATTING HELPER BASED ON PROMPT TYPE ---
+    const formatAsset = (assetType: string, subject: string, context: string, view: string, extraTech: string = ""): string => {
+        const safetyMargin = "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING.";
+        const techLine = `${view}. ${extraTech}`;
+        const ar = "16:9";
+
+        // 1. UNIVERSAL
+        if (promptType === PromptType.UNIVERSAL) {
+            return `Create a high-resolution ${assetType} showing ${subject}. The setting belongs to the ${civ} civilization.
+            
+            The art direction is inspired by ${styleRef}. ${cleanRef}.
+            The scene features a ${tokens.vibe.toLowerCase()} atmosphere with ${tokens.finish.toLowerCase()}.
+            Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
+            
+            Technical details: ${techLine}.
+            High quality, wide ${ar} aspect ratio, professional game asset. ${safetyMargin}`;
+        }
+
+        // 2. MIDJOURNEY
+        if (promptType === PromptType.MIDJOURNEY) {
+            return `${assetType} of ${subject}, ${civ} style :: ${context}, Time: ${time}, Weather: ${weather} :: **${styleRef} Style** :: ${cleanRef} :: ${tokens.vibe}, ${tokens.finish} :: ${techLine}, Balanced composition, Natural blending --ar ${ar} --v 6.0 --stylize 250 --no text ui interface`;
+        }
+
+        // 3. TECHNICAL (Stable Diffusion)
+        if (promptType === PromptType.ADVANCED) {
+            const quality = "(masterpiece, best quality, 8k, highres),";
+            const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}, isolated on white background, ${tokens.clarity} \n${neg}`;
+        }
+
+        return "";
+    };
 
     // --- MODE 1: WORLD (Maps + Scenes) ---
     if (mode === NarrativeMode.WORLD) {
@@ -137,22 +166,24 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         items.push({
             title: "MAP: Top Down View",
             type: 'MAP',
-            prompt: `Game Asset: Top-down Map of ${place}, ${civ} territory.
-            Style: ${styleRef}. ${cleanRef}. ${tokens.finish}.
-            View: 90-degree top-down, clear layout for game level.
-            ${safetyMargin}
-            ${promptType === PromptType.MIDJOURNEY ? mjSuffix : ''}`
+            prompt: formatAsset(
+                "game map", 
+                `a detailed map of ${place}`, 
+                `${place} terrain`, 
+                "Top-Down View (90º), top-down tactical view"
+            )
         });
 
         // 2. Isometric Map
         items.push({
             title: "MAP: Isometric View",
             type: 'MAP',
-            prompt: `Game Asset: Isometric Environment of ${place}, ${civ} architecture.
-            Style: ${styleRef}. ${cleanRef}. ${tokens.finish}.
-            View: 45-degree isometric, tactical RPG perspective.
-            ${safetyMargin}
-            ${promptType === PromptType.MIDJOURNEY ? mjSuffix : ''}`
+            prompt: formatAsset(
+                "isometric environment", 
+                `${place} with ${civ} architecture`, 
+                `${place} terrain`, 
+                "45-degree isometric view, tactical RPG perspective"
+            )
         });
 
         // 3. POIs (Scenes)
@@ -164,11 +195,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             items.push({
                 title: `SCENE ${idx + 1}: ${poiName}`,
                 type: 'SCENE',
-                prompt: `Game Asset: Concept Art of ${poiName} inside ${place}.
-                Context: ${civ} civilization details.
-                Style: ${styleRef}. ${cleanRef}. ${tokens.vibe}.
-                ${safetyMargin}
-                ${promptType === PromptType.MIDJOURNEY ? mjSuffix : ''}`
+                prompt: formatAsset(
+                    "concept art image", 
+                    `${poiName} located within ${place}`, 
+                    `Interior/Exterior of ${poiName}`, 
+                    "Cinematic Eye-Level Shot, immersive perspective"
+                )
             });
         });
     }
@@ -181,11 +213,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
              items.push({
                 title: `UI: ${el}`,
                 type: 'UI',
-                prompt: `Game UI Asset: ${el}.
-                Theme: ${civ} style interface.
-                Style: ${styleRef}. ${cleanRef}. High quality user interface design.
-                ${safetyMargin}
-                ${promptType === PromptType.MIDJOURNEY ? mjSuffix : ''}`
+                prompt: formatAsset(
+                    "Game UI Asset", 
+                    `${el} interface element`, 
+                    `User Interface design`, 
+                    "Flat vector graphic, front view, UI design"
+                )
             });
         });
     }
@@ -205,12 +238,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             items.push({
                 title: `CHAR: ${r.role}`,
                 type: 'CHARACTER',
-                prompt: `Character Concept Sheet: ${r.role} (${r.desc}).
-                Race/Civ: ${civ}.
-                Layout: Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running).
-                Style: ${styleRef}. ${cleanRef}. Full body, detailed costume.
-                ${safetyMargin}
-                ${promptType === PromptType.MIDJOURNEY ? mjSuffix : ''}`
+                prompt: formatAsset(
+                    "Character Concept Sheet", 
+                    `${r.role} (${r.desc})`, 
+                    `Character design`, 
+                    "Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running), Full body"
+                )
             });
         });
 
@@ -218,12 +251,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         items.push({
             title: `CHAR: Companion/Pet`,
             type: 'CHARACTER',
-            prompt: `Creature Concept Art: ${civ} Beast/Pet Companion.
-            Context: Creature fitting the ${place} environment.
-            Style: ${styleRef}. ${cleanRef}.
-            View: Full body detailed render, vertical composition.
-            ${safetyMargin}
-            ${promptType === PromptType.MIDJOURNEY ? '--ar 9:16 --v 6.0' : ''}`
+            prompt: formatAsset(
+                "Creature Concept Art", 
+                `${civ} Beast/Pet Companion fitting the ${place} environment`, 
+                `Creature design`, 
+                "Full body detailed render, vertical composition"
+            )
         });
     }
 

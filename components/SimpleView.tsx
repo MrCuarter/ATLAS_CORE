@@ -30,6 +30,7 @@ interface SimpleViewProps {
 const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaType, promptType, setPromptType, setMediaType }) => {
   const t = UI_TEXT[lang];
   const [activeStep, setActiveStep] = useState(1);
+  const [wizardStep, setWizardStep] = useState(0); // 0=Category, 1=Ref, 2=Vibe, 3=Detail, 4=Clarity, 5=Finish
 
   // Refs for sequential scrolling
   const step1Ref = useRef<HTMLDivElement>(null);
@@ -67,6 +68,14 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
     }
   };
 
+  const handleSkip = (step: number, field: keyof MapConfig, nextRef: React.RefObject<HTMLDivElement | null>) => {
+    playTechClick();
+    onChange(field, ''); // Clear value
+    if (nextRef) {
+        scrollToStep(step + 1, nextRef);
+    }
+  };
+
   // Determine lists dynamically
   const isFantasy = config.themeMode === ThemeMode.FANTASY;
   const isHistorical = config.themeMode === ThemeMode.HISTORICAL;
@@ -81,6 +90,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
   // --- STYLE WIZARD HANDLERS (BLOCK 6) ---
   const handleWizardReset = () => {
     playSwitch();
+    setWizardStep(0);
     onChange('styleCategory', undefined);
     onChange('styleReference', undefined);
     onChange('styleVibe', undefined);
@@ -101,25 +111,30 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
 
     // Cascade reset logic
     if (field === 'styleCategory') {
+        setWizardStep(1);
         onChange('styleReference', undefined);
         onChange('styleVibe', undefined);
         onChange('styleDetail', undefined);
         onChange('styleClarity', undefined);
         onChange('styleFinish', undefined);
     } else if (field === 'styleReference') {
+        setWizardStep(2);
         onChange('styleVibe', undefined);
         onChange('styleDetail', undefined);
         onChange('styleClarity', undefined);
         onChange('styleFinish', undefined);
         onChange('artStyle', value); // Map reference to legacy field for compatibility
     } else if (field === 'styleVibe') {
+        setWizardStep(3);
         onChange('styleDetail', undefined);
         onChange('styleClarity', undefined);
         onChange('styleFinish', undefined);
     } else if (field === 'styleDetail') {
+        setWizardStep(4);
         onChange('styleClarity', undefined);
         onChange('styleFinish', undefined);
     } else if (field === 'styleClarity') {
+        setWizardStep(5);
         onChange('styleFinish', undefined);
     }
 
@@ -130,6 +145,24 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
         scrollToStep(7, step7Ref);
     }
   };
+
+  const handleWizardSkip = (field: keyof MapConfig, nextStepIdx: number) => {
+      playTechClick();
+      onChange(field, ''); // Clear
+      setWizardStep(nextStepIdx);
+      if (field === 'styleFinish') {
+        scrollToStep(7, step7Ref);
+      }
+  };
+
+  const SkipBtn = ({ onClick }: { onClick: () => void }) => (
+      <button 
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        className="text-[9px] text-gray-500 hover:text-white underline decoration-dotted uppercase tracking-wider ml-auto transition-colors"
+      >
+          SALTAR
+      </button>
+  );
 
   // --- RENDERS ---
 
@@ -215,10 +248,14 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
       if (!isHistorical) return null;
       return (
         <div ref={stepEraRef} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 3 && config.civilization ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
-            <h3 className="text-sm font-mono font-bold text-orange-400 mb-4 uppercase tracking-widest flex items-center">
-                <span className="w-6 h-6 bg-orange-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">3B</span> 
-                {t.stepEra}
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-mono font-bold text-orange-400 uppercase tracking-widest flex items-center">
+                    <span className="w-6 h-6 bg-orange-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">3B</span> 
+                    {t.stepEra}
+                </h3>
+                <SkipBtn onClick={() => handleSkip(3, 'era', step4Ref)} />
+            </div>
+            
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {HISTORICAL_ERAS.map(item => (
                     <button
@@ -258,10 +295,14 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
 
   const renderBlock5 = () => (
     <div ref={step5Ref} className={`mb-12 transition-all duration-500 scroll-mt-24 ${activeStep >= 5 ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4 pointer-events-none'}`}>
-        <h3 className="text-sm font-mono font-bold text-accent-400 mb-4 uppercase tracking-widest flex items-center">
-            <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">5</span> 
-            {t.stepBuild}
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-mono font-bold text-accent-400 uppercase tracking-widest flex items-center">
+                <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">5</span> 
+                {t.stepBuild}
+            </h3>
+            <SkipBtn onClick={() => handleSkip(5, 'buildingType', step6Ref)} />
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {currentBuildingList.map(item => (
                 <button
@@ -302,8 +343,11 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </div>
             </div>
             {/* 6B */}
-            <div className={`transition-all duration-300 ${!config.styleCategory ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6B. Elige un referente visual</h4>
+            <div className={`transition-all duration-300 ${wizardStep < 1 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                <div className="flex justify-between items-center mb-2">
+                     <h4 className="text-[10px] font-mono font-bold text-gray-500 uppercase">6B. Elige un referente visual</h4>
+                     <SkipBtn onClick={() => handleWizardSkip('styleReference', 2)} />
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {config.styleCategory && STYLE_WIZARD_DATA.references[config.styleCategory]?.map(ref => (
                         <button key={ref.label} onClick={() => handleWizardStep('styleReference', ref.label)} className={`px-2 py-2 text-[10px] font-medium border rounded transition-all flex flex-col items-center justify-center h-16 ${config.styleReference === ref.label ? 'bg-purple-900/40 border-purple-400 text-white' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}><span className="font-bold leading-tight">{ref.label}</span><span className="text-[8px] opacity-60 font-normal leading-tight mt-1">{ref.desc}</span></button>
@@ -311,8 +355,11 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </div>
             </div>
             {/* 6C */}
-            <div className={`transition-all duration-300 ${!config.styleReference ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6C. ¿Qué sensación transmite?</h4>
+            <div className={`transition-all duration-300 ${wizardStep < 2 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                <div className="flex justify-between items-center mb-2">
+                     <h4 className="text-[10px] font-mono font-bold text-gray-500 uppercase">6C. ¿Qué sensación transmite?</h4>
+                     <SkipBtn onClick={() => handleWizardSkip('styleVibe', 3)} />
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {STYLE_WIZARD_DATA.vibes.map(v => (
                         <button key={v.label} onClick={() => handleWizardStep('styleVibe', v.label)} className={`px-2 py-2 text-[10px] font-medium border rounded transition-all ${config.styleVibe === v.label ? 'bg-purple-900/40 border-purple-400 text-white' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}>{v.label}</button>
@@ -320,8 +367,11 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </div>
             </div>
             {/* 6D */}
-            <div className={`transition-all duration-300 ${!config.styleVibe ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6D. Nivel de detalle</h4>
+            <div className={`transition-all duration-300 ${wizardStep < 3 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-[10px] font-mono font-bold text-gray-500 uppercase">6D. Nivel de detalle</h4>
+                    <SkipBtn onClick={() => handleWizardSkip('styleDetail', 4)} />
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                     {STYLE_WIZARD_DATA.details.map(d => (
                         <button key={d.label} onClick={() => handleWizardStep('styleDetail', d.label)} className={`px-2 py-2 text-[10px] font-medium border rounded transition-all ${config.styleDetail === d.label ? 'bg-purple-900/40 border-purple-400 text-white' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}>{d.label}</button>
@@ -329,8 +379,11 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </div>
             </div>
             {/* 6E */}
-             <div className={`transition-all duration-300 ${!config.styleDetail ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6E. Claridad del entorno</h4>
+             <div className={`transition-all duration-300 ${wizardStep < 4 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-[10px] font-mono font-bold text-gray-500 uppercase">6E. Claridad del entorno</h4>
+                    <SkipBtn onClick={() => handleWizardSkip('styleClarity', 5)} />
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                     {STYLE_WIZARD_DATA.clarity.map(c => (
                         <button key={c.label} onClick={() => handleWizardStep('styleClarity', c.label)} className={`px-2 py-2 text-[10px] font-medium border rounded transition-all ${config.styleClarity === c.label ? 'bg-purple-900/40 border-purple-400 text-white' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}>{c.label}</button>
@@ -338,8 +391,11 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 </div>
             </div>
             {/* 6F */}
-             <div className={`transition-all duration-300 ${!config.styleClarity ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6F. Acabado visual final</h4>
+             <div className={`transition-all duration-300 ${wizardStep < 5 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-[10px] font-mono font-bold text-gray-500 uppercase">6F. Acabado visual final</h4>
+                    <SkipBtn onClick={() => handleWizardSkip('styleFinish', 6)} />
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {STYLE_WIZARD_DATA.finish.map(f => (
                         <button key={f.label} onClick={() => handleWizardStep('styleFinish', f.label)} className={`px-2 py-2 text-[10px] font-medium border rounded transition-all ${config.styleFinish === f.label ? 'bg-purple-900/40 border-purple-400 text-white' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}>{f.label}</button>

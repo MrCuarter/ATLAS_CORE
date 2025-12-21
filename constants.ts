@@ -270,7 +270,9 @@ export const UI_TEXT = {
     memoryEmpty: "No hay registros de diseño.",
     memoryDownload: "DESCARGAR LOG",
     memoryClear: "BORRAR MEMORIA",
-    gemini: "GEMINI (IMAGEN)"
+    gemini: "GEMINI (IMAGEN)",
+    enhanceCollection: "MEJORAR CON IA",
+    enhancing: "MEJORANDO...",
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -370,7 +372,9 @@ export const UI_TEXT = {
     memoryEmpty: "No design logs found.",
     memoryDownload: "DOWNLOAD LOG",
     memoryClear: "CLEAR MEMORY",
-    gemini: "GEMINI (IMAGEN)"
+    gemini: "GEMINI (IMAGEN)",
+    enhanceCollection: "ENHANCE WITH AI",
+    enhancing: "ENHANCING...",
   }
 };
 

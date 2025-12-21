@@ -52,6 +52,7 @@ const App: React.FC = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [narrativeCollection, setNarrativeCollection] = useState<PromptCollectionItem[]>([]);
   const [isGeneratingNarrative, setIsGeneratingNarrative] = useState(false);
+  const [isEnhancingCollection, setIsEnhancingCollection] = useState(false);
 
   // Load history on mount
   useEffect(() => {
@@ -160,6 +161,29 @@ const App: React.FC = () => {
         setNarrativeCollection(collection);
         playSuccess();
       } catch (error) { console.error(error); } finally { setIsGeneratingNarrative(false); }
+  };
+
+  const handleEnhanceCollection = async () => {
+    if (narrativeCollection.length === 0) return;
+    setIsEnhancingCollection(true);
+    playTechClick();
+    
+    try {
+        // Process in parallel for speed
+        const enhancedPromises = narrativeCollection.map(async (item) => {
+             // Pass the current promptType (MJ, Universal, etc.) so Gemini knows how to format it
+             const enhancedText = await enhancePromptWithGemini(item.prompt, promptType);
+             return { ...item, prompt: enhancedText };
+        });
+
+        const newCollection = await Promise.all(enhancedPromises);
+        setNarrativeCollection(newCollection);
+        playSuccess();
+    } catch (e) {
+        console.error("Error enhancing collection:", e);
+    } finally {
+        setIsEnhancingCollection(false);
+    }
   };
 
   const t = C.UI_TEXT[lang];
@@ -293,7 +317,7 @@ const App: React.FC = () => {
                 {mode === AppMode.STORYCRAFTER && (
                   <>
                     <NarrativeView config={config} onChange={handleConfigChange} lang={lang} onGenerate={handleNarrativeGeneration} isGenerating={isGeneratingNarrative} onRandom={handleWorldGen} promptType={promptType} setPromptType={setPromptType} />
-                    <CollectionDisplay collection={narrativeCollection} lang={lang} />
+                    <CollectionDisplay collection={narrativeCollection} lang={lang} onEnhance={handleEnhanceCollection} isEnhancing={isEnhancingCollection} />
                   </>
                 )}
             </div>
