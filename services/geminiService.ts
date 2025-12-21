@@ -25,6 +25,11 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         4. **STRUCTURE**: Keep the '::' separators.
         5. **ENHANCE**: Add technical keywords (e.g. "volumetric lighting", "octane render", "8k") ONLY if they fit the requested style.
         6. **NO HALLUCINATIONS**: Do not change the Civilization or Place type.
+        7. **CHARACTER SHEETS**: If the prompt mentions "Character Sheet" or "Poses", you MUST add parameters to ensure separation: "Wide spacing between poses, no overlapping, white background".
+        8. **PET SHEETS**: If the prompt mentions "Companion/Pet" or "Creature Concept Sheet":
+           - MUST specify "Quadruped" or "Beast".
+           - MUST specify "Vertical Layout" and "Three distinct poses: Top, Center, Bottom".
+           - MUST use "--ar 9:16".
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
         // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
@@ -36,6 +41,8 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         2. **STYLE FIDELITY**: If the input mentions a specific influence (e.g. "Disney / Pixar", "Elden Ring", "Blueprint"), the output must explicitly mention "in the style of [Reference]".
         3. **SUBJECT**: Keep the exact Civilization (e.g. "Orcs") and Location (e.g. "Sand Dunes").
         4. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
+        5. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
+        6. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
         
         ENHANCEMENT STRATEGY:
         - Translate to English.

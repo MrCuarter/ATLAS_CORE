@@ -355,8 +355,8 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                 `}
             >
                 <div className="text-2xl mb-2">⚔️</div>
-                <div className="font-mono font-bold text-sm tracking-widest text-pink-400 mb-1">GENERAR CHARS</div>
-                <p className="text-[10px] text-pink-200/50 leading-tight">Héroes (3 poses acción) + Villanos + Mascota.</p>
+                <div className="font-mono font-bold text-sm tracking-widest text-pink-400 mb-1">GENERAR PERSONAJES</div>
+                <p className="text-[10px] text-pink-200/50 leading-tight">Hoja de diseño completa: Héroes (3 poses), Villanos, NPCs y Mascotas. Optimizado para evitar solapamientos.</p>
             </button>
 
       </div>

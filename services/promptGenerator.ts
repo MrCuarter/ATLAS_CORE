@@ -128,15 +128,15 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
     
     // --- FORMATTING HELPER BASED ON PROMPT TYPE ---
-    const formatAsset = (assetType: string, subject: string, context: string, view: string, extraTech: string = ""): string => {
+    const formatAsset = (assetType: string, subject: string, context: string, view: string, extraTech: string = "", customAr: string = "16:9"): string => {
         // LOGIC: Isolated background is ONLY for Characters and UI, NOT for World maps/scenes
         const isWorldMode = mode === NarrativeMode.WORLD;
         const safetyMargin = isWorldMode 
             ? "High quality, wide aspect ratio, professional game asset." 
-            : "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING.";
+            : "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING. Wide negative space between elements.";
         
         const techLine = `${view}. ${extraTech}`;
-        const ar = "16:9";
+        const ar = customAr;
 
         // 1. UNIVERSAL
         if (promptType === PromptType.UNIVERSAL) {
@@ -147,7 +147,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
             
             Technical details: ${techLine}.
-            ${safetyMargin}`;
+            ${safetyMargin}
+            Aspect Ratio: ${ar}`;
         }
 
         // 2. MIDJOURNEY
@@ -239,7 +240,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             { role: 'Sage/NPC', desc: 'Wise elder or Quest giver' }
         ];
 
-        // Humanoids: Horizontal, 3 action poses
+        // Humanoids: Horizontal, 3 action poses (16:9)
         roles.forEach((r, idx) => {
             items.push({
                 title: `CHAR: ${r.role}`,
@@ -248,20 +249,22 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                     "Character Concept Sheet", 
                     `${r.role} (${r.desc})`, 
                     `Character design`, 
-                    "Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running), Full body"
+                    "Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running), surrounded by ample negative space, strictly separated, no overlapping elements. Full body",
+                    "16:9"
                 )
             });
         });
 
-        // Pet/Creature: Vertical, Full body
+        // Pet/Creature: Vertical, 3 Poses (9:16)
         items.push({
             title: `CHAR: Companion/Pet`,
             type: 'CHARACTER',
             prompt: formatAsset(
-                "Creature Concept Art", 
-                `${civ} Beast/Pet Companion fitting the ${place} environment`, 
+                "Creature Concept Sheet", 
+                `${civ} Quadruped Beast or Mythological Creature (Fantasy/Invented)`, 
                 `Creature design`, 
-                "Full body detailed render, vertical composition"
+                "Vertical Character Sheet (9:16 aspect ratio). Three distinct poses arranged vertically: Top (Alert/Standing), Center (Action/Attacking), Bottom (Resting/Sleeping). Wide negative space between poses.",
+                "9:16"
             )
         });
     }
