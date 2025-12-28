@@ -246,23 +246,25 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         }
 
         pois.forEach((poiName, idx) => {
-            // Add slight randomness to camera descriptions for variety
+            // ENFORCED INTERIOR/THRESHOLD PERSPECTIVES
             const camVars = [
-                "Cinematic Eye-Level Shot", 
-                "Wide Angle establishing shot", 
-                "Low angle immersive shot",
-                "Atmospheric perspective"
+                "First-person perspective view into the INTERIOR from the entrance threshold", 
+                "Immersive eye-level shot standing at the open doorway, gazing deep into the INTERIOR", 
+                "Point-of-view shot looking through the main entrance portal into the internal space",
+                "Cinematic shot from the character's perspective at the threshold, contemplating the INTERIOR details",
+                "Close-up immersive shot from the doorway looking inside at the detailed INTERIOR architecture",
+                "Eye-level POV from the threshold, framed by the door frame looking into the heart of the INTERIOR"
             ];
             const randomCam = camVars[idx % camVars.length];
 
             items.push({
-                title: `SCENE ${idx + 1}: ${poiName}`,
+                title: `SCENE ${idx + 1}: ${poiName} (Interior)`,
                 type: 'SCENE',
                 prompt: formatAsset(
-                    "concept art image", 
-                    `${poiName} located within ${place}`, 
-                    `Interior/Exterior of ${poiName}`, 
-                    `${randomCam}, immersive perspective`
+                    "detailed concept art of an INTERIOR", 
+                    `the inside interior of ${poiName} in ${place}`, 
+                    `Rich interior environment of ${poiName}, looking in from the doorway, immersive architecture`, 
+                    `${randomCam}, wide-angle immersive field of view`
                 )
             });
         });

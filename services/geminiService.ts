@@ -21,17 +21,24 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         CRITICAL RULES:
         1. **TRANSLATE TO ENGLISH**: All Spanish text must be translated.
         2. **PRESERVE STYLE**: If the prompt says specific style references (e.g. "**Disney/Pixar Style**", "Arcane", "Pixel Art"), YOU MUST KEEP THEM EXACTLY AS IS.
-        3. **PRESERVE CAMERA**: If the prompt says "Top-Down View", "Isometric", or "Side View", YOU MUST KEEP THAT EXACT CAMERA TOKEN. Do not change "Top-Down" to generic "High angle".
+        3. **PRESERVE CAMERA**: If the prompt says "Top-Down View", "Isometric", or "Side View", YOU MUST KEEP THAT EXACT CAMERA TOKEN.
         4. **STRUCTURE**: Keep the '::' separators.
         5. **ENHANCE**: Add technical keywords (e.g. "volumetric lighting", "octane render", "8k") ONLY if they fit the requested style.
         6. **NO HALLUCINATIONS**: Do not change the Civilization or Place type.
-        7. **CHARACTER SHEETS**: If the prompt mentions "Character Sheet" or "Poses", you MUST add parameters to ensure separation: "Wide spacing between poses, no overlapping, white background".
-        8. **PET SHEETS**: If the prompt mentions "Companion/Pet" or "Creature Concept Sheet":
+        
+        7. **INTERIOR FOCUS FOR SCENES**: If the prompt is for a scene/POI (like a tavern, shop, library, temple):
+           - YOU MUST describe the INTERIOR of the place.
+           - THE PERSPECTIVE MUST be from the character's POV standing at the doorway/entrance threshold, looking deep into the room.
+           - Use terms like "viewed from the threshold", "POV from the entrance looking in", "framing the interior through the open door".
+
+        8. **CHARACTER SHEETS**: If the prompt mentions "Character Sheet" or "Poses", you MUST add parameters to ensure separation: "Wide spacing between poses, no overlapping, white background".
+        
+        9. **PET SHEETS**: If the prompt mentions "Companion/Pet" or "Creature Concept Sheet":
            - MUST specify "Quadruped" or "Beast".
            - MUST specify "Vertical Layout" and "Three distinct poses: Top, Center, Bottom".
            - MUST use "--ar 9:16".
-        9. **NO PEOPLE / SCENERY ONLY**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
-        10. **VARIETY**: Use diverse vocabulary. Avoid starting every prompt with "Cinematic shot of...". Mix sentence structures.
+        
+        10. **NO PEOPLE**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
         // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
@@ -39,9 +46,14 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         TASK: Rewrite the prompt into a rich English description, but strictly adhere to the technical constraints provided in the input.
         
         STRICT CONSTRAINTS (DO NOT IGNORE):
-        1. **PERSPECTIVE IS SACRED**: If the input specifies "Top-Down View (90º)" or "Isometric", the output MUST explicitly state "Top-Down View" or "Isometric view". Do NOT change this to "high angle" or "bird's eye". It must be accurate for a game map.
-        2. **STYLE FIDELITY**: If the input mentions a specific influence (e.g. "Disney / Pixar", "Elden Ring", "Blueprint"), the output must explicitly mention "in the style of [Reference]".
-        3. **SUBJECT**: Keep the exact Civilization (e.g. "Orcs") and Location (e.g. "Sand Dunes").
+        1. **PERSPECTIVE IS SACRED**: If the input specifies "Top-Down View (90º)" or "Isometric", the output MUST explicitly state "Top-Down View" or "Isometric view".
+        2. **STYLE FIDELITY**: If the input mentions a specific influence (e.g. "Disney / Pixar", "Elden Ring"), the output must explicitly mention "in the style of [Reference]".
+        
+        3. **INTERIOR POI FOCUS**: If generating a scene for a specific location (POI):
+           - The prompt MUST depict the INTERIOR of the location.
+           - The view MUST be a first-person perspective standing exactly at the entrance threshold, looking into the room.
+           - Describe the interior atmosphere, furniture, and depth as seen from the doorway.
+
         4. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
         5. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
         6. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
@@ -49,8 +61,8 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         
         ENHANCEMENT STRATEGY:
         - Translate to English.
-        - Improve the lighting and texture descriptions (e.g. "subsurface scattering", "weathered textures", "dynamic shadows") to match the requested mood.
-        - **VARIETY**: Do not use the same sentence structure for every request. Vary the opening phrase (e.g., "A desolate...", "Visualizing a...", "Concept art of...").
+        - Improve lighting/texture (e.g. "subsurface scattering", "dynamic shadows") to match the mood.
+        - Use diverse vocabulary to avoid repetitiveness.
         `;
     } else {
         // TYPE C: ADVANCED/TECHNICAL ENHANCER (Tokens)
@@ -59,16 +71,17 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         
         RULES:
         1. **TRANSLATE TO ENGLISH**.
-        2. **PRESERVE CORE TOKENS**: Do not remove the camera type (Top-down/Isometric), the Style Reference, or the Civilization.
-        3. **EXPAND**: Add danbooru-style tags for lighting and texture (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
-        4. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
+        2. **ENFORCE INTERIOR FOR POIs**: If the location is an interior place, add tags like "indoor, interior view, looking through doorway, first person view from threshold".
+        3. **PRESERVE CORE TOKENS**: Do not remove the camera type, the Style Reference, or the Civilization.
+        4. **EXPAND**: Add technical tags (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
+        5. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
         `;
     }
 
     const response = await ai.models.generateContent({
       model: modelId,
       contents: `CURRENT PROMPT:\n${currentPrompt}`,
-      config: { systemInstruction, temperature: 0.7 } // Increased temperature slightly for variety
+      config: { systemInstruction, temperature: 0.7 }
     });
     return response.text?.trim() || currentPrompt;
   } catch (error) {
@@ -78,7 +91,6 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
 };
 
 export const generateGameAssetsPrompt = async (context: string): Promise<string> => {
-    // Legacy function, keeping generic structure
      try {
         const apiKey = getApiKey();
         if (!apiKey) return "";
@@ -128,7 +140,7 @@ export const generateDerivedScene = async (currentPrompt: string, mediaType: Med
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-3-flash-preview";
         
-        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed.`;
+        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed. Ensure the view is from the doorway threshold looking into the interior.`;
 
         const response = await ai.models.generateContent({
             model: modelId,
