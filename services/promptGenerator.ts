@@ -98,13 +98,23 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         const viewStr = isScene ? "eye-level perspective" : "top-down tactical view";
         const subjectStr = isScene ? `depicting ${poi} located within ${place}` : `showing a detailed map of ${place} centered on ${building}`;
         
-        // Remove "Visual Style:" prefix from token if present for smoother flow
+        // Clean up style tokens
         const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
+        
+        // Determine the "Inspired by" source. Priority: 1. Extracted, 2. Wizard Ref, 3. Generic Art Style
+        const styleSource = config.extractedStyle 
+            ? 'an uploaded reference image' 
+            : (config.styleReference || config.artStyle || 'a distinct visual style');
+
+        // Construct style sentence to avoid redundancy (e.g. "Inspired by Hades. Style details: Hades.")
+        let styleSentence = `The art direction is inspired by ${styleSource}.`;
+        if (cleanRef && cleanRef !== styleSource && !cleanRef.includes(styleSource)) {
+             styleSentence += ` Style details: ${cleanRef}.`;
+        }
 
         return `Create a ${typeStr} ${subjectStr}. The setting belongs to the ${civ} civilization.
         
-        The art direction is inspired by ${config.extractedStyle ? 'an uploaded reference image' : config.styleReference}. 
-        Style details: ${cleanRef}.
+        ${styleSentence}
         ${tokens.vibe ? `The scene features a ${tokens.vibe.toLowerCase()} atmosphere.` : ''} 
         ${tokens.finish ? `Finish: ${tokens.finish.toLowerCase()}.` : ''}
         
@@ -121,9 +131,13 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
             : `Top-down game map of ${place}, ${building}, ${civ} style`;
 
         const envDetails = `Time: ${time}, Weather: ${weather}, ${config.customAtmosphere || 'Atmospheric lighting'}`;
+        
+        // Use styleReference if available (Wizard), otherwise fallback to artStyle (Preset)
+        const refLabel = config.styleReference || config.artStyle || 'Fantasy';
+        
         const styleBlock = config.extractedStyle 
             ? `**Custom Art Style** :: ${config.extractedStyle}`
-            : `**${config.styleReference} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
+            : `**${refLabel} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
             
         const motionText = isVideo ? `, ${videoAction} motion` : "";
 
