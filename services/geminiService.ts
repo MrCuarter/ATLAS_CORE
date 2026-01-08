@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { PromptType, MediaType } from "../types";
+import { PromptType, MediaType, Language } from "../types";
 
 const getApiKey = () => process.env.API_KEY || "";
 
@@ -24,21 +24,32 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         3. **PRESERVE CAMERA**: If the prompt says "Top-Down View", "Isometric", or "Side View", YOU MUST KEEP THAT EXACT CAMERA TOKEN.
         4. **STRUCTURE**: Keep the '::' separators.
         5. **ENHANCE**: Add technical keywords (e.g. "volumetric lighting", "octane render", "8k") ONLY if they fit the requested style.
-        6. **NO HALLUCINATIONS**: Do not change the Civilization or Place type.
         
-        7. **INTERIOR FOCUS FOR SCENES**: If the prompt is for a scene/POI (like a tavern, shop, library, temple):
+        6. **STYLE VS CONTENT DECOUPLING (MOST IMPORTANT)**: 
+           - The "Visual Style" (e.g., Civilization VI, Zelda, Age of Empires) dictates the **RENDERING TECHNIQUE** (brush strokes, lighting, textures, saturation).
+           - The "Civilization/Theme" (e.g., Cyberpunk, Elves, Space) dictates the **CONTENT** (objects, clothes, buildings, UI shapes).
+           - **EXAMPLE**: If Style is "Age of Empires" (Historical) but Theme is "Space Station", you MUST generate a Space Station rendered with the realistic/isometric look of Age of Empires. DO NOT generate a medieval castle.
+           - **EXAMPLE 2**: If Style is "Zelda" (Fantasy) but Theme is "WWII Soldier", generate a Soldier with Cel-Shading. DO NOT generate an Elf.
+
+        7. **STRICT INTERIOR FOCUS FOR SCENES**: If the prompt is for a scene/POI (like a tavern, shop, library, temple, forge):
            - YOU MUST describe the INTERIOR of the place.
            - THE PERSPECTIVE MUST be from the character's POV standing at the doorway/entrance threshold, looking deep into the room.
+           - **VARIETY**: Ensure the interior is packed with unique items related to its function.
            - Use terms like "viewed from the threshold", "POV from the entrance looking in", "framing the interior through the open door".
 
         8. **CHARACTER SHEETS**: If the prompt mentions "Character Sheet" or "Poses", you MUST add parameters to ensure separation: "Wide spacing between poses, no overlapping, white background".
         
-        9. **PET SHEETS**: If the prompt mentions "Companion/Pet" or "Creature Concept Sheet":
+        9. **BADGE / TOKEN SHEETS**: If the prompt mentions "Character Tokens" or "Badges":
+           - MUST specify a grid of 6 circular insignias.
+           - MUST specify a layout of 3 in the top row and 3 in the bottom row.
+           - MUST emphasize "Wide safety margin between tokens, isolated on pure white background".
+
+        10. **PET SHEETS**: If the prompt mentions "Companion/Pet" or "Creature Concept Sheet":
            - MUST specify "Quadruped" or "Beast".
            - MUST specify "Vertical Layout" and "Three distinct poses: Top, Center, Bottom".
            - MUST use "--ar 9:16".
         
-        10. **NO PEOPLE**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
+        11. **NO PEOPLE**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
         // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
@@ -49,15 +60,26 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         1. **PERSPECTIVE IS SACRED**: If the input specifies "Top-Down View (90º)" or "Isometric", the output MUST explicitly state "Top-Down View" or "Isometric view".
         2. **STYLE FIDELITY**: If the input mentions a specific influence (e.g. "Disney / Pixar", "Elden Ring"), the output must explicitly mention "in the style of [Reference]".
         
-        3. **INTERIOR POI FOCUS**: If generating a scene for a specific location (POI):
+        3. **STYLE VS CONTENT SEPARATION**: 
+           - Isolate the ART STYLE (How it looks) from the CONTENT (What it is).
+           - If the user asks for "Space Station" in "Zelda Style", describe: "A futuristic Space Station rendered in a vibrant, cel-shaded, painterly style similar to Breath of the Wild". 
+           - DO NOT change the content to match the style (e.g., do not turn the space station into a castle).
+
+        4. **STRICT INTERIOR POI FOCUS**: If generating a scene for a specific location (POI):
            - The prompt MUST depict the INTERIOR of the location.
            - The view MUST be a first-person perspective standing exactly at the entrance threshold, looking into the room.
+           - **VARIETY**: Describe unique environmental storytelling elements specific to that POI.
            - Describe the interior atmosphere, furniture, and depth as seen from the doorway.
 
-        4. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
-        5. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
-        6. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
-        7. **NO PEOPLE**: If the prompt is for a MAP or SCENE, explicit state: "The scene is devoid of people. No characters present. Focus on environment and architecture."
+        5. **BACKGROUND**: If the input says "Isolated on white background", KEEP IT.
+        6. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
+        
+        7. **BADGE / TOKEN SHEETS**: If generating "Character Tokens" or "Badges":
+           - The output MUST describe a sheet showing 6 circular insignias in a grid (3 top, 3 bottom).
+           - Must emphasize white negative space and isolation.
+
+        8. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
+        9. **NO PEOPLE**: If the prompt is for a MAP or SCENE, explicit state: "The scene is devoid of people. No characters present. Focus on environment and architecture."
         
         ENHANCEMENT STRATEGY:
         - Translate to English.
@@ -71,10 +93,12 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         
         RULES:
         1. **TRANSLATE TO ENGLISH**.
-        2. **ENFORCE INTERIOR FOR POIs**: If the location is an interior place, add tags like "indoor, interior view, looking through doorway, first person view from threshold".
-        3. **PRESERVE CORE TOKENS**: Do not remove the camera type, the Style Reference, or the Civilization.
-        4. **EXPAND**: Add technical tags (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
-        5. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
+        2. **STRICT INTERIOR FOR POIs**: If the location is an interior place, add tags like "indoor, interior view, looking through doorway, first person view from threshold, thematic furniture, unique environmental details".
+        3. **STYLE DECOUPLING**: Ensure the tokens for CONTENT (e.g. "Spaceship", "Laser") are separate from tokens for STYLE (e.g. "Oil painting", "Pixel art"). Do not mix them up (e.g. do not put "sword" if the content is "gun", even if style is "medieval").
+        4. **PRESERVE CORE TOKENS**: Do not remove the camera type, the Style Reference, or the Civilization.
+        5. **EXPAND**: Add technical tags (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
+        6. **BADGE GRIDS**: If badges are mentioned, add "grid layout, 3x2 arrangement, 6 icons, circular frames, isolated on white".
+        7. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
         `;
     }
 
@@ -113,17 +137,33 @@ export const generateGameAssetsPrompt = async (context: string): Promise<string>
     }
 }
 
-export const generatePOISuggestions = async (place: string, civ: string): Promise<string[]> => {
+export const generatePOISuggestions = async (place: string, civ: string, building: string, lang: Language): Promise<string[]> => {
     try {
         const apiKey = getApiKey();
         if (!apiKey) return [];
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-3-flash-preview";
-        const systemInstruction = `List 6 creative "Points of Interest" inside "${place}" for a "${civ}" theme. Return strictly as a JSON array of strings. No extra text. Keep names in the original language if it adds flavor, but prefer English if generic.`;
+
+        // Logic: Return in Spanish if UI is ES, otherwise English. 
+        // The PromptEnhancer will translate back to English later for generation.
+        const outputLang = lang === Language.ES ? 'SPANISH' : 'ENGLISH';
+        
+        const systemInstruction = `
+        You are a Narrative Designer for a video game.
+        TASK: List 6 creative "Points of Interest" (Rooms, Areas, Landmarks) found inside a "${building}" located in "${place}".
+        CONTEXT: The civilization/race is "${civ}". Ensure the names reflect their technology, magic, or culture.
+        
+        EXAMPLES:
+        - If Space Station + Humans: Greenhouse, Cryo Lab, Command Deck, Zero-G Gym, Reactor Core, Airslock.
+        - If Dwarf Fortress + Forge: Molten Channel, Ancestral Anvil, Rune Carver, Obsidian Vault, Ale Storage, Golem Workshop.
+        
+        FORMAT: Return strictly as a JSON array of strings. No extra text.
+        LANGUAGE: The output names MUST BE IN ${outputLang}.`;
+
         const response = await ai.models.generateContent({
             model: modelId,
-            contents: "Generate.",
-            config: { systemInstruction, temperature: 0.7, responseMimeType: "application/json" }
+            contents: "Generate Points of Interest.",
+            config: { systemInstruction, temperature: 0.75, responseMimeType: "application/json" }
         });
         const text = response.text?.trim();
         return text ? JSON.parse(text) : [];

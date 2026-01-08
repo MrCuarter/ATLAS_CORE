@@ -151,11 +151,11 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     // Detailed Wizard Tokens
     const tokens = getStyleToken(config);
     const styleRef = config.styleReference || config.artStyle || 'Fantasy';
+    // Clean ref for smoother prompting
     const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
     
     // --- FORMATTING HELPER BASED ON PROMPT TYPE ---
-    const formatAsset = (assetType: string, subject: string, context: string, view: string, extraTech: string = "", customAr: string = "16:9"): string => {
-        // LOGIC: Isolated background is ONLY for Characters and UI, NOT for World maps/scenes
+    const formatAsset = (assetType: string, subject: string, contextDescription: string, view: string, extraTech: string = "", customAr: string = "16:9"): string => {
         const isWorldMode = mode === NarrativeMode.WORLD;
         const safetyMargin = isWorldMode 
             ? "High quality, wide aspect ratio, professional game asset." 
@@ -164,29 +164,29 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         const techLine = `${view}. ${extraTech}`;
         const ar = customAr;
 
-        // VARIATIONS SYSTEM for Universal Prompts (To reduce repetition)
-        const VARIATIONS = [
-            `Create a high-resolution ${assetType} showing ${subject}.`,
-            `A highly detailed ${assetType} depicting ${subject}.`,
-            `Design a professional ${assetType} representing ${subject}.`,
-            `Visual asset: ${assetType} of ${subject}.`
-        ];
-        // Pick a random intro
-        const intro = VARIATIONS[Math.floor(Math.random() * VARIATIONS.length)];
-
         // NO PEOPLE LOGIC
         const noPeopleTag = isWorldMode ? "NO PEOPLE, NO CHARACTERS, empty scenery, environmental focus." : "";
         const mjNoPeople = isWorldMode ? "--no people characters figures" : "--no text ui interface";
         const sdNoPeople = isWorldMode ? "(no humans, no people, empty scenery)," : "";
 
+        // STYLE DECOUPLING INSTRUCTION
+        // This ensures the Subject matches the Civilization, while the Render matches the Style Reference.
+        const styleInstruction = `
+        VISUAL STYLE & RENDERING: Apply the *aesthetic technique* of ${styleRef} (${cleanRef}). Match its textures, lighting, and rendering engine.
+        SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** in **${place}**. 
+        (Do NOT use assets/characters from the ${styleRef} game. Use ${civ} assets rendered in ${styleRef} style).`;
+
+        const mjStyleBlock = `**${styleRef} Art Style** :: ${tokens.vibe} :: ${tokens.finish}`;
+
         // 1. UNIVERSAL
         if (promptType === PromptType.UNIVERSAL) {
-            return `${intro} The setting belongs to the ${civ} civilization.
+            return `Create a ${assetType} of ${subject}.
             
-            The art direction is inspired by ${styleRef}. ${cleanRef}.
-            The scene features a ${tokens.vibe.toLowerCase()} atmosphere with ${tokens.finish.toLowerCase()}.
-            Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
+            ${styleInstruction}
+            Atmosphere: ${tokens.vibe}. Finish: ${tokens.finish}.
+            Lighting: ${time} with ${weather}.
             
+            Context: ${contextDescription}.
             Technical details: ${techLine}.
             ${safetyMargin}
             ${noPeopleTag}
@@ -195,7 +195,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
 
         // 2. MIDJOURNEY
         if (promptType === PromptType.MIDJOURNEY) {
-            return `${assetType} of ${subject}, ${civ} style :: ${context}, Time: ${time}, Weather: ${weather} :: **${styleRef} Style** :: ${cleanRef} :: ${tokens.vibe}, ${tokens.finish} :: ${techLine}, Balanced composition, Natural blending --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
+            // MJ structure: [Subject + Content] :: [Env + Tech] :: [Style Reference]
+            return `${assetType} of ${subject}, ${civ} aesthetics, ${place} environment :: ${contextDescription}, Time: ${time}, Weather: ${weather} :: ${mjStyleBlock} :: ${cleanRef} :: ${techLine} --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
         }
 
         // 3. TECHNICAL (Stable Diffusion)
@@ -203,7 +204,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             const quality = "(masterpiece, best quality, 8k, highres),";
             const isolationTag = isWorldMode ? "" : ", isolated on white background, simple background";
             const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
-            return `${quality} ${assetType}, ${subject}, ${civ} style, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${place} background, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
         }
 
         return "";
@@ -218,7 +219,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             prompt: formatAsset(
                 "game map", 
                 `a detailed map of ${place}`, 
-                `${place} terrain`, 
+                `Terrain and architecture of ${civ}`, 
                 "Top-Down View (90º), top-down tactical view"
             )
         });
@@ -229,9 +230,9 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             type: 'MAP',
             prompt: formatAsset(
                 "isometric environment", 
-                `the main ${config.buildingType || 'structure'} of ${place} (${civ} architecture)`, 
-                `${place} terrain`, 
-                "45-degree isometric view, Macro-Zoom focused on the central structure, detailed architecture close-up, tactical RPG perspective"
+                `the main ${config.buildingType || 'structure'} of ${place}`, 
+                `${civ} architecture and props`, 
+                "45-degree isometric view, Macro-Zoom focused on the central structure, detailed architecture close-up"
             )
         });
 
@@ -246,14 +247,13 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         }
 
         pois.forEach((poiName, idx) => {
-            // ENFORCED INTERIOR/THRESHOLD PERSPECTIVES
             const camVars = [
-                "First-person perspective view into the INTERIOR from the entrance threshold", 
-                "Immersive eye-level shot standing at the open doorway, gazing deep into the INTERIOR", 
-                "Point-of-view shot looking through the main entrance portal into the internal space",
-                "Cinematic shot from the character's perspective at the threshold, contemplating the INTERIOR details",
-                "Close-up immersive shot from the doorway looking inside at the detailed INTERIOR architecture",
-                "Eye-level POV from the threshold, framed by the door frame looking into the heart of the INTERIOR"
+                "First-person perspective looking into the INTERIOR from the entrance threshold", 
+                "Immersive eye-level shot standing at the open doorway, gazing deep into the INTERIOR heart", 
+                "Point-of-view shot looking through the main entrance portal into the internal cavernous space",
+                "Cinematic shot from the character's perspective at the threshold, observing the INTERIOR atmosphere",
+                "Close-up immersive shot from the doorway looking inside at the detailed INTERIOR furniture and props",
+                "Eye-level POV from the threshold, door frame visible in foreground looking into the INTERIOR"
             ];
             const randomCam = camVars[idx % camVars.length];
 
@@ -263,7 +263,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 prompt: formatAsset(
                     "detailed concept art of an INTERIOR", 
                     `the inside interior of ${poiName} in ${place}`, 
-                    `Rich interior environment of ${poiName}, looking in from the doorway, immersive architecture`, 
+                    `${civ} furniture, props and architecture specific to a ${poiName}`, 
                     `${randomCam}, wide-angle immersive field of view`
                 )
             });
@@ -272,14 +272,24 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
 
     // --- MODE 2: UI (Interface) ---
     if (mode === NarrativeMode.UI) {
+        // Explicitly defining the look of the UI based on Civ, NOT style.
+        let materialDesc = `${civ} materials`;
+        if (civ.toLowerCase().includes('cyber') || civ.toLowerCase().includes('sci-fi') || civ.toLowerCase().includes('space')) {
+            materialDesc = "Holographic panels, neon borders, dark metal frames, digital glass, futuristic fonts";
+        } else if (civ.toLowerCase().includes('elf') || civ.toLowerCase().includes('fantasy')) {
+             materialDesc = "Ornate gold frames, magical parchment, glowing gemstones, elegant serif fonts, mystical swirls";
+        } else if (civ.toLowerCase().includes('viking') || civ.toLowerCase().includes('dwarf')) {
+             materialDesc = "Carved stone, iron borders, heavy wood, runic inscriptions, rugged textures";
+        }
+
         // 1. UI BUTTONS PACK
         items.push({
             title: `UI: Buttons & Icons Pack`,
             type: 'UI',
             prompt: formatAsset(
                 "Game UI Buttons Pack",
-                `Complete collection of buttons and icons for a ${civ} style game`,
-                `User Interface design`,
+                `Complete collection of buttons and icons for a ${civ} themed game`,
+                `UI Aesthetics: ${materialDesc}. The buttons MUST look like they belong to the ${civ} civilization`,
                 `The image must show a full collection of buttons and icons arranged in a clean grid layout.
                 Content required:
                 – Large primary buttons: PLAY, UPGRADE, SHOP, QUESTS, BATTLE, COLLECT, BUY
@@ -297,8 +307,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             type: 'UI',
             prompt: formatAsset(
                 "Game UI Windows & Dialogue Pack",
-                `Set of empty UI windows and dialogue frames for a ${civ} style game`,
-                `User Interface design`,
+                `Set of empty UI windows and dialogue frames for a ${civ} themed game`,
+                `UI Aesthetics: ${materialDesc}. Frame designs matching ${civ} architecture`,
                 `The image must show a full set of empty UI windows and dialogue frames.
                 Content required:
                 – Large windows: Main dialogue window (wide), Secondary info window (medium)
@@ -317,7 +327,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             prompt: formatAsset(
                 "Game HUD Elements", 
                 `Health bar, Mana bar, and XP bar with ${civ} ornamentation`, 
-                `User Interface design`, 
+                `UI Aesthetics: ${materialDesc}`, 
                 "Isolated health and energy bars, decorative frames, status indicators. Flat vector graphic style.",
                 "16:9"
             )
@@ -341,8 +351,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 type: 'CHARACTER',
                 prompt: formatAsset(
                     "Character Concept Sheet", 
-                    `${r.role} (${r.desc})`, 
-                    `Character design`, 
+                    `${r.role} (${r.desc}) of the ${civ} race`, 
+                    `Costume and equipment must be strictly ${civ} style (e.g. if Space, use Space Suits; if Medieval, use Armor)`, 
                     "Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running), surrounded by ample negative space, strictly separated, no overlapping elements. Full body",
                     "16:9"
                 )
@@ -356,9 +366,22 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             prompt: formatAsset(
                 "Creature Concept Sheet", 
                 `${civ} Quadruped Beast or Mythological Creature (Fantasy/Invented)`, 
-                `Creature design`, 
+                `Anatomy and design matching ${civ} lore`, 
                 "Vertical Character Sheet (9:16 aspect ratio). Three distinct poses arranged vertically: Top (Alert/Standing), Center (Action/Attacking), Bottom (Resting/Sleeping). Wide negative space between poses.",
                 "9:16"
+            )
+        });
+
+        // 3. CHARACTER BADGES / INSIGNIAS (NEW: 3 top, 3 bottom)
+        items.push({
+            title: `UI: Character Tokens / Badges`,
+            type: 'BADGE',
+            prompt: formatAsset(
+                "Game Character Token Badges Sheet",
+                "Collection of 6 circular character insignias representing: Male Warrior, Female Mage, Dark Villain, Foot Soldier, Wise Sage, and Beast Companion",
+                `The portraits inside the badges must be ${civ} characters. The frame style must be ${civ} ornamentation`,
+                "A clean 3x2 grid layout of 6 circular badges: exactly 3 in the top row and 3 in the bottom row. Each insignia contains a character head portrait. Wide safety margin and white negative space between each badge.",
+                "16:9"
             )
         });
     }

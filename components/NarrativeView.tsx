@@ -47,14 +47,24 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   }, [config.manualPOIs]);
 
   // OFFLINE AUTO-POIS: When Civilization changes, update POIs with Predefined ones (no AI)
+  // This logic now checks for special "Space" context for Humans to give better offline defaults
   useEffect(() => {
     if (config.civilization) {
-         const predefined = C.getPredefinedPOIs(config.civilization);
+         let civKey = config.civilization;
+         // HACK: Improve offline mapping for Sci-Fi contexts if Humans are selected with specific places
+         if (civKey === 'Humanos' && (config.placeType?.includes('Espacio') || config.placeType?.includes('Base') || config.era?.includes('Futuro'))) {
+             civKey = 'Sci-Fi';
+         }
+         if (civKey === 'Humanos' && (config.placeType?.includes('Cyber') || config.era?.includes('Cyberpunk'))) {
+             civKey = 'Cyberpunk';
+         }
+
+         const predefined = C.getPredefinedPOIs(civKey);
          // Only update if current POIs are empty or basic default
          setPois(predefined);
          onChange('manualPOIs', predefined);
     }
-  }, [config.civilization, config.placeType]);
+  }, [config.civilization, config.placeType, config.era]);
 
   const handlePoiChange = (index: number, value: string) => {
     const newPois = [...pois];
@@ -68,7 +78,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     playTechClick();
     setIsLoadingPois(true);
     try {
-        const suggestions = await generatePOISuggestions(config.placeType, config.civilization);
+        const building = config.buildingType || 'Structure';
+        const suggestions = await generatePOISuggestions(config.placeType, config.civilization, building, lang);
+        
         if (suggestions && suggestions.length > 0) {
             const safeSuggestions = suggestions.slice(0, 6);
             while (safeSuggestions.length < 6) safeSuggestions.push("");
@@ -243,7 +255,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                 <button 
                     onClick={handleGeneratePois}
                     disabled={isLoadingPois || !config.placeType}
-                    className="px-4 py-2 bg-gray-950 border border-gray-700 hover:border-accent-500 hover:text-accent-400 text-gray-400 font-mono font-bold text-[10px] rounded transition-all flex items-center gap-2 uppercase tracking-wider"
+                    className="px-4 py-2 bg-gray-950 border border-gray-700 hover:border-accent-500 hover:text-accent-400 text-gray-400 font-mono font-bold text-[10px] rounded transition-all flex items-center gap-2 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isLoadingPois ? (
                         <span className="flex items-center gap-2"><svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg> GENERANDO...</span>

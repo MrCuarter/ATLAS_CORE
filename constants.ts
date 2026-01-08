@@ -1,5 +1,4 @@
 
-
 import { PoiMapping, Preset, Language } from './types';
 
 export const PROMPT_TRANSLATIONS: Record<string, string> = {
@@ -451,24 +450,24 @@ export const FANTASY_BUILDINGS = BUILDINGS_HISTORIC;
 export const HISTORICAL_BUILDINGS = BUILDINGS_HISTORIC;
 export const getBuildingsByEra = (era: string) => BUILDINGS_HISTORIC;
 
-// PREDEFINED POIS FOR OFFLINE STORYCRAFTER
+// PREDEFINED POIS FOR OFFLINE STORYCRAFTER (NOW IN ENGLISH)
 export const PREDEFINED_POIS: Record<string, string[]> = {
-    'DEFAULT': ['Plaza Principal', 'Taberna / Posada', 'Armería', 'Sala del Consejo', 'Murallas', 'Entrada Secreta'],
+    'DEFAULT': ['Main Square', 'Tavern / Inn', 'Armory', 'Council Hall', 'City Walls', 'Secret Entrance'],
     
     // FANTASY
-    'Altos Elfos': ['Cámara de los Cristales', 'Biblioteca Arcana', 'Observatorio Estelar', 'Jardines Colgantes', 'Sala del Trono', 'Puerto de Navíos Blancos'],
-    'Elfos Oscuros (Drow)': ['Templo de la Araña', 'Foso de los Esclavos', 'Sala de las Sombras', 'Mercado Subterráneo', 'Laboratorio de Venenos', 'Torre de Hechicería'],
-    'Enanos de Montaña': ['Gran Fragua', 'Sala del Tesoro', 'Mina Profunda', 'Cervecería Real', 'Salón de los Ancestros', 'Puerta de Piedra'],
-    'Orcos': ['Foso de Lucha', 'Campamento de Guerra', 'Altar de Huesos', 'Herrería de Sangre', 'Torre de Vigía Tribal', 'Jaulas de Wargs'],
-    'No-Muertos (Lich)': ['Cripta Real', 'Laboratorio de Nigromancia', 'Trono de Hueso', 'Foso de Almas', 'Jardín Marchito', 'Torre del Silencio'],
-    'Cyberpunk': ['Bar de Neón', 'Clínica de Implantes', 'Callejón Lluvioso', 'Torre Corporativa', 'Mercado Negro de Datos', 'Apartamento Cápsula'],
-    'Sci-Fi': ['Puente de Mando', 'Hangar de Naves', 'Laboratorio Hidropónico', 'Cámara Criogénica', 'Reactor de Fusión', 'Domo de Observación'],
+    'Altos Elfos': ['Crystal Chamber', 'Arcane Library', 'Star Observatory', 'Hanging Gardens', 'Throne Room', 'White Ships Harbor'],
+    'Elfos Oscuros (Drow)': ['Spider Temple', 'Slave Pit', 'Hall of Shadows', 'Underground Market', 'Poison Lab', 'Sorcery Tower'],
+    'Enanos de Montaña': ['Great Forge', 'Treasure Hall', 'Deep Mine', 'Royal Brewery', 'Hall of Ancestors', 'Stone Gate'],
+    'Orcos': ['Fighting Pit', 'War Camp', 'Altar of Bones', 'Blood Smithy', 'Tribal Watchtower', 'Warg Cages'],
+    'No-Muertos (Lich)': ['Royal Crypt', 'Necromancy Lab', 'Bone Throne', 'Pit of Souls', 'Withered Garden', 'Tower of Silence'],
+    'Cyberpunk': ['Neon Bar', 'Implant Clinic', 'Rainy Alley', 'Corporate Tower', 'Data Black Market', 'Capsule Apartment'],
+    'Sci-Fi': ['Command Bridge', 'Ship Hangar', 'Hydroponics Lab', 'Cryo Chamber', 'Fusion Reactor', 'Observation Dome'],
 
     // HISTORICAL
-    'Antiguo Egipto': ['Sala del Faraón', 'Cámara del Sarcófago', 'Templo de Ra', 'Orilla del Nilo', 'Obelisco', 'Cámara del Tesoro'],
-    'Vikingos': ['Gran Salón de Hidromiel', 'Muelle de Drakkars', 'Altar de Odín', 'Herrería', 'Casa del Jarl', 'Círculo de Runas'],
-    'Imperio Romano': ['Foro Romano', 'Coliseo (Arena)', 'Baños Termales', 'Villa del Senador', 'Templo de Júpiter', 'Barracones de Legión'],
-    'Japón Feudal': ['Dojo de Entrenamiento', 'Jardín Zen', 'Castillo del Shogun', 'Casa de Té', 'Torre Pagoda', 'Puerta Torii']
+    'Antiguo Egipto': ['Pharaoh\'s Hall', 'Sarcophagus Chamber', 'Temple of Ra', 'Nile Riverbank', 'Obelisk', 'Treasury'],
+    'Vikingos': ['Great Mead Hall', 'Longship Dock', 'Altar of Odin', 'Blacksmith', 'Jarl\'s House', 'Rune Circle'],
+    'Imperio Romano': ['Roman Forum', 'Colosseum (Arena)', 'Thermal Baths', 'Senator\'s Villa', 'Temple of Jupiter', 'Legion Barracks'],
+    'Japón Feudal': ['Training Dojo', 'Zen Garden', 'Shogun Castle', 'Tea House', 'Pagoda Tower', 'Torii Gate']
 };
 
 export const getPredefinedPOIs = (civ: string): string[] => {
@@ -481,6 +480,8 @@ export const getPredefinedPOIs = (civ: string): string[] => {
     if (civ.includes('Enano')) return PREDEFINED_POIS['Enanos de Montaña'];
     if (civ.includes('Orco') || civ.includes('Goblin')) return PREDEFINED_POIS['Orcos'];
     if (civ.includes('Muerto') || civ.includes('Lich') || civ.includes('Vampiro')) return PREDEFINED_POIS['No-Muertos (Lich)'];
+    // Logic for Sci-Fi / Cyberpunk based on Civ Name checks
+    if (civ.includes('Construct') || civ.includes('Golem')) return PREDEFINED_POIS['Sci-Fi'];
     
     return PREDEFINED_POIS['DEFAULT'];
 };
