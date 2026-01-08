@@ -1,9 +1,9 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapConfig, Language, NarrativeMode, ThemeMode, PromptType } from '../types';
 import * as C from '../constants';
 import { playSwitch, playTechClick, playSuccess } from '../services/audioService';
-import { generatePOISuggestions } from '../services/geminiService';
+import { generatePOISuggestions, analyzeImageStyle } from '../services/geminiService';
 
 interface NarrativeViewProps {
   config: MapConfig;
@@ -20,6 +20,8 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   const t = C.UI_TEXT[lang];
   const [pois, setPois] = useState<string[]>(config.manualPOIs || Array(6).fill(''));
   const [isLoadingPois, setIsLoadingPois] = useState(false);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Default to Fantasy if undefined, allow toggle
   const theme = config.themeMode || ThemeMode.FANTASY;
@@ -117,6 +119,42 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+          alert(t.imageTooBig || "Image too big (Max 5MB)");
+          return;
+      }
+
+      playTechClick();
+      setIsAnalyzingImage(true);
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+          const base64 = reader.result as string;
+          onChange('referenceImageBase64', base64);
+          
+          const extractedStyle = await analyzeImageStyle(base64);
+          
+          if (extractedStyle) {
+              onChange('extractedStyle', extractedStyle);
+              playSuccess();
+          } else {
+              alert("Could not extract style.");
+          }
+          setIsAnalyzingImage(false);
+      };
+      reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+      onChange('extractedStyle', undefined);
+      onChange('referenceImageBase64', undefined);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const Select = ({ label, value, options, onChangeVal, disabled = false }: { label: string, value: string, options: string[], onChangeVal: (val: string) => void, disabled?: boolean }) => (
     <div className="mb-4">
         <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
@@ -207,40 +245,87 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     </h3>
                 </div>
                 
-                {/* 1. Category */}
-                <Select 
-                    label="CATEGORÍA / MEDIO" 
-                    value={config.styleCategory || ''} 
-                    options={C.STYLE_WIZARD_DATA.categories} 
-                    onChangeVal={(v) => handleWizardChange('styleCategory', v)} 
-                />
+                {/* IMAGE UPLOAD UI */}
+                <div className="mb-6 p-4 bg-gray-950 border border-dashed border-gray-700 rounded-lg text-center hover:border-accent-500/50 transition-colors">
+                    {config.referenceImageBase64 ? (
+                        <div className="relative">
+                            <img src={config.referenceImageBase64} alt="Ref" className="h-32 mx-auto rounded border border-gray-700 object-cover mb-3" />
+                            {isAnalyzingImage ? (
+                                <div className="text-xs font-mono text-accent-400 animate-pulse">{t.analyzingStyle || "Analizando estilo con IA..."}</div>
+                            ) : (
+                                <div className="text-left">
+                                    <label className="text-[9px] text-green-500 font-bold uppercase tracking-wider mb-1 block">✅ {t.styleExtracted || "ESTILO EXTRAÍDO"}</label>
+                                    <textarea 
+                                        value={config.extractedStyle || ''}
+                                        onChange={(e) => onChange('extractedStyle', e.target.value)}
+                                        className="w-full h-16 bg-gray-900 border border-green-900/50 text-[10px] text-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
+                                    />
+                                </div>
+                            )}
+                            <button 
+                                onClick={clearImage} 
+                                className="absolute top-0 right-0 bg-red-900/80 text-white p-1 rounded-full hover:bg-red-700"
+                                title="Remove Image"
+                            >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    ) : (
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="cursor-pointer"
+                        >
+                            <div className="text-2xl mb-2">📸</div>
+                            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t.uploadRefLabel || "SUBIR REFERENCIA VISUAL"}</div>
+                            <div className="text-[9px] text-gray-600">{t.uploadRefDesc || "La IA copiará el estilo de tu imagen"}</div>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={handleImageUpload}
+                            />
+                        </div>
+                    )}
+                </div>
 
-                {/* 2. Reference (Dependent on Category) */}
-                <Select 
-                    label="REFERENTE VISUAL" 
-                    value={config.styleReference || ''} 
-                    options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} 
-                    onChangeVal={(v) => handleWizardChange('styleReference', v)}
-                    disabled={!config.styleCategory} 
-                />
+                {/* Wizard UI (Disabled if image uploaded) */}
+                <div className={`space-y-4 transition-opacity ${config.extractedStyle ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                    {/* 1. Category */}
+                    <Select 
+                        label="CATEGORÍA / MEDIO" 
+                        value={config.styleCategory || ''} 
+                        options={C.STYLE_WIZARD_DATA.categories} 
+                        onChangeVal={(v) => handleWizardChange('styleCategory', v)} 
+                    />
 
-                {/* 3. Vibe */}
-                <Select 
-                    label="SENSACIÓN / ATMÓSFERA" 
-                    value={config.styleVibe || ''} 
-                    options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} 
-                    onChangeVal={(v) => handleWizardChange('styleVibe', v)}
-                    disabled={!config.styleReference} 
-                />
+                    {/* 2. Reference (Dependent on Category) */}
+                    <Select 
+                        label="REFERENTE VISUAL" 
+                        value={config.styleReference || ''} 
+                        options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} 
+                        onChangeVal={(v) => handleWizardChange('styleReference', v)}
+                        disabled={!config.styleCategory} 
+                    />
 
-                {/* 4. Finish */}
-                <Select 
-                    label="ACABADO FINAL" 
-                    value={config.styleFinish || ''} 
-                    options={C.STYLE_WIZARD_DATA.finish.map(f => f.label)} 
-                    onChangeVal={(v) => handleWizardChange('styleFinish', v)} 
-                    disabled={!config.styleVibe}
-                />
+                    {/* 3. Vibe */}
+                    <Select 
+                        label="SENSACIÓN / ATMÓSFERA" 
+                        value={config.styleVibe || ''} 
+                        options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} 
+                        onChangeVal={(v) => handleWizardChange('styleVibe', v)}
+                        disabled={!config.styleReference} 
+                    />
+
+                    {/* 4. Finish */}
+                    <Select 
+                        label="ACABADO FINAL" 
+                        value={config.styleFinish || ''} 
+                        options={C.STYLE_WIZARD_DATA.finish.map(f => f.label)} 
+                        onChangeVal={(v) => handleWizardChange('styleFinish', v)} 
+                        disabled={!config.styleVibe}
+                    />
+                </div>
             </div>
       </div>
 
@@ -334,9 +419,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             {/* 1. MUNDO */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.WORLD)} // Changed to false (No AI) by default
-                disabled={isGenerating || !config.styleReference || !config.civilization}
+                disabled={isGenerating || (!config.styleReference && !config.extractedStyle) || !config.civilization}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-cyan-900/20 border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]'}
+                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-cyan-900/20 border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">🌍</div>
@@ -348,9 +433,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             {/* 2. UI */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.UI)} // Changed to false (No AI) by default
-                disabled={isGenerating || !config.styleReference}
+                disabled={isGenerating || (!config.styleReference && !config.extractedStyle)}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]'}
+                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">🔮</div>
@@ -361,9 +446,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             {/* 3. PERSONAJES */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.CHARACTERS)} // Changed to false (No AI) by default
-                disabled={isGenerating || !config.styleReference || !config.civilization}
+                disabled={isGenerating || (!config.styleReference && !config.extractedStyle) || !config.civilization}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${!config.styleReference ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-pink-900/20 border-pink-500/30 hover:bg-pink-900/40 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]'}
+                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-pink-900/20 border-pink-500/30 hover:bg-pink-900/40 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">⚔️</div>

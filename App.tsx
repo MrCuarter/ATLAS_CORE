@@ -33,7 +33,10 @@ const getInitialConfig = (): MapConfig => ({
   anachronismPolicy: 'STRICT',
   tags: [],
   manualDetails: '',
-  videoMovement: 'Desplazamiento suave'
+  videoMovement: 'Desplazamiento suave',
+  // NEW FIELDS FOR IMAGE UPLOAD
+  extractedStyle: undefined,
+  referenceImageBase64: undefined
 });
 
 const App: React.FC = () => {
@@ -144,7 +147,9 @@ const App: React.FC = () => {
         zoom: getRandomElement(C.ZOOMS),
         camera: getRandomElement(C.CAMERAS),
         aspectRatio: '16:9',
-        presetName: '✨ PROTOCOLO ATLAS_CORE'
+        presetName: '✨ PROTOCOLO ATLAS_CORE',
+        extractedStyle: undefined, // Clear uploaded style on random
+        referenceImageBase64: undefined
     }));
   };
 

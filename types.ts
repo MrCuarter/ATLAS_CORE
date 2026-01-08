@@ -53,6 +53,10 @@ export interface MapConfig {
   styleClarity?: string;
   styleFinish?: string;
 
+  // IMAGE REFERENCE FIELDS (NEW)
+  extractedStyle?: string; // Text description of the style extracted from image
+  referenceImageBase64?: string; // For UI preview only
+
   customAtmosphere: string; 
   zoom: string;
   camera: string;

@@ -278,6 +278,12 @@ export const UI_TEXT = {
     gemini: "GEMINI (IMAGEN)",
     enhanceCollection: "MEJORAR CON IA",
     enhancing: "MEJORANDO...",
+    // Image Upload Text
+    uploadRefLabel: "SUBIR REFERENCIA VISUAL",
+    uploadRefDesc: "La IA copiará el estilo de tu imagen",
+    analyzingStyle: "Analizando estilo con IA...",
+    styleExtracted: "ESTILO EXTRAÍDO",
+    imageTooBig: "Imagen demasiado grande (Máx 5MB)"
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -380,6 +386,12 @@ export const UI_TEXT = {
     gemini: "GEMINI (IMAGEN)",
     enhanceCollection: "ENHANCE WITH AI",
     enhancing: "ENHANCING...",
+    // Image Upload Text
+    uploadRefLabel: "UPLOAD VISUAL REFERENCE",
+    uploadRefDesc: "AI will extract the style from your image",
+    analyzingStyle: "Analyzing style with AI...",
+    styleExtracted: "EXTRACTED STYLE",
+    imageTooBig: "Image too big (Max 5MB)"
   }
 };
 

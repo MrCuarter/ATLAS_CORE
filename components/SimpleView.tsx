@@ -15,7 +15,8 @@ import {
     VIDEO_MOTIONS,
     STYLE_WIZARD_DATA
 } from '../constants';
-import { playTechClick, playSwitch } from '../services/audioService';
+import { playTechClick, playSwitch, playSuccess } from '../services/audioService';
+import { analyzeImageStyle } from '../services/geminiService';
 
 interface SimpleViewProps {
   config: MapConfig;
@@ -31,6 +32,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
   const t = UI_TEXT[lang];
   const [activeStep, setActiveStep] = useState(1);
   const [wizardStep, setWizardStep] = useState(0); // 0=Category, 1=Ref, 2=Vibe, 3=Detail, 4=Clarity, 5=Finish
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
 
   // Refs for sequential scrolling
   const step1Ref = useRef<HTMLDivElement>(null);
@@ -44,6 +46,7 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
   const step8Ref = useRef<HTMLDivElement>(null); // Format (Img/Video)
   const step9Ref = useRef<HTMLDivElement>(null); // Motion (Conditional)
   const step10Ref = useRef<HTMLDivElement>(null); // Platform
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll helper
   const scrollToStep = (stepNumber: number, ref: React.RefObject<HTMLDivElement | null>) => {
@@ -98,6 +101,9 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
     onChange('styleClarity', undefined);
     onChange('styleFinish', undefined);
     onChange('artStyle', ''); // Clear legacy
+    onChange('extractedStyle', undefined);
+    onChange('referenceImageBase64', undefined);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleWizardStep = (field: keyof MapConfig, value: string) => {
@@ -153,6 +159,40 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
       if (field === 'styleFinish') {
         scrollToStep(7, step7Ref);
       }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+          alert(t.imageTooBig || "Image too big (Max 5MB)");
+          return;
+      }
+
+      playTechClick();
+      setIsAnalyzingImage(true);
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+          const base64 = reader.result as string;
+          // Set preview immediately
+          onChange('referenceImageBase64', base64);
+          
+          // Call Gemini
+          const extractedStyle = await analyzeImageStyle(base64);
+          
+          if (extractedStyle) {
+              onChange('extractedStyle', extractedStyle);
+              playSuccess();
+              // Auto-scroll
+              scrollToStep(7, step7Ref);
+          } else {
+              alert("Could not extract style.");
+          }
+          setIsAnalyzingImage(false);
+      };
+      reader.readAsDataURL(file);
   };
 
   const SkipBtn = ({ onClick }: { onClick: () => void }) => (
@@ -333,14 +373,57 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                 <span className="w-6 h-6 bg-accent-900 text-white rounded-full flex items-center justify-center mr-3 text-[10px]">6</span> 
                 {t.stepStyle}
             </h3>
-            {config.styleCategory && (
-                <button onClick={handleWizardReset} className="text-[9px] text-gray-500 hover:text-white uppercase font-bold tracking-wider">
-                    RESET ESTILO
-                </button>
-            )}
+            <button onClick={handleWizardReset} className="text-[9px] text-gray-500 hover:text-white uppercase font-bold tracking-wider">
+                RESET ESTILO
+            </button>
         </div>
         
-        <div className="bg-gray-900/30 border border-gray-800 p-4 rounded-lg space-y-6">
+        {/* IMAGE UPLOAD UI */}
+        <div className="mb-6 p-4 bg-gray-950 border border-dashed border-gray-700 rounded-lg text-center hover:border-accent-500/50 transition-colors">
+            {config.referenceImageBase64 ? (
+                <div className="relative">
+                     <img src={config.referenceImageBase64} alt="Ref" className="h-32 mx-auto rounded border border-gray-700 object-cover mb-3" />
+                     {isAnalyzingImage ? (
+                         <div className="text-xs font-mono text-accent-400 animate-pulse">{t.analyzingStyle || "Analizando estilo con IA..."}</div>
+                     ) : (
+                         <div className="text-left">
+                             <label className="text-[9px] text-green-500 font-bold uppercase tracking-wider mb-1 block">✅ {t.styleExtracted || "ESTILO EXTRAÍDO"}</label>
+                             <textarea 
+                                value={config.extractedStyle || ''}
+                                onChange={(e) => onChange('extractedStyle', e.target.value)}
+                                className="w-full h-16 bg-gray-900 border border-green-900/50 text-[10px] text-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
+                             />
+                         </div>
+                     )}
+                     <button 
+                        onClick={handleWizardReset} 
+                        className="absolute top-0 right-0 bg-red-900/80 text-white p-1 rounded-full hover:bg-red-700"
+                        title="Remove Image"
+                     >
+                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                     </button>
+                </div>
+            ) : (
+                <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="cursor-pointer"
+                >
+                    <div className="text-2xl mb-2">📸</div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t.uploadRefLabel || "SUBIR REFERENCIA VISUAL"}</div>
+                    <div className="text-[9px] text-gray-600">{t.uploadRefDesc || "La IA copiará el estilo de tu imagen"}</div>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                    />
+                </div>
+            )}
+        </div>
+
+        {/* Wizard UI (Disabled if image uploaded) */}
+        <div className={`bg-gray-900/30 border border-gray-800 p-4 rounded-lg space-y-6 transition-opacity ${config.extractedStyle ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
             {/* 6A */}
             <div>
                 <h4 className="text-[10px] font-mono font-bold text-gray-500 mb-2 uppercase">6A. ¿A qué se parece este mundo?</h4>

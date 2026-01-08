@@ -5,7 +5,21 @@ import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA, PREDEFINED_POIS } from
 const t = (val: string): string => PROMPT_TRANSLATIONS[val] || val || '';
 
 // HELPER: Extract internal wizard tokens if they exist, otherwise fallback to legacy field
+// UPDATED: Now checks for `extractedStyle` first
 const getStyleToken = (config: MapConfig): { ref: string, vibe: string, detail: string, clarity: string, finish: string } => {
+    
+    // PRIORITY 1: Uploaded Image Style
+    if (config.extractedStyle) {
+        return {
+            ref: `Visual Style Reference: ${config.extractedStyle}`,
+            vibe: '', // Already included in extraction
+            detail: '', 
+            clarity: '',
+            finish: '' 
+        };
+    }
+
+    // PRIORITY 2: Wizard Fields
     const cat = config.styleCategory || 'Videojuego';
     const refObj = STYLE_WIZARD_DATA.references[cat]?.find(r => r.label === config.styleReference);
     const vibeObj = STYLE_WIZARD_DATA.vibes.find(v => v.label === config.styleVibe);
@@ -89,8 +103,11 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
 
         return `Create a ${typeStr} ${subjectStr}. The setting belongs to the ${civ} civilization.
         
-        The art direction is inspired by ${config.styleReference}. ${cleanRef}.
-        The scene features a ${tokens.vibe.toLowerCase()} atmosphere with ${tokens.finish.toLowerCase()}.
+        The art direction is inspired by ${config.extractedStyle ? 'an uploaded reference image' : config.styleReference}. 
+        Style details: ${cleanRef}.
+        ${tokens.vibe ? `The scene features a ${tokens.vibe.toLowerCase()} atmosphere.` : ''} 
+        ${tokens.finish ? `Finish: ${tokens.finish.toLowerCase()}.` : ''}
+        
         Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
         
         Technical details: ${camera} ${viewStr}. ${isVideo ? `Camera Action: ${videoAction}. Duration: 5s.` : ''}
@@ -104,7 +121,10 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
             : `Top-down game map of ${place}, ${building}, ${civ} style`;
 
         const envDetails = `Time: ${time}, Weather: ${weather}, ${config.customAtmosphere || 'Atmospheric lighting'}`;
-        const styleBlock = `**${config.styleReference} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
+        const styleBlock = config.extractedStyle 
+            ? `**Custom Art Style** :: ${config.extractedStyle}`
+            : `**${config.styleReference} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
+            
         const motionText = isVideo ? `, ${videoAction} motion` : "";
 
         return `${mainSubject} ${motionText} :: ${envDetails} :: ${styleBlock} :: ${camera}, ${tokens.clarity} --ar ${ar} --v 6.0 --stylize 250 --no text ui interface`;
@@ -118,7 +138,11 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
             : `top-down map, game map, ${place}, ${building}, ${civ} style,`;
         
         const envTags = `${time}, ${weather}, ${config.customAtmosphere || ''},`;
-        const styleTags = `${tokens.ref}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish},`;
+        
+        const styleTags = config.extractedStyle 
+            ? `${config.extractedStyle},` 
+            : `${tokens.ref}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish},`;
+            
         const techTags = `${camera}, ${tokens.clarity}, ${isVideo ? videoAction : ''}`;
         const negative = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
 
@@ -150,7 +174,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     
     // Detailed Wizard Tokens
     const tokens = getStyleToken(config);
-    const styleRef = config.styleReference || config.artStyle || 'Fantasy';
+    const styleRef = config.extractedStyle ? "Custom Uploaded Style" : (config.styleReference || config.artStyle || 'Fantasy');
+    
     // Clean ref for smoother prompting
     const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
     
@@ -176,14 +201,17 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** in **${place}**. 
         (Do NOT use assets/characters from the ${styleRef} game. Use ${civ} assets rendered in ${styleRef} style).`;
 
-        const mjStyleBlock = `**${styleRef} Art Style** :: ${tokens.vibe} :: ${tokens.finish}`;
+        const mjStyleBlock = config.extractedStyle
+            ? `**Custom Art Style** :: ${config.extractedStyle}`
+            : `**${styleRef} Art Style** :: ${tokens.vibe} :: ${tokens.finish}`;
 
         // 1. UNIVERSAL
         if (promptType === PromptType.UNIVERSAL) {
             return `Create a ${assetType} of ${subject}.
             
             ${styleInstruction}
-            Atmosphere: ${tokens.vibe}. Finish: ${tokens.finish}.
+            ${tokens.vibe ? `Atmosphere: ${tokens.vibe}.` : ''} 
+            ${tokens.finish ? `Finish: ${tokens.finish}.` : ''}
             Lighting: ${time} with ${weather}.
             
             Context: ${contextDescription}.
@@ -378,8 +406,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             type: 'BADGE',
             prompt: formatAsset(
                 "Game Character Token Badges Sheet",
-                "Collection of 6 circular character insignias representing: Male Warrior, Female Mage, Dark Villain, Foot Soldier, Wise Sage, and Beast Companion",
-                `The portraits inside the badges must be ${civ} characters. The frame style must be ${civ} ornamentation`,
+                "Collection of 6 circular character insignias representing exactly the 6 characters of this set: 1. Male Hero, 2. Female Hero, 3. Main Villain, 4. Minion Soldier, 5. Wise Sage, 6. Beast Companion",
+                `The portraits inside the badges must be close-up headshots of the ${civ} characters generated previously. The frame style must be ${civ} ornamentation`,
                 "A clean 3x2 grid layout of 6 circular badges: exactly 3 in the top row and 3 in the bottom row. Each insignia contains a character head portrait. Wide safety margin and white negative space between each badge.",
                 "16:9"
             )

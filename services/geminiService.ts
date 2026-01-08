@@ -4,6 +4,46 @@ import { PromptType, MediaType, Language } from "../types";
 
 const getApiKey = () => process.env.API_KEY || "";
 
+// HELPER: Convert Base64 string (data:image/...) to raw base64 for Gemini
+const cleanBase64 = (b64: string) => b64.replace(/^data:image\/\w+;base64,/, "");
+
+export const analyzeImageStyle = async (imageBase64: string): Promise<string> => {
+    try {
+        const apiKey = getApiKey();
+        if (!apiKey) return "";
+        const ai = new GoogleGenAI({ apiKey });
+        const modelId = "gemini-2.5-flash"; // Using 2.5 Flash for multimodal capabilities
+
+        const systemInstruction = `
+        You are a Senior Art Director for Video Games.
+        TASK: Analyze the provided image and extract ONLY its **Visual Style** keywords to use in a Stable Diffusion/Midjourney prompt.
+        
+        RULES:
+        1. IGNORE the subject matter (do not describe the characters, objects, or location).
+        2. FOCUS ONLY ON: Art medium (e.g., oil painting, pixel art, 3D render), Lighting (e.g., volumetric, neon), Color Palette (e.g., pastel, desaturated), and Rendering Technique (e.g., cel-shaded, octane render, brush strokes).
+        3. OUTPUT FORMAT: A concise, comma-separated list of high-quality English keywords.
+        
+        Example Output: "oil painting style, thick brush strokes, chiaroscuro lighting, warm earth tones, matte finish, vintage texture"
+        `;
+
+        const response = await ai.models.generateContent({
+            model: modelId,
+            contents: {
+                parts: [
+                    { inlineData: { mimeType: "image/png", data: cleanBase64(imageBase64) } },
+                    { text: "Extract the visual style keywords." }
+                ]
+            },
+            config: { systemInstruction, temperature: 0.4, maxOutputTokens: 100 }
+        });
+
+        return response.text?.trim() || "";
+    } catch (error) {
+        console.error("Image Analysis Error:", error);
+        return "";
+    }
+};
+
 export const enhancePromptWithGemini = async (currentPrompt: string, promptType: PromptType): Promise<string> => {
   try {
     const apiKey = getApiKey();
@@ -40,6 +80,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         8. **CHARACTER SHEETS**: If the prompt mentions "Character Sheet" or "Poses", you MUST add parameters to ensure separation: "Wide spacing between poses, no overlapping, white background".
         
         9. **BADGE / TOKEN SHEETS**: If the prompt mentions "Character Tokens" or "Badges":
+           - **CONTENT RULE**: The 6 badges must correspond exactly to these roles: Male Hero, Female Hero, Main Villain, Minion, Sage/NPC, and Beast Companion.
            - MUST specify a grid of 6 circular insignias.
            - MUST specify a layout of 3 in the top row and 3 in the bottom row.
            - MUST emphasize "Wide safety margin between tokens, isolated on pure white background".
@@ -75,6 +116,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         6. **CHARACTER SEPARATION**: If generating a Character Sheet with multiple poses, you MUST explicitly state: "Ensure wide negative space between character poses, no overlapping elements, distinct separation".
         
         7. **BADGE / TOKEN SHEETS**: If generating "Character Tokens" or "Badges":
+           - **CONTENT RULE**: The 6 badges must correspond exactly to these roles: Male Hero, Female Hero, Main Villain, Minion, Sage/NPC, and Beast Companion.
            - The output MUST describe a sheet showing 6 circular insignias in a grid (3 top, 3 bottom).
            - Must emphasize white negative space and isolation.
 
@@ -97,7 +139,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         3. **STYLE DECOUPLING**: Ensure the tokens for CONTENT (e.g. "Spaceship", "Laser") are separate from tokens for STYLE (e.g. "Oil painting", "Pixel art"). Do not mix them up (e.g. do not put "sword" if the content is "gun", even if style is "medieval").
         4. **PRESERVE CORE TOKENS**: Do not remove the camera type, the Style Reference, or the Civilization.
         5. **EXPAND**: Add technical tags (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
-        6. **BADGE GRIDS**: If badges are mentioned, add "grid layout, 3x2 arrangement, 6 icons, circular frames, isolated on white".
+        6. **BADGE GRIDS**: If badges are mentioned, add "grid layout, 3x2 arrangement, 6 icons, circular frames, isolated on white, male hero face, female mage face, villain face, minion face, sage face, beast face".
         7. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
         `;
     }
@@ -144,8 +186,6 @@ export const generatePOISuggestions = async (place: string, civ: string, buildin
         const ai = new GoogleGenAI({ apiKey });
         const modelId = "gemini-3-flash-preview";
 
-        // Logic: Return in Spanish if UI is ES, otherwise English. 
-        // The PromptEnhancer will translate back to English later for generation.
         const outputLang = lang === Language.ES ? 'SPANISH' : 'ENGLISH';
         
         const systemInstruction = `
