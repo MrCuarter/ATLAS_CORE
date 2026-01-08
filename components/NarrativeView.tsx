@@ -49,7 +49,6 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   }, [config.manualPOIs]);
 
   // OFFLINE AUTO-POIS: When Civilization changes, update POIs with Predefined ones (no AI)
-  // This logic now checks for special "Space" context for Humans to give better offline defaults
   useEffect(() => {
     if (config.civilization) {
          let civKey = config.civilization;
@@ -115,7 +114,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     if (field === 'styleCategory') {
         onChange('styleReference', '');
         onChange('styleVibe', '');
-        onChange('styleFinish', '');
+        // onChange('styleFinish', ''); // Removed Finish
     }
   };
 
@@ -245,39 +244,40 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     </h3>
                 </div>
                 
-                {/* IMAGE UPLOAD UI */}
-                <div className="mb-6 p-4 bg-gray-950 border border-dashed border-gray-700 rounded-lg text-center hover:border-accent-500/50 transition-colors">
+                {/* COMPACT IMAGE UPLOAD */}
+                <div className="mb-4">
                     {config.referenceImageBase64 ? (
-                        <div className="relative">
-                            <img src={config.referenceImageBase64} alt="Ref" className="h-32 mx-auto rounded border border-gray-700 object-cover mb-3" />
-                            {isAnalyzingImage ? (
-                                <div className="text-xs font-mono text-accent-400 animate-pulse">{t.analyzingStyle || "Analizando estilo con IA..."}</div>
-                            ) : (
-                                <div className="text-left">
-                                    <label className="text-[9px] text-green-500 font-bold uppercase tracking-wider mb-1 block">✅ {t.styleExtracted || "ESTILO EXTRAÍDO"}</label>
-                                    <textarea 
-                                        value={config.extractedStyle || ''}
-                                        onChange={(e) => onChange('extractedStyle', e.target.value)}
-                                        className="w-full h-16 bg-gray-900 border border-green-900/50 text-[10px] text-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
-                                    />
-                                </div>
-                            )}
-                            <button 
+                        // Uploaded State: Compact Row
+                        <div className="flex gap-3 bg-gray-950/50 p-2 rounded border border-green-900/30 items-center relative group">
+                             <img src={config.referenceImageBase64} alt="Ref" className="w-12 h-12 rounded object-cover border border-gray-700" />
+                             <div className="flex-grow min-w-0">
+                                 <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">✅ {t.styleExtracted}</span>
+                                     {isAnalyzingImage && <span className="text-[9px] text-accent-400 animate-pulse ml-2">Analyzing...</span>}
+                                 </div>
+                                 <input 
+                                    type="text"
+                                    value={config.extractedStyle || ''}
+                                    onChange={(e) => onChange('extractedStyle', e.target.value)}
+                                    className="w-full bg-transparent text-[10px] text-gray-300 border-none focus:ring-0 p-0 placeholder-gray-600 truncate"
+                                    placeholder="Estilo extraído..."
+                                 />
+                             </div>
+                             <button 
                                 onClick={clearImage} 
-                                className="absolute top-0 right-0 bg-red-900/80 text-white p-1 rounded-full hover:bg-red-700"
-                                title="Remove Image"
-                            >
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                                className="text-gray-500 hover:text-red-400 p-1"
+                             >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                             </button>
                         </div>
                     ) : (
+                        // Empty State: Compact Button
                         <div 
                             onClick={() => fileInputRef.current?.click()}
-                            className="cursor-pointer"
+                            className="cursor-pointer border border-dashed border-gray-700 hover:border-accent-500/50 bg-gray-950/30 rounded p-2 flex items-center justify-center gap-2 transition-all group"
                         >
-                            <div className="text-2xl mb-2">📸</div>
-                            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t.uploadRefLabel || "SUBIR REFERENCIA VISUAL"}</div>
-                            <div className="text-[9px] text-gray-600">{t.uploadRefDesc || "La IA copiará el estilo de tu imagen"}</div>
+                            <span className="text-lg group-hover:scale-110 transition-transform">📸</span>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider group-hover:text-gray-300">{t.uploadRefLabel || "SUBIR REFERENCIA VISUAL"}</span>
                             <input 
                                 type="file" 
                                 ref={fileInputRef} 
@@ -317,14 +317,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                         disabled={!config.styleReference} 
                     />
 
-                    {/* 4. Finish */}
-                    <Select 
-                        label="ACABADO FINAL" 
-                        value={config.styleFinish || ''} 
-                        options={C.STYLE_WIZARD_DATA.finish.map(f => f.label)} 
-                        onChangeVal={(v) => handleWizardChange('styleFinish', v)} 
-                        disabled={!config.styleVibe}
-                    />
+                    {/* 4. Finish - REMOVED FOR BALANCE */}
                 </div>
             </div>
       </div>
