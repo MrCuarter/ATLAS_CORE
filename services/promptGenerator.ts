@@ -1,6 +1,6 @@
 
 import { MapConfig, MediaType, PromptType, PromptCollectionItem, Language, NarrativeMode } from '../types';
-import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA, PREDEFINED_POIS } from '../constants';
+import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA, getPredefinedPOIs } from '../constants';
 
 const t = (val: string): string => PROMPT_TRANSLATIONS[val] || val || '';
 
@@ -63,6 +63,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
 
     const place = t(config.placeType);
     const civ = t(config.civilization);
+    const era = config.era ? t(config.era) : '';
     const building = t(config.buildingType);
     const poi = (config.manualPOIs && config.manualPOIs[0]) ? config.manualPOIs[0] : building;
     
@@ -112,7 +113,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
              styleSentence += ` Style details: ${cleanRef}.`;
         }
 
-        return `Create a ${typeStr} ${subjectStr}. The setting belongs to the ${civ} civilization.
+        return `Create a ${typeStr} ${subjectStr}. The setting belongs to the ${civ} civilization${era ? ` during the ${era}` : ''}.
         
         ${styleSentence}
         ${tokens.vibe ? `The scene features a ${tokens.vibe.toLowerCase()} atmosphere.` : ''} 
@@ -121,14 +122,15 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         Lighting conditions are ${time.toLowerCase()} with ${weather.toLowerCase()}.
         
         Technical details: ${camera} ${viewStr}. ${isVideo ? `Camera Action: ${videoAction}. Duration: 5s.` : ''}
+        Important: The camera angle specified (${camera}) is a strict technical requirement and overrides any default camera angle implied by the art style.
         High quality, wide ${ar} aspect ratio, professional game asset.`;
     }
 
     // === TYPE B: MIDJOURNEY ===
     if (promptType === PromptType.MIDJOURNEY) {
         const mainSubject = isScene 
-            ? `Cinematic shot of ${poi} in ${place}, ${civ} architecture`
-            : `Top-down game map of ${place}, ${building}, ${civ} style`;
+            ? `Cinematic shot of ${poi} in ${place}, ${civ} architecture, ${era}`
+            : `Top-down game map of ${place}, ${building}, ${civ} style, ${era}`;
 
         const envDetails = `Time: ${time}, Weather: ${weather}, ${config.customAtmosphere || 'Atmospheric lighting'}`;
         
@@ -148,8 +150,8 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
     if (promptType === PromptType.ADVANCED) {
         const qualityPrefix = "(masterpiece, best quality, 8k, highres),";
         const subjectTags = isScene 
-            ? `scenery, ${poi}, ${place}, ${civ} architecture,` 
-            : `top-down map, game map, ${place}, ${building}, ${civ} style,`;
+            ? `scenery, ${poi}, ${place}, ${civ} architecture, ${era},` 
+            : `top-down map, game map, ${place}, ${building}, ${civ} style, ${era},`;
         
         const envTags = `${time}, ${weather}, ${config.customAtmosphere || ''},`;
         
@@ -171,6 +173,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     const items: PromptCollectionItem[] = [];
     const civ = t(config.civilization);
     const place = t(config.placeType);
+    const era = config.era ? t(config.era) : '';
     let time = config.time ? `${t(config.time)}` : 'daytime';
     let weather = config.weather ? `${t(config.weather)}` : 'clear';
 
@@ -212,7 +215,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         // This ensures the Subject matches the Civilization, while the Render matches the Style Reference.
         const styleInstruction = `
         VISUAL STYLE & RENDERING: Apply the *aesthetic technique* of ${styleRef} (${cleanRef}). Match its textures, lighting, and rendering engine.
-        SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** in **${place}**. 
+        SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** ${era ? `in the **${era}**` : ''} located in **${place}**. 
         (Do NOT use assets/characters from the ${styleRef} game. Use ${civ} assets rendered in ${styleRef} style).`;
 
         const mjStyleBlock = config.extractedStyle
@@ -238,7 +241,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         // 2. MIDJOURNEY
         if (promptType === PromptType.MIDJOURNEY) {
             // MJ structure: [Subject + Content] :: [Env + Tech] :: [Style Reference]
-            return `${assetType} of ${subject}, ${civ} aesthetics, ${place} environment :: ${contextDescription}, Time: ${time}, Weather: ${weather} :: ${mjStyleBlock} :: ${cleanRef} :: ${techLine} --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
+            return `${assetType} of ${subject}, ${civ} aesthetics, ${place} environment ${era ? `, ${era}` : ''} :: ${contextDescription}, Time: ${time}, Weather: ${weather} :: ${mjStyleBlock} :: ${cleanRef} :: ${techLine} --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
         }
 
         // 3. TECHNICAL (Stable Diffusion)
@@ -246,7 +249,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             const quality = "(masterpiece, best quality, 8k, highres),";
             const isolationTag = isWorldMode ? "" : ", isolated on white background, simple background";
             const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
-            return `${quality} ${assetType}, ${subject}, ${civ} style, ${place} background, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${era}, ${place} background, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
         }
 
         return "";
@@ -261,7 +264,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             prompt: formatAsset(
                 "game map", 
                 `a detailed map of ${place}`, 
-                `Terrain and architecture of ${civ}`, 
+                `Terrain and architecture of ${civ}${era ? ` (${era})` : ''}`, 
                 "Top-Down View (90º), top-down tactical view"
             )
         });
@@ -273,7 +276,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             prompt: formatAsset(
                 "isometric environment", 
                 `the main ${config.buildingType || 'structure'} of ${place}`, 
-                `${civ} architecture and props`, 
+                `${civ} architecture and props${era ? `, ${era} period` : ''}`, 
                 "45-degree isometric view, Macro-Zoom focused on the central structure, detailed architecture close-up"
             )
         });
@@ -281,13 +284,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         // 3. POIs (Scenes)
         let pois = (config.manualPOIs && config.manualPOIs.some(p => p !== '')) 
             ? config.manualPOIs.filter(p => p !== '') 
-            : ['Main Entrance', 'Market Square', 'Throne Room', 'Secret Passage', 'Armory', 'Living Quarters'];
+            : getPredefinedPOIs(config.civilization || '', config.era || '', config.placeType || '', config.buildingType || '');
         
-        // POI OVERRIDE FOR SPACE IF DEFAULT
-        if (isSpace && (!config.manualPOIs || config.manualPOIs.every(p => p === ''))) {
-             pois = PREDEFINED_POIS['Sci-Fi'] || pois;
-        }
-
         pois.forEach((poiName, idx) => {
             const camVars = [
                 "First-person perspective looking into the INTERIOR from the entrance threshold", 
@@ -316,12 +314,15 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     if (mode === NarrativeMode.UI) {
         // Explicitly defining the look of the UI based on Civ, NOT style.
         let materialDesc = `${civ} materials`;
-        if (civ.toLowerCase().includes('cyber') || civ.toLowerCase().includes('sci-fi') || civ.toLowerCase().includes('space')) {
-            materialDesc = "Holographic panels, neon borders, dark metal frames, digital glass, futuristic fonts";
-        } else if (civ.toLowerCase().includes('elf') || civ.toLowerCase().includes('fantasy')) {
-             materialDesc = "Ornate gold frames, magical parchment, glowing gemstones, elegant serif fonts, mystical swirls";
-        } else if (civ.toLowerCase().includes('viking') || civ.toLowerCase().includes('dwarf')) {
-             materialDesc = "Carved stone, iron borders, heavy wood, runic inscriptions, rugged textures";
+        
+        if (era.includes('Future') || era.includes('Cyberpunk') || civ.toLowerCase().includes('cyber') || civ.toLowerCase().includes('sci-fi') || civ.toLowerCase().includes('space')) {
+            materialDesc = "Holographic panels, neon borders, dark metal frames, digital glass, futuristic fonts, HUD aesthetics";
+        } else if (era.includes('Medieval') || civ.toLowerCase().includes('elf') || civ.toLowerCase().includes('fantasy')) {
+             materialDesc = "Ornate gold frames, magical parchment, glowing gemstones, elegant serif fonts, mystical swirls, wooden textures";
+        } else if (era.includes('Stone') || civ.toLowerCase().includes('viking') || civ.toLowerCase().includes('dwarf')) {
+             materialDesc = "Carved stone, iron borders, heavy wood, runic inscriptions, rugged textures, fur details";
+        } else if (era.includes('Modern') || era.includes('Industrial')) {
+             materialDesc = "Clean vector lines, minimal flat design, metallic gradients, industrial steel frames";
         }
 
         // 1. UI BUTTONS PACK
@@ -393,8 +394,8 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 type: 'CHARACTER',
                 prompt: formatAsset(
                     "Character Concept Sheet", 
-                    `${r.role} (${r.desc}) of the ${civ} race`, 
-                    `Costume and equipment must be strictly ${civ} style (e.g. if Space, use Space Suits; if Medieval, use Armor)`, 
+                    `${r.role} (${r.desc}) of the ${civ} race ${era ? `in ${era} attire` : ''}`, 
+                    `Costume and equipment must be strictly ${civ} style matching the ${era} period.`, 
                     "Horizontal sheet showing **Three Distinct Dynamic Action Poses** (attacking, casting, running), surrounded by ample negative space, strictly separated, no overlapping elements. Full body",
                     "16:9"
                 )

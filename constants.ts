@@ -11,7 +11,7 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Región (Medio)': 'Region Overview',
 
   // FANTASY RACES
-  'Altos Elfos': 'High Elves',
+  'Elfos': 'Elves',
   'Elfos Silvanos': 'Wood Elves',
   'Elfos Oscuros (Drow)': 'Dark Elves (Drow)',
   'Humanos': 'Humans',
@@ -33,6 +33,9 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Constructos/Golems': 'Constructs/Golems',
 
   // HISTORICAL CIVS
+  'Antigua Mesopotamia': 'Ancient Mesopotamia',
+  'Imperio Mongol': 'Mongol Empire',
+  'Imperio Chino': 'Chinese Empire',
   'Antiguo Egipto': 'Ancient Egypt',
   'Imperio Romano': 'Roman Empire',
   'Vikingos': 'Vikings',
@@ -80,6 +83,11 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Montañas de Niebla': 'Misty Mountains',
   'Mazmorra': 'Dungeon',
   'Valle de Cristal': 'Crystal Valley',
+  // NEW LOCATIONS
+  'Cráter de Impacto': 'Meteor Impact Crater',
+  'Arrecife de Coral': 'Coral Reef',
+  'Cañón Profundo': 'Deep Canyon',
+
   // SPACE LOCATIONS
   'Espacio Exterior': 'Deep Outer Space',
   'Planeta Extraterrestre': 'Alien Planet Surface',
@@ -105,6 +113,20 @@ export const PROMPT_TRANSLATIONS: Record<string, string> = {
   'Pirámides y Templos': 'Pyramids and Temples',
   'Aldea arbórea': 'Treehouse Village',
   'Sala del Trono': 'Throne Room',
+
+  // SPACE BUILDINGS
+  'Estación de Comunicaciones': 'Comms Station',
+  'Laboratorio de Investigación': 'Research Lab',
+  'Hangar de Naves': 'Spaceship Hangar',
+  'Domo Habitacional': 'Habitation Dome',
+  'Mina de Asteroides': 'Asteroid Mine',
+  'Portal de Salto': 'Jump Gate / Portal',
+  'Torre de Defensa': 'Defense Turret Tower',
+  'Núcleo de Energía': 'Power Core Reactor',
+  'Invernadero Hidropónico': 'Hydroponic Greenhouse',
+  'Puesto de Avanzada': 'Outpost',
+  'Ruinas Alienígenas': 'Alien Ruins',
+  'Fábrica de Robots': 'Robot Factory',
 
   // CAMERAS
   'Cenital (Top-Down 90º)': 'Top-Down View (90º)',
@@ -235,6 +257,7 @@ export const UI_TEXT = {
     stepPlatform: "10. PLATAFORMA DE DESTINO",
     stepMotionHelp: "Elige cómo se mueve la cámara en la escena.",
     stepPlatformSubtitle: "¿Dónde vas a usar el prompt? Cada IA interpreta los prompts de forma distinta.",
+    stepRatio: "6. ASPECT RATIO",
     formatUniversal: "UNIVERSAL",
     formatUniversalDesc: "Funciona en Gemini, DALL-E, Copilot y web.",
     formatMJ: "MIDJOURNEY",
@@ -403,8 +426,7 @@ export const TIMES = ['Day', 'Night', 'Sunset', 'Sunrise', 'Eclipse'];
 export const WEATHERS = ['Clear', 'Rain', 'Fog', 'Snow', 'Storm', 'Sandstorm'];
 
 export const FANTASY_RACES = [
-    'Altos Elfos', 'Elfos Silvanos', 'Elfos Oscuros (Drow)', 
-    'Humanos', 'Enanos de Montaña', 'Enanos de Hierro',
+    'Elfos', 'Humanos', 'Enanos de Montaña', 'Enanos de Hierro',
     'Orcos', 'Goblins', 'No-Muertos (Lich)', 'Esqueletos', 
     'Hadas (Fae)', 'Demonios', 'Angeles', 'Hombres Lagarto',
     'Gnomos', 'Halflings', 'Vampiros', 'Hombres Lobo', 
@@ -412,6 +434,7 @@ export const FANTASY_RACES = [
 ];
 
 export const HISTORICAL_CIVS = [
+    'Antigua Mesopotamia', 'Imperio Mongol', 'Imperio Chino',
     'Antiguo Egipto', 'Imperio Romano', 'Vikingos', 'Grecia Clásica',
     'Japón Feudal', 'Imperio Maya', 'Imperio Azteca', 'Europa Medieval',
     'China Dinastía Han', 'Persia', 'Londres Victoriano', 'Lejano Oeste (Western)'
@@ -434,7 +457,8 @@ export const HISTORICAL_ERAS = [
 const LOCATIONS_CIVILIZED = [
     'Playa Costera', 'Acantilados', 'Cordillera Montañosa', 'Valle Verde',
     'Bosque Denso', 'Selva Tropical', 'Desierto de Dunas', 'Caverna Subterránea',
-    'Tundra Helada', 'Páramo Volcánico', 'Pantano/Ciénaga', 'Llanura Abierta'
+    'Tundra Helada', 'Páramo Volcánico', 'Pantano/Ciénaga', 'Llanura Abierta',
+    'Cráter de Impacto', 'Arrecife de Coral', 'Cañón Profundo'
 ];
 
 const SPACE_LOCATIONS = [
@@ -457,45 +481,56 @@ const BUILDINGS_HISTORIC = [
     'Mercado / Bazar', 'Puerto / Muelle', 'Campamento Militar',
     'Cementerio / Cripta', 'Mina / Cantera', 'Puente / Puerta'
 ];
+
+export const SPACE_BUILDINGS_LIST = [
+    'Estación de Comunicaciones', 'Laboratorio de Investigación', 'Hangar de Naves',
+    'Domo Habitacional', 'Mina de Asteroides', 'Portal de Salto',
+    'Torre de Defensa', 'Núcleo de Energía', 'Invernadero Hidropónico',
+    'Puesto de Avanzada', 'Ruinas Alienígenas', 'Fábrica de Robots'
+];
+
 export const BUILDINGS = BUILDINGS_HISTORIC;
 export const FANTASY_BUILDINGS = BUILDINGS_HISTORIC; 
 export const HISTORICAL_BUILDINGS = BUILDINGS_HISTORIC;
 export const getBuildingsByEra = (era: string) => BUILDINGS_HISTORIC;
 
-// PREDEFINED POIS FOR OFFLINE STORYCRAFTER (NOW IN ENGLISH)
-export const PREDEFINED_POIS: Record<string, string[]> = {
-    'DEFAULT': ['Main Square', 'Tavern / Inn', 'Armory', 'Council Hall', 'City Walls', 'Secret Entrance'],
+// EXTENDED POI LOGIC FOR STORYCRAFTER
+// Now accepts ERA and BUILDING TYPE to be smarter
+export const getPredefinedPOIs = (civ: string, era: string = '', place: string = '', building: string = ''): string[] => {
     
-    // FANTASY
-    'Altos Elfos': ['Crystal Chamber', 'Arcane Library', 'Star Observatory', 'Hanging Gardens', 'Throne Room', 'White Ships Harbor'],
-    'Elfos Oscuros (Drow)': ['Spider Temple', 'Slave Pit', 'Hall of Shadows', 'Underground Market', 'Poison Lab', 'Sorcery Tower'],
-    'Enanos de Montaña': ['Great Forge', 'Treasure Hall', 'Deep Mine', 'Royal Brewery', 'Hall of Ancestors', 'Stone Gate'],
-    'Orcos': ['Fighting Pit', 'War Camp', 'Altar of Bones', 'Blood Smithy', 'Tribal Watchtower', 'Warg Cages'],
-    'No-Muertos (Lich)': ['Royal Crypt', 'Necromancy Lab', 'Bone Throne', 'Pit of Souls', 'Withered Garden', 'Tower of Silence'],
-    'Cyberpunk': ['Neon Bar', 'Implant Clinic', 'Rainy Alley', 'Corporate Tower', 'Data Black Market', 'Capsule Apartment'],
-    'Sci-Fi': ['Command Bridge', 'Ship Hangar', 'Hydroponics Lab', 'Cryo Chamber', 'Fusion Reactor', 'Observation Dome'],
+    // 1. SPACE / FUTURISTIC OVERRIDE (Priority)
+    const isFuture = era.includes('Futuro') || era.includes('Año 4000') || era.includes('Cyberpunk');
+    const isSpace = place.includes('Espacio') || place.includes('Planeta') || place.includes('Lunar');
+    
+    if (isFuture || isSpace) {
+        if (era.includes('Cyberpunk')) {
+             return ['Neon Market', 'Hacker Den', 'Augmentation Clinic', 'Street Food Stall', 'Corporate Lobby', 'Rooftop Helipad'];
+        }
+        return ['Command Bridge', 'Cryo Chamber', 'Engine Core', 'Hydroponics Lab', 'Airlock / Hangar', 'Crew Quarters'];
+    }
 
-    // HISTORICAL
-    'Antiguo Egipto': ['Pharaoh\'s Hall', 'Sarcophagus Chamber', 'Temple of Ra', 'Nile Riverbank', 'Obelisk', 'Treasury'],
-    'Vikingos': ['Great Mead Hall', 'Longship Dock', 'Altar of Odin', 'Blacksmith', 'Jarl\'s House', 'Rune Circle'],
-    'Imperio Romano': ['Roman Forum', 'Colosseum (Arena)', 'Thermal Baths', 'Senator\'s Villa', 'Temple of Jupiter', 'Legion Barracks'],
-    'Japón Feudal': ['Training Dojo', 'Zen Garden', 'Shogun Castle', 'Tea House', 'Pagoda Tower', 'Torii Gate']
-};
+    // 2. CIVILIZATION SPECIFIC
+    if (civ.includes('Elfo')) return ['Crystal Chamber', 'Arcane Library', 'Star Observatory', 'Hanging Gardens', 'Throne Room', 'White Ships Harbor'];
+    if (civ.includes('Oscuro') || civ.includes('Drow')) return ['Spider Temple', 'Slave Pit', 'Hall of Shadows', 'Underground Market', 'Poison Lab', 'Sorcery Tower'];
+    if (civ.includes('Enano')) return ['Great Forge', 'Treasure Hall', 'Deep Mine', 'Royal Brewery', 'Hall of Ancestors', 'Stone Gate'];
+    if (civ.includes('Orco') || civ.includes('Goblin')) return ['Fighting Pit', 'War Camp', 'Altar of Bones', 'Blood Smithy', 'Tribal Watchtower', 'Warg Cages'];
+    if (civ.includes('Muerto') || civ.includes('Lich') || civ.includes('Vampiro')) return ['Royal Crypt', 'Necromancy Lab', 'Bone Throne', 'Pit of Souls', 'Withered Garden', 'Tower of Silence'];
+    
+    // 3. HISTORICAL SPECIFIC
+    if (civ.includes('Egipto')) return ['Pharaoh\'s Hall', 'Sarcophagus Chamber', 'Temple of Ra', 'Nile Riverbank', 'Obelisk', 'Treasury'];
+    if (civ.includes('Vikingos')) return ['Great Mead Hall', 'Longship Dock', 'Altar of Odin', 'Blacksmith', 'Jarl\'s House', 'Rune Circle'];
+    if (civ.includes('Romano')) return ['Roman Forum', 'Colosseum (Arena)', 'Thermal Baths', 'Senator\'s Villa', 'Temple of Jupiter', 'Legion Barracks'];
+    if (civ.includes('Japón')) return ['Training Dojo', 'Zen Garden', 'Shogun Castle', 'Tea House', 'Pagoda Tower', 'Torii Gate'];
+    if (civ.includes('Oeste') || civ.includes('Western')) return ['Saloon', 'Sheriff Office', 'Train Station', 'Gold Mine Entrance', 'Bank Vault', 'Stables'];
+    if (civ.includes('Victoriano')) return ['Steam Engine Room', 'Clock Tower Mechanism', 'Drawing Room', 'Cobblestone Street', 'Factory Floor', 'Study Room'];
 
-export const getPredefinedPOIs = (civ: string): string[] => {
-    if (!civ) return PREDEFINED_POIS['DEFAULT'];
-    // Try exact match
-    if (PREDEFINED_POIS[civ]) return PREDEFINED_POIS[civ];
-    
-    // Fallback logic
-    if (civ.includes('Elfo')) return PREDEFINED_POIS['Altos Elfos'];
-    if (civ.includes('Enano')) return PREDEFINED_POIS['Enanos de Montaña'];
-    if (civ.includes('Orco') || civ.includes('Goblin')) return PREDEFINED_POIS['Orcos'];
-    if (civ.includes('Muerto') || civ.includes('Lich') || civ.includes('Vampiro')) return PREDEFINED_POIS['No-Muertos (Lich)'];
-    // Logic for Sci-Fi / Cyberpunk based on Civ Name checks
-    if (civ.includes('Construct') || civ.includes('Golem')) return PREDEFINED_POIS['Sci-Fi'];
-    
-    return PREDEFINED_POIS['DEFAULT'];
+    // 4. BUILDING CONTEXT FALLBACK (If Civ is generic "Humans")
+    if (building.includes('Castillo')) return ['Throne Room', 'Dungeon', 'Armory', 'Royal Bedroom', 'Kitchens', 'Great Hall'];
+    if (building.includes('Templo')) return ['Main Altar', 'Meditation Room', 'Relic Chamber', 'Catacombs', 'Library', 'Garden'];
+    if (building.includes('Tavern')) return ['Main Bar', 'Kitchen', 'Cellar', 'Guest Room', 'Stable', 'Back Alley'];
+
+    // DEFAULT
+    return ['Main Square', 'Tavern / Inn', 'Armory', 'Council Hall', 'City Walls', 'Secret Entrance'];
 };
 
 interface StyleWizardData {
@@ -591,8 +626,8 @@ export const STYLE_WIZARD_DATA: StyleWizardData = {
     finish: [
         { label: 'Limpio y ordenado', token: 'Clean render, Sharp edges, Vector-like precision' },
         { label: 'Pintado a mano', token: 'Hand-painted texture, Visible brush strokes, Artistic touch' },
-        { label: 'Textura suave', token: 'Soft gradients, Smooth shading, Velvet texture' },
-        { label: 'Aspecto de maqueta', token: 'Tilt-shift photography, Miniature effect, Physical model look' },
+        { label: 'Textura suave', token: 'Soft texture' },
+        { label: 'Aspecto de maqueta', token: 'Diorama / Miniature look, Tilt-shift effect, Physical material texture' },
         { label: 'Cinematográfico', token: 'Cinematic lighting, Post-processing, Lens flares, Depth of field' }
     ]
 };
@@ -659,7 +694,7 @@ export const RATIOS = ['16:9'];
 export const ARCHETYPE_DEFINITIONS = [
     {
         name: "Alta Fantasía",
-        civs: ['Altos Elfos', 'Humanos', 'Hadas (Fae)', 'Angeles'],
+        civs: ['Elfos', 'Humanos', 'Hadas (Fae)', 'Angeles'],
         places: ['Valle Verde', 'Bosque Denso', 'Llanura Abierta', 'Playa Costera'],
         styles: ['Zelda: Breath of the Wild', 'World of Warcraft', 'Genshin Impact', 'Studio Ghibli', 'Disney/Pixar 3D', 'Acuarela Suave', 'Art Nouveau'],
         era: 'Edad Antigua'

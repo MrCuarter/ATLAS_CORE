@@ -23,20 +23,32 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Default to Fantasy if undefined, allow toggle
   const theme = config.themeMode || ThemeMode.FANTASY;
 
-  // Lists based on theme
+  // --- DYNAMIC LIST LOGIC ---
   const civList = theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS;
-  const buildingList = theme === ThemeMode.FANTASY ? C.FANTASY_BUILDINGS : C.HISTORICAL_BUILDINGS;
+  
+  // DETERMINE CONTEXT (Space / Future)
+  const isFutureContext = (config.era && (config.era.includes('Futuro') || config.era.includes('Cyberpunk') || config.era.includes('Año 4000'))) || false;
   
   const placeList = useMemo(() => {
     if (theme === ThemeMode.FANTASY) {
         return C.PLACES_BY_CIV[config.civilization] || C.PLACES_BY_CIV['DEFAULT'];
     }
-    // Historical uses Locations
-    return C.LOCATIONS;
-  }, [config.civilization, theme]);
+    // Historical uses Locations, but filters by Era
+    if (isFutureContext) {
+        return C.LOCATIONS; // Includes Space
+    }
+    // Remove Space locations for ancient history
+    return C.LOCATIONS.filter(l => !l.includes('Espacio') && !l.includes('Planeta') && !l.includes('Lunar'));
+  }, [config.civilization, theme, isFutureContext]);
+
+  const buildingList = useMemo(() => {
+      if (isFutureContext || (config.placeType && (config.placeType.includes('Espacio') || config.placeType.includes('Planeta')))) {
+          return C.SPACE_BUILDINGS_LIST;
+      }
+      return theme === ThemeMode.FANTASY ? C.FANTASY_BUILDINGS : C.HISTORICAL_BUILDINGS;
+  }, [theme, isFutureContext, config.placeType]);
 
   // Sync internal POIs with config
   useEffect(() => {
@@ -48,24 +60,16 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     }
   }, [config.manualPOIs]);
 
-  // OFFLINE AUTO-POIS: When Civilization changes, update POIs with Predefined ones (no AI)
+  // OFFLINE AUTO-POIS: Update when context changes
   useEffect(() => {
-    if (config.civilization) {
-         let civKey = config.civilization;
-         // HACK: Improve offline mapping for Sci-Fi contexts if Humans are selected with specific places
-         if (civKey === 'Humanos' && (config.placeType?.includes('Espacio') || config.placeType?.includes('Base') || config.era?.includes('Futuro'))) {
-             civKey = 'Sci-Fi';
-         }
-         if (civKey === 'Humanos' && (config.placeType?.includes('Cyber') || config.era?.includes('Cyberpunk'))) {
-             civKey = 'Cyberpunk';
-         }
-
-         const predefined = C.getPredefinedPOIs(civKey);
-         // Only update if current POIs are empty or basic default
+    if (config.civilization || config.era || config.placeType) {
+         // Smart predefined selection
+         const predefined = C.getPredefinedPOIs(config.civilization, config.era, config.placeType, config.buildingType);
+         // Update only if significant change or empty
          setPois(predefined);
          onChange('manualPOIs', predefined);
     }
-  }, [config.civilization, config.placeType, config.era]);
+  }, [config.civilization, config.placeType, config.era, config.buildingType]);
 
   const handlePoiChange = (index: number, value: string) => {
     const newPois = [...pois];
@@ -100,43 +104,35 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   const handleThemeToggle = (newTheme: ThemeMode) => {
     onChange('themeMode', newTheme);
     onChange('civilization', '');
+    onChange('era', '');
     onChange('placeType', '');
     onChange('buildingType', '');
     playSwitch();
   };
 
-  // HANDLER FOR WIZARD STYLE FIELDS (Block 2)
   const handleWizardChange = (field: keyof MapConfig, value: string) => {
     playTechClick();
     onChange(field, value);
-    
-    // Cascade resets
     if (field === 'styleCategory') {
         onChange('styleReference', '');
         onChange('styleVibe', '');
-        // onChange('styleFinish', ''); // Removed Finish
     }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
-
       if (file.size > 5 * 1024 * 1024) {
           alert(t.imageTooBig || "Image too big (Max 5MB)");
           return;
       }
-
       playTechClick();
       setIsAnalyzingImage(true);
-
       const reader = new FileReader();
       reader.onloadend = async () => {
           const base64 = reader.result as string;
           onChange('referenceImageBase64', base64);
-          
           const extractedStyle = await analyzeImageStyle(base64);
-          
           if (extractedStyle) {
               onChange('extractedStyle', extractedStyle);
               playSuccess();
@@ -154,20 +150,49 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
       if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const Select = ({ label, value, options, onChangeVal, disabled = false }: { label: string, value: string, options: string[], onChangeVal: (val: string) => void, disabled?: boolean }) => (
-    <div className="mb-4">
-        <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
-        <select 
-            value={value} 
-            onChange={(e) => { playTechClick(); onChangeVal(e.target.value); }}
-            disabled={disabled}
-            className={`w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors rounded-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-            <option value="">{t.noneOption}</option>
-            {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-    </div>
-  );
+  // --- SMART SELECT COMPONENT WITH MANUAL INPUT ---
+  const SmartSelect = ({ label, value, options, onChangeVal, disabled = false, placeholder = "Escribe tu opción personalizada..." }: { label: string, value: string, options: string[], onChangeVal: (val: string) => void, disabled?: boolean, placeholder?: string }) => {
+      const isManual = value && !options.includes(value);
+      
+      return (
+        <div className="mb-4">
+            <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
+            <div className="relative">
+                <select 
+                    value={isManual ? "MANUAL_OVERRIDE" : value} 
+                    onChange={(e) => { 
+                        playTechClick(); 
+                        if (e.target.value === "MANUAL_OVERRIDE") {
+                            onChangeVal(""); // Clear value to force manual input appearance
+                        } else {
+                            onChangeVal(e.target.value); 
+                        }
+                    }}
+                    disabled={disabled}
+                    className={`w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors rounded-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <option value="">{t.noneOption}</option>
+                    {options.map(o => <option key={o} value={o}>{o}</option>)}
+                    <option value="MANUAL_OVERRIDE" className="text-accent-400 font-bold bg-gray-900">✏️ INPUT MANUAL / OTRO</option>
+                </select>
+            </div>
+            
+            {/* MANUAL INPUT BOX - Appears if manual selected or value not in options */}
+            {isManual && (
+                <div className="mt-2 animate-fade-in">
+                    <input 
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChangeVal(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full bg-accent-900/10 border border-accent-500/50 p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent-400 rounded-sm"
+                        autoFocus
+                    />
+                </div>
+            )}
+        </div>
+      );
+  };
 
   return (
     <div className="animate-fade-in pb-8 max-w-6xl mx-auto">
@@ -214,25 +239,42 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     </button>
                 </div>
                 
-                <Select 
-                    label={theme === ThemeMode.FANTASY ? t.labelRace : t.labelCiv} 
-                    value={config.civilization} 
+                {/* 1A. CIVILIZATION */}
+                <SmartSelect 
+                    label={theme === ThemeMode.FANTASY ? "1A. RAZA / ESPECIE" : "1A. CIVILIZACIÓN"} 
+                    value={config.civilization || ''} 
                     options={civList} 
                     onChangeVal={(v) => onChange('civilization', v)} 
+                    placeholder="Escribe el nombre de la civilización..."
                 />
 
-                <Select 
-                    label={theme === ThemeMode.FANTASY ? t.labelGeo : "GEOLOCALIZACIÓN"} 
-                    value={config.placeType} 
+                {/* 1B. ERA (Only Historical, or optional for Fantasy) */}
+                {theme === ThemeMode.HISTORICAL && (
+                    <SmartSelect 
+                        label="1B. ÉPOCA / ERA" 
+                        value={config.era || ''} 
+                        options={C.HISTORICAL_ERAS} 
+                        onChangeVal={(v) => onChange('era', v)} 
+                        placeholder="Define la época temporal..."
+                    />
+                )}
+
+                {/* 1C. GEOLOCATION */}
+                <SmartSelect 
+                    label={theme === ThemeMode.FANTASY ? "1B. GEOLOCALIZACIÓN" : "1C. GEOLOCALIZACIÓN"} 
+                    value={config.placeType || ''} 
                     options={placeList} 
                     onChangeVal={(v) => onChange('placeType', v)} 
+                    placeholder="¿Dónde ocurre esto?"
                 />
 
-                <Select 
-                    label={t.labelSettlement} 
-                    value={config.buildingType} 
+                {/* 1D. EDIFICATION */}
+                <SmartSelect 
+                    label={theme === ThemeMode.FANTASY ? "1C. EDIFICACIÓN" : "1D. EDIFICACIÓN"} 
+                    value={config.buildingType || ''} 
                     options={buildingList} 
                     onChangeVal={(v) => onChange('buildingType', v)} 
+                    placeholder="Tipo de estructura principal..."
                 />
             </div>
 
@@ -292,16 +334,16 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                 {/* Wizard UI (Disabled if image uploaded) */}
                 <div className={`space-y-4 transition-opacity ${config.extractedStyle ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
                     {/* 1. Category */}
-                    <Select 
-                        label="CATEGORÍA / MEDIO" 
+                    <SmartSelect 
+                        label="2A. CATEGORÍA / MEDIO" 
                         value={config.styleCategory || ''} 
                         options={C.STYLE_WIZARD_DATA.categories} 
                         onChangeVal={(v) => handleWizardChange('styleCategory', v)} 
                     />
 
                     {/* 2. Reference (Dependent on Category) */}
-                    <Select 
-                        label="REFERENTE VISUAL" 
+                    <SmartSelect 
+                        label="2B. REFERENTE VISUAL" 
                         value={config.styleReference || ''} 
                         options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} 
                         onChangeVal={(v) => handleWizardChange('styleReference', v)}
@@ -309,15 +351,13 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     />
 
                     {/* 3. Vibe */}
-                    <Select 
-                        label="SENSACIÓN / ATMÓSFERA" 
+                    <SmartSelect 
+                        label="2C. SENSACIÓN / ATMÓSFERA" 
                         value={config.styleVibe || ''} 
                         options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} 
                         onChangeVal={(v) => handleWizardChange('styleVibe', v)}
                         disabled={!config.styleReference} 
                     />
-
-                    {/* 4. Finish - REMOVED FOR BALANCE */}
                 </div>
             </div>
       </div>

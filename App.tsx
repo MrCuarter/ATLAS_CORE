@@ -202,6 +202,14 @@ const App: React.FC = () => {
       playSwitch();
   };
 
+  const handleSwitchToStorycrafter = () => {
+      // Switches mode to Storycrafter. 
+      // The current 'config' state is automatically preserved and passed to NarrativeView.
+      // NarrativeView will automatically detect the context (Civ, Place, etc.) and update POIs accordingly via its useEffect hooks.
+      setMode(AppMode.STORYCRAFTER);
+      playPowerUp(); // Special sound effect for level up
+  };
+
   const t = C.UI_TEXT[lang];
   const headerBtnClass = "group relative flex items-center gap-2 px-3 py-1.5 rounded-sm bg-gray-900 border border-gray-800 hover:border-opacity-100 transition-all overflow-hidden";
   
@@ -354,7 +362,15 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            {mode !== AppMode.STORYCRAFTER && <PromptDisplay prompt={generatedPrompt} promptType={promptType} lang={lang} mode={mode} onCopy={() => saveToHistory(generatedPrompt)} mediaType={mediaType} />}
+            {mode !== AppMode.STORYCRAFTER && <PromptDisplay 
+                prompt={generatedPrompt} 
+                promptType={promptType} 
+                lang={lang} 
+                mode={mode} 
+                onCopy={() => saveToHistory(generatedPrompt)} 
+                mediaType={mediaType}
+                onContinueToStorycrafter={handleSwitchToStorycrafter} // Passed the new handler
+            />}
             <div ref={bottomRef} className="h-8" /> 
       </main>
       

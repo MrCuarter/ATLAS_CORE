@@ -10,6 +10,7 @@ import {
     getLocationsByEra,
     getBuildingsByEra,
     FANTASY_BUILDINGS,
+    SPACE_BUILDINGS_LIST,
     MAP_PERSPECTIVES, 
     SCENE_PERSPECTIVES, 
     VIDEO_MOTIONS,
@@ -88,7 +89,16 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
 
   // DYNAMIC LISTS based on ERA (only for Historical mode)
   const currentLocationList = isFantasy ? LOCATIONS : getLocationsByEra(config.era);
-  const currentBuildingList = isFantasy ? FANTASY_BUILDINGS : getBuildingsByEra(config.era);
+  
+  // SPACE CONTEXT LOGIC
+  const isSpaceContext = config.placeType && (
+    config.placeType.includes('Espacio') || 
+    config.placeType.includes('Planeta') || 
+    config.placeType.includes('Lunar') ||
+    config.placeType.includes('Base')
+  );
+
+  const currentBuildingList = isSpaceContext ? SPACE_BUILDINGS_LIST : (isFantasy ? FANTASY_BUILDINGS : getBuildingsByEra(config.era));
 
   // --- STYLE WIZARD HANDLERS (BLOCK 6) ---
   const handleWizardReset = () => {
@@ -204,6 +214,27 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
       </button>
   );
 
+  // Generic Manual Input Cell
+  const ManualInputCell = ({ field, placeholder }: { field: keyof MapConfig, placeholder: string }) => {
+     // Check if current value is NOT in the predefined list implies manual input
+     const isCustom = config[field] && 
+        !civList.includes(config[field] as string) && 
+        !currentLocationList.includes(config[field] as string) && 
+        !currentBuildingList.includes(config[field] as string) &&
+        !HISTORICAL_ERAS.includes(config[field] as string); // Updated to include ERAS check
+     
+     return (
+        <input 
+            type="text"
+            placeholder={placeholder}
+            value={config[field] as string || ''}
+            onChange={(e) => onChange(field, e.target.value)}
+            className={`px-3 py-3 text-[10px] font-medium transition-all duration-200 border rounded outline-none placeholder-gray-600 focus:border-accent-400 focus:bg-accent-900/10
+            ${isCustom ? 'bg-accent-900/20 border-accent-500/50 text-white' : 'bg-gray-950 border-gray-800 text-gray-300'}`}
+        />
+     );
+  }
+
   // --- RENDERS ---
 
   const renderBlock1 = () => (
@@ -279,6 +310,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                         {item}
                     </button>
                 ))}
+                {/* Manual Input Integrated */}
+                <ManualInputCell field="civilization" placeholder="Otro / Manual..." />
             </div>
         </div>
     );
@@ -307,6 +340,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                         {item}
                     </button>
                 ))}
+                {/* Manual Input for Era */}
+                <ManualInputCell field="era" placeholder="Era personalizada..." />
             </div>
         </div>
       );
@@ -331,6 +366,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                     {item}
                 </button>
             ))}
+            {/* Manual Input Integrated */}
+            <ManualInputCell field="placeType" placeholder="Lugar personalizado..." />
         </div>
     </div>
     );
@@ -348,6 +385,12 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
             <SkipBtn onClick={() => handleSkip(5, 'buildingType', step6Ref)} />
         </div>
 
+        {isSpaceContext && (
+             <p className="text-[10px] text-cyan-500 font-mono mb-2 uppercase tracking-wide border-l-2 border-cyan-500 pl-2">
+                🚀 Contexto Espacial Detectado: Estructuras Sci-Fi
+             </p>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {currentBuildingList.map(item => (
                 <button
@@ -359,6 +402,8 @@ const SimpleView: React.FC<SimpleViewProps> = ({ config, onChange, lang, mediaTy
                     {item}
                 </button>
             ))}
+            {/* Manual Input Integrated */}
+            <ManualInputCell field="buildingType" placeholder="Edificio manual..." />
         </div>
     </div>
     );

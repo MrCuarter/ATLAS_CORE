@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PromptType, Language, AppMode, MediaType } from '../types';
 import { UI_TEXT } from '../constants';
@@ -10,10 +11,11 @@ interface PromptDisplayProps {
   lang: Language;
   mode: AppMode;
   onCopy?: () => void;
-  mediaType: MediaType; // Added prop
+  mediaType: MediaType;
+  onContinueToStorycrafter?: () => void; // New Prop
 }
 
-const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang, mode, onCopy, mediaType }) => {
+const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang, mode, onCopy, mediaType, onContinueToStorycrafter }) => {
   const [copied, setCopied] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isDeriving, setIsDeriving] = useState(false);
@@ -145,6 +147,34 @@ const PromptDisplay: React.FC<PromptDisplayProps> = ({ prompt, promptType, lang,
             </div>
         </div>
       </div>
+
+      {/* STORYCRAFTER UPSELL BANNER (ONLY IN ARCHITECT MODE) */}
+      {mode === AppMode.ARCHITECT && onContinueToStorycrafter && (
+        <div className="mt-4 p-5 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-blue-900/10 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in group hover:border-purple-500/60 transition-all">
+            <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-purple-900/50 flex items-center justify-center border border-purple-500/50 text-xl">
+                    🔮
+                </div>
+                <div className="text-left">
+                    <h4 className="text-purple-400 font-bold font-mono text-xs uppercase tracking-widest mb-1 flex items-center gap-2">
+                        EXPANDIR UNIVERSO
+                        <span className="text-[9px] bg-purple-500 text-white px-1.5 rounded font-sans">IA</span>
+                    </h4>
+                    <p className="text-gray-400 text-xs max-w-lg leading-relaxed">
+                        ¿Quieres usar este prompt como semilla para generar una colección completa? 
+                        (Mapas, UI, Personajes e Items coherentes).
+                    </p>
+                </div>
+            </div>
+            <button
+                onClick={() => { playTechClick(); onContinueToStorycrafter(); }}
+                className="whitespace-nowrap px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold font-mono text-[10px] uppercase tracking-widest rounded-sm transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] flex items-center gap-2"
+            >
+                CONTINUAR EN STORYCRAFTER
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </button>
+        </div>
+      )}
     </div>
   );
 };
