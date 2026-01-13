@@ -2,17 +2,56 @@
 import { GoogleGenAI } from "@google/genai";
 import { PromptType, MediaType, Language } from "../types";
 
-const getApiKey = () => process.env.API_KEY || "";
+// Load all available keys from process.env (injected by Vite)
+const API_KEYS = [
+    process.env.API_KEY,
+    process.env.API_KEY_SECONDARY,
+    process.env.API_KEY_TERTIARY
+].filter(key => key && key.length > 0) as string[];
 
 // HELPER: Convert Base64 string (data:image/...) to raw base64 for Gemini
 const cleanBase64 = (b64: string) => b64.replace(/^data:image\/\w+;base64,/, "");
 
+/**
+ * Executes a Gemini operation with automatic fallback to secondary/tertiary keys
+ * if the primary key fails due to quota/rate limits.
+ */
+const executeWithFallback = async <T>(
+    operation: (ai: GoogleGenAI) => Promise<T>
+): Promise<T> => {
+    if (API_KEYS.length === 0) {
+        throw new Error("No API Keys configured.");
+    }
+
+    let lastError: any = null;
+
+    for (let i = 0; i < API_KEYS.length; i++) {
+        const key = API_KEYS[i];
+        try {
+            const ai = new GoogleGenAI({ apiKey: key });
+            // console.log(`Using API Key #${i + 1}`); // Uncomment for debugging
+            return await operation(ai);
+        } catch (error: any) {
+            console.warn(`API Key #${i + 1} failed:`, error.message);
+            lastError = error;
+            
+            // If it's the last key, or if the error is likely NOT related to quota 
+            // (e.g., malformed request), we might want to stop. 
+            // However, for simplicity in the demo, we try all keys for any error 
+            // to ensure maximum resilience during the presentation.
+            
+            if (i === API_KEYS.length - 1) {
+                console.error("All API keys exhausted.");
+            }
+        }
+    }
+
+    throw lastError || new Error("Unknown API Error");
+};
+
 export const analyzeImageStyle = async (imageBase64: string): Promise<string> => {
-    try {
-        const apiKey = getApiKey();
-        if (!apiKey) return "";
-        const ai = new GoogleGenAI({ apiKey });
-        const modelId = "gemini-2.5-flash"; // Using 2.5 Flash for multimodal capabilities
+    return executeWithFallback(async (ai) => {
+        const modelId = "gemini-2.5-flash"; 
 
         const systemInstruction = `
         You are a Senior Art Director for Video Games.
@@ -38,17 +77,14 @@ export const analyzeImageStyle = async (imageBase64: string): Promise<string> =>
         });
 
         return response.text?.trim() || "";
-    } catch (error) {
-        console.error("Image Analysis Error:", error);
+    }).catch(err => {
+        console.error("Image Analysis Final Failure:", err);
         return "";
-    }
+    });
 };
 
 export const enhancePromptWithGemini = async (currentPrompt: string, promptType: PromptType): Promise<string> => {
-  try {
-    const apiKey = getApiKey();
-    if (!apiKey) return currentPrompt;
-    const ai = new GoogleGenAI({ apiKey });
+  return executeWithFallback(async (ai) => {
     const modelId = "gemini-3-flash-preview";
 
     let systemInstruction = "";
@@ -150,17 +186,14 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
       config: { systemInstruction, temperature: 0.7 }
     });
     return response.text?.trim() || currentPrompt;
-  } catch (error) {
-    console.error(error);
-    return currentPrompt; 
-  }
+  }).catch(err => {
+      console.error(err);
+      return currentPrompt; // Fallback to original prompt on failure
+  });
 };
 
 export const generateGameAssetsPrompt = async (context: string): Promise<string> => {
-     try {
-        const apiKey = getApiKey();
-        if (!apiKey) return "";
-        const ai = new GoogleGenAI({ apiKey });
+     return executeWithFallback(async (ai) => {
         const modelId = "gemini-3-flash-preview";
 
         const systemInstruction = `You are a Lead Game Artist. Generate Midjourney prompts for a professional Game UI Kit based on: "${context}".
@@ -173,17 +206,14 @@ export const generateGameAssetsPrompt = async (context: string): Promise<string>
             config: { systemInstruction, temperature: 0.6 }
         });
         return response.text?.trim() || "";
-    } catch (error) {
-        console.error(error);
+    }).catch(err => {
+        console.error(err);
         return "";
-    }
+    });
 }
 
 export const generatePOISuggestions = async (place: string, civ: string, building: string, lang: Language): Promise<string[]> => {
-    try {
-        const apiKey = getApiKey();
-        if (!apiKey) return [];
-        const ai = new GoogleGenAI({ apiKey });
+    return executeWithFallback(async (ai) => {
         const modelId = "gemini-3-flash-preview";
 
         const outputLang = lang === Language.ES ? 'SPANISH' : 'ENGLISH';
@@ -207,17 +237,14 @@ export const generatePOISuggestions = async (place: string, civ: string, buildin
         });
         const text = response.text?.trim();
         return text ? JSON.parse(text) : [];
-    } catch (error) {
-        console.error(error);
+    }).catch(err => {
+        console.error(err);
         return [];
-    }
+    });
 }
 
 export const generateDerivedScene = async (currentPrompt: string, mediaType: MediaType): Promise<string> => {
-    try {
-        const apiKey = getApiKey();
-        if (!apiKey) return currentPrompt;
-        const ai = new GoogleGenAI({ apiKey });
+    return executeWithFallback(async (ai) => {
         const modelId = "gemini-3-flash-preview";
         
         const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed. Ensure the view is from the doorway threshold looking into the interior.`;
@@ -228,8 +255,8 @@ export const generateDerivedScene = async (currentPrompt: string, mediaType: Med
             config: { systemInstruction, temperature: 0.8 }
         });
         return response.text?.trim() || currentPrompt;
-    } catch (error) {
-        console.error(error);
+    }).catch(err => {
+        console.error(err);
         return currentPrompt;
-    }
+    });
 }
