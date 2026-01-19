@@ -16,6 +16,82 @@ interface NarrativeViewProps {
   setPromptType: (type: PromptType) => void;
 }
 
+// --- EXTRACTED COMPONENTS (STABLE IDENTITY) ---
+
+const SimpleInput = React.memo(({ label, value, onChangeVal, placeholder }: { label: string, value: string, onChangeVal: (val: string) => void, placeholder: string }) => (
+  <div className="mb-4">
+      <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{label}</label>
+      <input 
+          type="text"
+          value={value}
+          onChange={(e) => onChangeVal(e.target.value)}
+          placeholder={placeholder}
+          className="w-full bg-gray-900/50 border border-gray-700 p-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-accent-400 rounded-sm transition-colors"
+      />
+  </div>
+));
+
+const SmartSelect = React.memo(({ 
+  label, 
+  value, 
+  options, 
+  onChangeVal, 
+  disabled = false, 
+  placeholder = "Escribe tu opción personalizada...",
+  allowManual = true,
+  noneOptionText
+}: { 
+  label: string, 
+  value: string, 
+  options: string[], 
+  onChangeVal: (val: string) => void, 
+  disabled?: boolean, 
+  placeholder?: string,
+  allowManual?: boolean,
+  noneOptionText: string
+}) => {
+  const isManual = value && !options.includes(value);
+  
+  return (
+    <div className="mb-4">
+        <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
+        <div className="relative">
+            <select 
+                value={isManual ? "MANUAL_OVERRIDE" : value} 
+                onChange={(e) => { 
+                    playTechClick(); 
+                    if (e.target.value === "MANUAL_OVERRIDE") {
+                        onChangeVal(""); // Clear value to force manual input appearance
+                    } else {
+                        onChangeVal(e.target.value); 
+                    }
+                }}
+                disabled={disabled}
+                className={`w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors rounded-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+                <option value="">{noneOptionText}</option>
+                {options.map(o => <option key={o} value={o}>{o}</option>)}
+                {allowManual && <option value="MANUAL_OVERRIDE" className="text-accent-400 font-bold bg-gray-900">✏️ INPUT MANUAL / OTRO</option>}
+            </select>
+        </div>
+        
+        {/* MANUAL INPUT BOX */}
+        {isManual && allowManual && (
+            <div className="mt-2 animate-fade-in">
+                <input 
+                    type="text"
+                    value={value}
+                    onChange={(e) => onChangeVal(e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full bg-accent-900/10 border border-accent-500/50 p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent-400 rounded-sm"
+                    autoFocus
+                />
+            </div>
+        )}
+    </div>
+  );
+});
+
 const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, onGenerate, isGenerating, onRandom, promptType, setPromptType }) => {
   const t = C.UI_TEXT[lang];
   const [pois, setPois] = useState<string[]>(config.manualPOIs || Array(6).fill(''));
@@ -26,6 +102,46 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   
   const theme = config.themeMode || ThemeMode.FANTASY;
   const styleMode = config.styleMode || StyleMode.ASSISTED;
+
+  // Generate random placeholders for Custom Mode on mount
+  const placeholders = useMemo(() => {
+      const civs = [
+          "Un país de plátanos", 
+          "Monos salvajes con smoking", 
+          "Alienígenas con cabeza de perro", 
+          "Sociedad de tostadoras sintientes", 
+          "Caballeros montados en caracoles gigantes",
+          "Piratas informáticos del siglo XVIII"
+      ];
+      const eras = [
+          "Año 3000 (pero sin tecnología)", 
+          "La Era del Hielo de Vainilla", 
+          "Tiempo detenido a las 5:00 PM", 
+          "Prehistoria con láseres"
+      ];
+      const places = [
+          "Ciudad construida sobre una tortuga", 
+          "Oficina burocrática infinita", 
+          "Supermercado laberíntico", 
+          "Nube de algodón de azúcar tóxica",
+          "Volcán de chocolate"
+      ];
+      const buildings = [
+          "Rascacielos de naipes", 
+          "Búnker de peluche", 
+          "Templo dedicado al WiFi", 
+          "Fábrica de arcoíris líquidos"
+      ];
+      
+      const getRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+      return {
+          civ: getRandom(civs),
+          era: getRandom(eras),
+          place: getRandom(places),
+          build: getRandom(buildings)
+      };
+  }, []);
 
   // --- DYNAMIC LIST LOGIC ---
   const civList = theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS;
@@ -172,64 +288,6 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
       if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // --- SMART SELECT COMPONENT WITH MANUAL INPUT ---
-  const SmartSelect = ({ label, value, options, onChangeVal, disabled = false, placeholder = "Escribe tu opción personalizada..." }: { label: string, value: string, options: string[], onChangeVal: (val: string) => void, disabled?: boolean, placeholder?: string }) => {
-      const isManual = value && !options.includes(value);
-      
-      return (
-        <div className="mb-4">
-            <label className={`block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold ${disabled ? 'opacity-50' : ''}`}>{label}</label>
-            <div className="relative">
-                <select 
-                    value={isManual ? "MANUAL_OVERRIDE" : value} 
-                    onChange={(e) => { 
-                        playTechClick(); 
-                        if (e.target.value === "MANUAL_OVERRIDE") {
-                            onChangeVal(""); // Clear value to force manual input appearance
-                        } else {
-                            onChangeVal(e.target.value); 
-                        }
-                    }}
-                    disabled={disabled}
-                    className={`w-full bg-gray-950 border border-gray-800 p-3 text-sm text-gray-200 outline-none focus:border-accent-500 transition-colors rounded-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    <option value="">{t.noneOption}</option>
-                    {options.map(o => <option key={o} value={o}>{o}</option>)}
-                    <option value="MANUAL_OVERRIDE" className="text-accent-400 font-bold bg-gray-900">✏️ INPUT MANUAL / OTRO</option>
-                </select>
-            </div>
-            
-            {/* MANUAL INPUT BOX - Appears if manual selected or value not in options */}
-            {isManual && (
-                <div className="mt-2 animate-fade-in">
-                    <input 
-                        type="text"
-                        value={value}
-                        onChange={(e) => onChangeVal(e.target.value)}
-                        placeholder={placeholder}
-                        className="w-full bg-accent-900/10 border border-accent-500/50 p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent-400 rounded-sm"
-                        autoFocus
-                    />
-                </div>
-            )}
-        </div>
-      );
-  };
-
-  // --- SIMPLE INPUT COMPONENT (FOR CUSTOM MODE) ---
-  const SimpleInput = ({ label, value, onChangeVal, placeholder }: { label: string, value: string, onChangeVal: (val: string) => void, placeholder: string }) => (
-      <div className="mb-4">
-          <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{label}</label>
-          <input 
-              type="text"
-              value={value}
-              onChange={(e) => onChangeVal(e.target.value)}
-              placeholder={placeholder}
-              className="w-full bg-gray-900/50 border border-gray-700 p-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-accent-400 rounded-sm transition-colors"
-          />
-      </div>
-  );
-
   const getBorderColor = () => {
       if (theme === ThemeMode.FANTASY) return 'border-l-purple-600';
       if (theme === ThemeMode.HISTORICAL) return 'border-l-orange-600';
@@ -297,28 +355,28 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     /* CUSTOM MODE: SIMPLE TEXT INPUTS */
                     <div className="animate-fade-in space-y-4">
                         <SimpleInput 
-                            label="1A. CIVILIZACIÓN / ENTIDAD" 
+                            label="1A. CIVILIZACIÓN / ENTIDAD (OPCIONAL)" 
                             value={config.civilization || ''} 
                             onChangeVal={(v) => onChange('civilization', v)} 
-                            placeholder="Ej: Federación Galáctica, Culto de Cthulhu..."
+                            placeholder={`Ej: ${placeholders.civ}`}
                         />
                         <SimpleInput 
                             label="1B. ÉPOCA / ERA (OPCIONAL)" 
                             value={config.era || ''} 
                             onChangeVal={(v) => onChange('era', v)} 
-                            placeholder="Ej: Año 3000, Prehistoria Alternativa..."
+                            placeholder={`Ej: ${placeholders.era}`}
                         />
                          <SimpleInput 
-                            label="1C. CONTEXTO / LUGAR" 
+                            label="1C. CONTEXTO / LUGAR (OPCIONAL)" 
                             value={config.placeType || ''} 
                             onChangeVal={(v) => onChange('placeType', v)} 
-                            placeholder="Ej: Base en Marte, Ruinas Sumergidas..."
+                            placeholder={`Ej: ${placeholders.place}`}
                         />
                          <SimpleInput 
-                            label="1D. EDIFICACIÓN PRINCIPAL" 
+                            label="1D. EDIFICACIÓN PRINCIPAL (OPCIONAL)" 
                             value={config.buildingType || ''} 
                             onChangeVal={(v) => onChange('buildingType', v)} 
-                            placeholder="Ej: Torre de Control, Templo Mayor..."
+                            placeholder={`Ej: ${placeholders.build}`}
                         />
                     </div>
                 ) : (
@@ -331,6 +389,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                             options={civList} 
                             onChangeVal={(v) => onChange('civilization', v)} 
                             placeholder="Escribe el nombre de la civilización..."
+                            noneOptionText={t.noneOption}
                         />
 
                         {/* 1B. ERA (Only Historical) */}
@@ -341,6 +400,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                                 options={C.HISTORICAL_ERAS} 
                                 onChangeVal={(v) => onChange('era', v)} 
                                 placeholder="Define la época temporal..."
+                                noneOptionText={t.noneOption}
                             />
                         )}
 
@@ -351,6 +411,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                             options={placeList} 
                             onChangeVal={(v) => onChange('placeType', v)} 
                             placeholder="¿Dónde ocurre esto?"
+                            noneOptionText={t.noneOption}
                         />
 
                         {/* 1D. EDIFICATION */}
@@ -360,6 +421,8 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                             options={buildingList} 
                             onChangeVal={(v) => onChange('buildingType', v)} 
                             placeholder="Tipo de estructura principal..."
+                            allowManual={false} // Manual input disabled for standard modes
+                            noneOptionText={t.noneOption}
                         />
                     </div>
                 )}
@@ -383,9 +446,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                 {/* TAB CONTENT: ASSISTED */}
                 {styleMode === StyleMode.ASSISTED && (
                     <div className="animate-fade-in space-y-4">
-                        <SmartSelect label="2A. CATEGORÍA" value={config.styleCategory || ''} options={C.STYLE_WIZARD_DATA.categories} onChangeVal={(v) => handleWizardChange('styleCategory', v)} />
-                        <SmartSelect label="2B. REFERENTE VISUAL" value={config.styleReference || ''} options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} onChangeVal={(v) => handleWizardChange('styleReference', v)} disabled={!config.styleCategory} />
-                        <SmartSelect label="2C. SENSACIÓN / ATMÓSFERA" value={config.styleVibe || ''} options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} onChangeVal={(v) => handleWizardChange('styleVibe', v)} disabled={!config.styleReference} />
+                        <SmartSelect label="2A. CATEGORÍA" value={config.styleCategory || ''} options={C.STYLE_WIZARD_DATA.categories} onChangeVal={(v) => handleWizardChange('styleCategory', v)} noneOptionText={t.noneOption} />
+                        <SmartSelect label="2B. REFERENTE VISUAL" value={config.styleReference || ''} options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} onChangeVal={(v) => handleWizardChange('styleReference', v)} disabled={!config.styleCategory} noneOptionText={t.noneOption} />
+                        <SmartSelect label="2C. SENSACIÓN / ATMÓSFERA" value={config.styleVibe || ''} options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} onChangeVal={(v) => handleWizardChange('styleVibe', v)} disabled={!config.styleReference} noneOptionText={t.noneOption} />
                     </div>
                 )}
 
