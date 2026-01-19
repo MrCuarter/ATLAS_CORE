@@ -24,7 +24,14 @@ export enum NarrativeMode {
 
 export enum ThemeMode {
   FANTASY = 'FANTASY',
-  HISTORICAL = 'HISTORICAL'
+  HISTORICAL = 'HISTORICAL',
+  CUSTOM = 'CUSTOM'
+}
+
+export enum StyleMode {
+  ASSISTED = 'ASSISTED',
+  REF_IMAGE = 'REF_IMAGE',
+  MANUAL = 'MANUAL'
 }
 
 export enum Language {
@@ -54,6 +61,8 @@ export interface MapConfig {
   styleFinish?: string;
 
   // IMAGE REFERENCE FIELDS (NEW)
+  styleMode?: StyleMode; // New field to track the active style tab
+  manualStyle?: string;  // New field for custom text style
   extractedStyle?: string; // Text description of the style extracted from image
   referenceImageBase64?: string; // For UI preview only
 

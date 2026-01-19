@@ -1,25 +1,35 @@
 
-import { MapConfig, MediaType, PromptType, PromptCollectionItem, Language, NarrativeMode } from '../types';
+import { MapConfig, MediaType, PromptType, PromptCollectionItem, Language, NarrativeMode, StyleMode } from '../types';
 import { PROMPT_TRANSLATIONS, UI_TEXT, STYLE_WIZARD_DATA, getPredefinedPOIs } from '../constants';
 
 const t = (val: string): string => PROMPT_TRANSLATIONS[val] || val || '';
 
-// HELPER: Extract internal wizard tokens if they exist, otherwise fallback to legacy field
-// UPDATED: Now checks for `extractedStyle` first
+// HELPER: Extract internal wizard tokens based on Style Mode
 const getStyleToken = (config: MapConfig): { ref: string, vibe: string, detail: string, clarity: string, finish: string } => {
     
-    // PRIORITY 1: Uploaded Image Style
-    if (config.extractedStyle) {
+    // PRIORITY 1: MANUAL TEXT (if mode is MANUAL)
+    if (config.styleMode === StyleMode.MANUAL && config.manualStyle) {
         return {
-            ref: `Visual Style Reference: ${config.extractedStyle}`,
-            vibe: '', // Already included in extraction
+            ref: `Custom Visual Style: ${config.manualStyle}`,
+            vibe: '',
+            detail: '',
+            clarity: '',
+            finish: ''
+        };
+    }
+
+    // PRIORITY 2: UPLOADED IMAGE (if mode is REF_IMAGE and extraction exists)
+    if (config.styleMode === StyleMode.REF_IMAGE && config.extractedStyle) {
+        return {
+            ref: `Visual Style Reference extracted from image: ${config.extractedStyle}`,
+            vibe: '', 
             detail: '', 
             clarity: '',
             finish: '' 
         };
     }
 
-    // PRIORITY 2: Wizard Fields
+    // PRIORITY 3: ASSISTED WIZARD (Default or fallback)
     const cat = config.styleCategory || 'Videojuego';
     const refObj = STYLE_WIZARD_DATA.references[cat]?.find(r => r.label === config.styleReference);
     const vibeObj = STYLE_WIZARD_DATA.vibes.find(v => v.label === config.styleVibe);
@@ -102,10 +112,10 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         // Clean up style tokens
         const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
         
-        // Determine the "Inspired by" source. Priority: 1. Extracted, 2. Wizard Ref, 3. Generic Art Style
-        const styleSource = config.extractedStyle 
-            ? 'an uploaded reference image' 
-            : (config.styleReference || config.artStyle || 'a distinct visual style');
+        // Determine the "Inspired by" source. Priority: 1. Manual/Extracted, 2. Wizard Ref, 3. Generic Art Style
+        let styleSource = (config.styleMode === StyleMode.MANUAL && config.manualStyle) ? 'a custom artistic style' :
+                          (config.styleMode === StyleMode.REF_IMAGE && config.extractedStyle) ? 'an uploaded reference image' :
+                          (config.styleReference || config.artStyle || 'a distinct visual style');
 
         // Construct style sentence to avoid redundancy (e.g. "Inspired by Hades. Style details: Hades.")
         let styleSentence = `The art direction is inspired by ${styleSource}.`;
@@ -134,12 +144,13 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
 
         const envDetails = `Time: ${time}, Weather: ${weather}, ${config.customAtmosphere || 'Atmospheric lighting'}`;
         
-        // Use styleReference if available (Wizard), otherwise fallback to artStyle (Preset)
-        const refLabel = config.styleReference || config.artStyle || 'Fantasy';
+        // Determine style label based on mode
+        let refLabel = 'Fantasy';
+        if (config.styleMode === StyleMode.MANUAL) refLabel = 'Custom';
+        else if (config.styleMode === StyleMode.REF_IMAGE) refLabel = 'Reference';
+        else refLabel = config.styleReference || config.artStyle || 'Fantasy';
         
-        const styleBlock = config.extractedStyle 
-            ? `**Custom Art Style** :: ${config.extractedStyle}`
-            : `**${refLabel} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
+        const styleBlock = `**${refLabel} Style** :: ${tokens.ref} :: ${tokens.vibe} :: ${tokens.finish}`;
             
         const motionText = isVideo ? `, ${videoAction} motion` : "";
 
@@ -155,9 +166,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         
         const envTags = `${time}, ${weather}, ${config.customAtmosphere || ''},`;
         
-        const styleTags = config.extractedStyle 
-            ? `${config.extractedStyle},` 
-            : `${tokens.ref}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish},`;
+        const styleTags = `${tokens.ref}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish},`;
             
         const techTags = `${camera}, ${tokens.clarity}, ${isVideo ? videoAction : ''}`;
         const negative = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
@@ -171,6 +180,8 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
 // === STORYCRAFTER ENGINE (OFFLINE LOGIC) ===
 export const generateNarrativeCollection = (config: MapConfig, promptType: PromptType, lang: Language, mode: NarrativeMode): PromptCollectionItem[] => {
     const items: PromptCollectionItem[] = [];
+    
+    // For Custom Theme, use inputs directly without translation map fallback if they are not in the dictionary
     const civ = t(config.civilization);
     const place = t(config.placeType);
     const era = config.era ? t(config.era) : '';
@@ -189,9 +200,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         weather = "Vacuum of space, Starry background, Nebulas";
     }
     
-    // Detailed Wizard Tokens
+    // Detailed Wizard Tokens (Respected based on StyleMode)
     const tokens = getStyleToken(config);
-    const styleRef = config.extractedStyle ? "Custom Uploaded Style" : (config.styleReference || config.artStyle || 'Fantasy');
+    let styleRef = "Fantasy";
+    if (config.styleMode === StyleMode.MANUAL) styleRef = "Custom Manual Style";
+    else if (config.styleMode === StyleMode.REF_IMAGE) styleRef = "Custom Uploaded Style";
+    else styleRef = config.styleReference || config.artStyle || 'Fantasy';
     
     // Clean ref for smoother prompting
     const cleanRef = tokens.ref.replace('Visual Style:', '').trim();
@@ -212,15 +226,12 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
         const sdNoPeople = isWorldMode ? "(no humans, no people, empty scenery)," : "";
 
         // STYLE DECOUPLING INSTRUCTION
-        // This ensures the Subject matches the Civilization, while the Render matches the Style Reference.
         const styleInstruction = `
-        VISUAL STYLE & RENDERING: Apply the *aesthetic technique* of ${styleRef} (${cleanRef}). Match its textures, lighting, and rendering engine.
-        SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** ${era ? `in the **${era}**` : ''} located in **${place}**. 
-        (Do NOT use assets/characters from the ${styleRef} game. Use ${civ} assets rendered in ${styleRef} style).`;
+        VISUAL STYLE & RENDERING: Apply the *aesthetic technique* of ${styleRef}. 
+        Style Details: ${cleanRef}.
+        SUBJECT MATTER & CONTENT: The content must be strictly related to **${civ}** ${era ? `in the **${era}**` : ''} located in **${place}**.`;
 
-        const mjStyleBlock = config.extractedStyle
-            ? `**Custom Art Style** :: ${config.extractedStyle}`
-            : `**${styleRef} Art Style** :: ${tokens.vibe} :: ${tokens.finish}`;
+        const mjStyleBlock = `**${styleRef} Art Style** :: ${tokens.vibe} :: ${tokens.finish}`;
 
         // 1. UNIVERSAL
         if (promptType === PromptType.UNIVERSAL) {

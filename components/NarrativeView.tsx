@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { MapConfig, Language, NarrativeMode, ThemeMode, PromptType } from '../types';
+import { MapConfig, Language, NarrativeMode, ThemeMode, PromptType, StyleMode } from '../types';
 import * as C from '../constants';
 import { playSwitch, playTechClick, playSuccess } from '../services/audioService';
 import { generatePOISuggestions, analyzeImageStyle } from '../services/geminiService';
@@ -21,9 +21,11 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
   const [pois, setPois] = useState<string[]>(config.manualPOIs || Array(6).fill(''));
   const [isLoadingPois, setIsLoadingPois] = useState(false);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const theme = config.themeMode || ThemeMode.FANTASY;
+  const styleMode = config.styleMode || StyleMode.ASSISTED;
 
   // --- DYNAMIC LIST LOGIC ---
   const civList = theme === ThemeMode.FANTASY ? C.FANTASY_RACES : C.HISTORICAL_CIVS;
@@ -60,8 +62,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     }
   }, [config.manualPOIs]);
 
-  // OFFLINE AUTO-POIS: Update when context changes
+  // OFFLINE AUTO-POIS: Update when context changes (Only for standard themes)
   useEffect(() => {
+    if (theme === ThemeMode.CUSTOM) return; // Don't overwrite custom input
     if (config.civilization || config.era || config.placeType) {
          // Smart predefined selection
          const predefined = C.getPredefinedPOIs(config.civilization, config.era, config.placeType, config.buildingType);
@@ -69,7 +72,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
          setPois(predefined);
          onChange('manualPOIs', predefined);
     }
-  }, [config.civilization, config.placeType, config.era, config.buildingType]);
+  }, [config.civilization, config.placeType, config.era, config.buildingType, theme]);
 
   const handlePoiChange = (index: number, value: string) => {
     const newPois = [...pois];
@@ -103,11 +106,17 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
 
   const handleThemeToggle = (newTheme: ThemeMode) => {
     onChange('themeMode', newTheme);
+    // Clear values when switching to ensure clean slate
     onChange('civilization', '');
     onChange('era', '');
     onChange('placeType', '');
     onChange('buildingType', '');
     playSwitch();
+  };
+
+  const handleStyleModeToggle = (newMode: StyleMode) => {
+      onChange('styleMode', newMode);
+      playSwitch();
   };
 
   const handleWizardChange = (field: keyof MapConfig, value: string) => {
@@ -119,9 +128,7 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const processFile = async (file: File) => {
       if (file.size > 5 * 1024 * 1024) {
           alert(t.imageTooBig || "Image too big (Max 5MB)");
           return;
@@ -142,6 +149,21 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
           setIsAnalyzingImage(false);
       };
       reader.readAsDataURL(file);
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+          processFile(file);
+      }
   };
 
   const clearImage = () => {
@@ -194,6 +216,32 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
       );
   };
 
+  // --- SIMPLE INPUT COMPONENT (FOR CUSTOM MODE) ---
+  const SimpleInput = ({ label, value, onChangeVal, placeholder }: { label: string, value: string, onChangeVal: (val: string) => void, placeholder: string }) => (
+      <div className="mb-4">
+          <label className="block text-[10px] text-gray-500 mb-1 font-mono uppercase font-bold">{label}</label>
+          <input 
+              type="text"
+              value={value}
+              onChange={(e) => onChangeVal(e.target.value)}
+              placeholder={placeholder}
+              className="w-full bg-gray-900/50 border border-gray-700 p-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-accent-400 rounded-sm transition-colors"
+          />
+      </div>
+  );
+
+  const getBorderColor = () => {
+      if (theme === ThemeMode.FANTASY) return 'border-l-purple-600';
+      if (theme === ThemeMode.HISTORICAL) return 'border-l-orange-600';
+      return 'border-l-cyan-600'; // Custom
+  }
+
+  const getThemeColorClass = (target: ThemeMode) => {
+      if (target === ThemeMode.FANTASY) return 'text-purple-300 border-purple-500/30 bg-purple-900/50';
+      if (target === ThemeMode.HISTORICAL) return 'text-orange-300 border-orange-500/30 bg-orange-900/50';
+      return 'text-cyan-300 border-cyan-500/30 bg-cyan-900/50';
+  }
+
   return (
     <div className="animate-fade-in pb-8 max-w-6xl mx-auto">
       
@@ -207,10 +255,10 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             
             {/* BLOQUE 1: NÚCLEO DE ESCENARIO */}
-            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-l-purple-600' : 'border-l-orange-600'} relative`}>
+            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${getBorderColor()} relative transition-colors duration-300`}>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className={`text-sm font-bold text-white font-mono flex items-center gap-2 uppercase tracking-tighter`}>
-                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>01.</span> {t.scenario}
+                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : theme === ThemeMode.HISTORICAL ? 'text-orange-500' : 'text-cyan-500'}>01.</span> {t.scenario}
                     </h3>
                     
                     {/* RANDOM BUTTON NEXT TO TITLE */}
@@ -223,150 +271,172 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
                     </button>
                 </div>
 
-                {/* Theme Toggle */}
+                {/* Theme Toggle (3 Options) */}
                 <div className="flex bg-gray-950 border border-gray-800 rounded mb-4 p-0.5">
                     <button 
                         onClick={() => handleThemeToggle(ThemeMode.FANTASY)} 
-                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.FANTASY ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.FANTASY ? getThemeColorClass(ThemeMode.FANTASY) : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         {t.themeFantasy}
                     </button>
                     <button 
                         onClick={() => handleThemeToggle(ThemeMode.HISTORICAL)} 
-                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.HISTORICAL ? 'bg-orange-900/50 text-orange-300 border border-orange-500/30' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.HISTORICAL ? getThemeColorClass(ThemeMode.HISTORICAL) : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         {t.themeHistory}
                     </button>
+                    <button 
+                        onClick={() => handleThemeToggle(ThemeMode.CUSTOM)} 
+                        className={`flex-1 py-1.5 text-[10px] font-bold transition-all uppercase tracking-wider rounded-sm ${theme === ThemeMode.CUSTOM ? getThemeColorClass(ThemeMode.CUSTOM) : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        {t.themeCustom}
+                    </button>
                 </div>
                 
-                {/* 1A. CIVILIZATION */}
-                <SmartSelect 
-                    label={theme === ThemeMode.FANTASY ? "1A. RAZA / ESPECIE" : "1A. CIVILIZACIÓN"} 
-                    value={config.civilization || ''} 
-                    options={civList} 
-                    onChangeVal={(v) => onChange('civilization', v)} 
-                    placeholder="Escribe el nombre de la civilización..."
-                />
+                {theme === ThemeMode.CUSTOM ? (
+                    /* CUSTOM MODE: SIMPLE TEXT INPUTS */
+                    <div className="animate-fade-in space-y-4">
+                        <SimpleInput 
+                            label="1A. CIVILIZACIÓN / ENTIDAD" 
+                            value={config.civilization || ''} 
+                            onChangeVal={(v) => onChange('civilization', v)} 
+                            placeholder="Ej: Federación Galáctica, Culto de Cthulhu..."
+                        />
+                        <SimpleInput 
+                            label="1B. ÉPOCA / ERA (OPCIONAL)" 
+                            value={config.era || ''} 
+                            onChangeVal={(v) => onChange('era', v)} 
+                            placeholder="Ej: Año 3000, Prehistoria Alternativa..."
+                        />
+                         <SimpleInput 
+                            label="1C. CONTEXTO / LUGAR" 
+                            value={config.placeType || ''} 
+                            onChangeVal={(v) => onChange('placeType', v)} 
+                            placeholder="Ej: Base en Marte, Ruinas Sumergidas..."
+                        />
+                         <SimpleInput 
+                            label="1D. EDIFICACIÓN PRINCIPAL" 
+                            value={config.buildingType || ''} 
+                            onChangeVal={(v) => onChange('buildingType', v)} 
+                            placeholder="Ej: Torre de Control, Templo Mayor..."
+                        />
+                    </div>
+                ) : (
+                    /* STANDARD MODES: SMART SELECTS */
+                    <div className="animate-fade-in">
+                        {/* 1A. CIVILIZATION */}
+                        <SmartSelect 
+                            label={theme === ThemeMode.FANTASY ? t.labelRace : t.labelCiv} 
+                            value={config.civilization || ''} 
+                            options={civList} 
+                            onChangeVal={(v) => onChange('civilization', v)} 
+                            placeholder="Escribe el nombre de la civilización..."
+                        />
 
-                {/* 1B. ERA (Only Historical, or optional for Fantasy) */}
-                {theme === ThemeMode.HISTORICAL && (
-                    <SmartSelect 
-                        label="1B. ÉPOCA / ERA" 
-                        value={config.era || ''} 
-                        options={C.HISTORICAL_ERAS} 
-                        onChangeVal={(v) => onChange('era', v)} 
-                        placeholder="Define la época temporal..."
-                    />
+                        {/* 1B. ERA (Only Historical) */}
+                        {theme === ThemeMode.HISTORICAL && (
+                            <SmartSelect 
+                                label={t.labelEra} 
+                                value={config.era || ''} 
+                                options={C.HISTORICAL_ERAS} 
+                                onChangeVal={(v) => onChange('era', v)} 
+                                placeholder="Define la época temporal..."
+                            />
+                        )}
+
+                        {/* 1C. GEOLOCATION */}
+                        <SmartSelect 
+                            label={t.labelGeo} 
+                            value={config.placeType || ''} 
+                            options={placeList} 
+                            onChangeVal={(v) => onChange('placeType', v)} 
+                            placeholder="¿Dónde ocurre esto?"
+                        />
+
+                        {/* 1D. EDIFICATION */}
+                        <SmartSelect 
+                            label={t.labelSettlement} 
+                            value={config.buildingType || ''} 
+                            options={buildingList} 
+                            onChangeVal={(v) => onChange('buildingType', v)} 
+                            placeholder="Tipo de estructura principal..."
+                        />
+                    </div>
                 )}
-
-                {/* 1C. GEOLOCATION */}
-                <SmartSelect 
-                    label={theme === ThemeMode.FANTASY ? "1B. GEOLOCALIZACIÓN" : "1C. GEOLOCALIZACIÓN"} 
-                    value={config.placeType || ''} 
-                    options={placeList} 
-                    onChangeVal={(v) => onChange('placeType', v)} 
-                    placeholder="¿Dónde ocurre esto?"
-                />
-
-                {/* 1D. EDIFICATION */}
-                <SmartSelect 
-                    label={theme === ThemeMode.FANTASY ? "1C. EDIFICACIÓN" : "1D. EDIFICACIÓN"} 
-                    value={config.buildingType || ''} 
-                    options={buildingList} 
-                    onChangeVal={(v) => onChange('buildingType', v)} 
-                    placeholder="Tipo de estructura principal..."
-                />
             </div>
 
-            {/* BLOQUE 2: ADN VISUAL (WIZARD DROPDOWNS) */}
-            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${theme === ThemeMode.FANTASY ? 'border-l-purple-600' : 'border-l-orange-600'}`}>
+            {/* BLOQUE 2: ADN VISUAL (3-TAB SYSTEM) */}
+            <div className={`bg-gray-900/50 p-5 border border-gray-800 border-l-4 rounded-r-lg ${getBorderColor()} transition-colors duration-300`}>
                 <div className="flex justify-between items-center mb-4">
                      <h3 className={`text-sm font-bold text-white font-mono uppercase tracking-tighter flex items-center gap-2`}>
-                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>02.</span> ADN VISUAL
+                        <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : theme === ThemeMode.HISTORICAL ? 'text-orange-500' : 'text-cyan-500'}>02.</span> ADN VISUAL
                     </h3>
                 </div>
                 
-                {/* COMPACT IMAGE UPLOAD */}
-                <div className="mb-4">
-                    {config.referenceImageBase64 ? (
-                        // Uploaded State: Compact Row
-                        <div className="flex gap-3 bg-gray-950/50 p-2 rounded border border-green-900/30 items-center relative group">
-                             <img src={config.referenceImageBase64} alt="Ref" className="w-12 h-12 rounded object-cover border border-gray-700" />
-                             <div className="flex-grow min-w-0">
-                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">✅ {t.styleExtracted}</span>
-                                     {isAnalyzingImage && <span className="text-[9px] text-accent-400 animate-pulse ml-2">Analyzing...</span>}
-                                 </div>
-                                 <input 
-                                    type="text"
-                                    value={config.extractedStyle || ''}
-                                    onChange={(e) => onChange('extractedStyle', e.target.value)}
-                                    className="w-full bg-transparent text-[10px] text-gray-300 border-none focus:ring-0 p-0 placeholder-gray-600 truncate"
-                                    placeholder="Estilo extraído..."
-                                 />
-                             </div>
-                             <button 
-                                onClick={clearImage} 
-                                className="text-gray-500 hover:text-red-400 p-1"
-                             >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                             </button>
-                        </div>
-                    ) : (
-                        // Empty State: Compact Button
-                        <div 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="cursor-pointer border border-dashed border-gray-700 hover:border-accent-500/50 bg-gray-950/30 rounded p-2 flex items-center justify-center gap-2 transition-all group"
-                        >
-                            <span className="text-lg group-hover:scale-110 transition-transform">📸</span>
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider group-hover:text-gray-300">{t.uploadRefLabel || "SUBIR REFERENCIA VISUAL"}</span>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                className="hidden" 
-                                accept="image/*" 
-                                onChange={handleImageUpload}
-                            />
-                        </div>
-                    )}
+                {/* Style Mode Toggle */}
+                <div className="flex bg-gray-950 border border-gray-800 rounded mb-4 p-0.5">
+                    <button onClick={() => handleStyleModeToggle(StyleMode.ASSISTED)} className={`flex-1 py-1.5 text-[10px] font-bold uppercase rounded-sm transition-all ${styleMode === StyleMode.ASSISTED ? 'bg-gray-800 text-white' : 'text-gray-500'}`}>{t.styleAssisted}</button>
+                    <button onClick={() => handleStyleModeToggle(StyleMode.REF_IMAGE)} className={`flex-1 py-1.5 text-[10px] font-bold uppercase rounded-sm transition-all ${styleMode === StyleMode.REF_IMAGE ? 'bg-gray-800 text-white' : 'text-gray-500'}`}>{t.styleVisualRef}</button>
+                    <button onClick={() => handleStyleModeToggle(StyleMode.MANUAL)} className={`flex-1 py-1.5 text-[10px] font-bold uppercase rounded-sm transition-all ${styleMode === StyleMode.MANUAL ? 'bg-gray-800 text-white' : 'text-gray-500'}`}>{t.styleCustom}</button>
                 </div>
 
-                {/* Wizard UI (Disabled if image uploaded) */}
-                <div className={`space-y-4 transition-opacity ${config.extractedStyle ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                    {/* 1. Category */}
-                    <SmartSelect 
-                        label="2A. CATEGORÍA / MEDIO" 
-                        value={config.styleCategory || ''} 
-                        options={C.STYLE_WIZARD_DATA.categories} 
-                        onChangeVal={(v) => handleWizardChange('styleCategory', v)} 
-                    />
+                {/* TAB CONTENT: ASSISTED */}
+                {styleMode === StyleMode.ASSISTED && (
+                    <div className="animate-fade-in space-y-4">
+                        <SmartSelect label="2A. CATEGORÍA" value={config.styleCategory || ''} options={C.STYLE_WIZARD_DATA.categories} onChangeVal={(v) => handleWizardChange('styleCategory', v)} />
+                        <SmartSelect label="2B. REFERENTE VISUAL" value={config.styleReference || ''} options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} onChangeVal={(v) => handleWizardChange('styleReference', v)} disabled={!config.styleCategory} />
+                        <SmartSelect label="2C. SENSACIÓN / ATMÓSFERA" value={config.styleVibe || ''} options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} onChangeVal={(v) => handleWizardChange('styleVibe', v)} disabled={!config.styleReference} />
+                    </div>
+                )}
 
-                    {/* 2. Reference (Dependent on Category) */}
-                    <SmartSelect 
-                        label="2B. REFERENTE VISUAL" 
-                        value={config.styleReference || ''} 
-                        options={config.styleCategory ? C.STYLE_WIZARD_DATA.references[config.styleCategory]?.map(r => r.label) || [] : []} 
-                        onChangeVal={(v) => handleWizardChange('styleReference', v)}
-                        disabled={!config.styleCategory} 
-                    />
+                {/* TAB CONTENT: VISUAL REF (DRAG & DROP) */}
+                {styleMode === StyleMode.REF_IMAGE && (
+                    <div className="animate-fade-in">
+                        {config.referenceImageBase64 ? (
+                            <div className="relative border border-green-900/50 rounded bg-gray-950/50 p-4 text-center">
+                                <img src={config.referenceImageBase64} alt="Ref" className="h-32 mx-auto rounded border border-gray-700 object-cover mb-3" />
+                                <div className="text-[9px] font-bold text-green-500 uppercase tracking-wider mb-2">✅ {t.styleExtracted}</div>
+                                <textarea readOnly value={config.extractedStyle || ''} className="w-full h-16 bg-transparent text-[10px] text-gray-400 border-none resize-none text-center focus:ring-0" />
+                                <button onClick={clearImage} className="absolute top-2 right-2 text-gray-500 hover:text-red-400"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            </div>
+                        ) : (
+                            <div 
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all gap-3 ${isDragging ? 'border-green-500 bg-green-900/20' : 'border-gray-700 hover:border-accent-500/50 hover:bg-gray-900'}`}
+                            >
+                                <div className="text-3xl">{isDragging ? '📂' : '📸'}</div>
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{isDragging ? "SUELTA LA IMAGEN" : t.uploadDragDrop}</div>
+                                <p className="text-[9px] text-gray-600">{t.uploadRefDesc}</p>
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            </div>
+                        )}
+                        {isAnalyzingImage && <div className="text-center mt-2 text-xs font-mono text-accent-400 animate-pulse">{t.analyzingStyle}</div>}
+                    </div>
+                )}
 
-                    {/* 3. Vibe */}
-                    <SmartSelect 
-                        label="2C. SENSACIÓN / ATMÓSFERA" 
-                        value={config.styleVibe || ''} 
-                        options={C.STYLE_WIZARD_DATA.vibes.map(v => v.label)} 
-                        onChangeVal={(v) => handleWizardChange('styleVibe', v)}
-                        disabled={!config.styleReference} 
-                    />
-                </div>
+                {/* TAB CONTENT: MANUAL */}
+                {styleMode === StyleMode.MANUAL && (
+                    <div className="animate-fade-in">
+                        <label className="block text-[10px] text-gray-500 mb-2 font-mono uppercase font-bold">DESCRIPCIÓN DE ESTILO MANUAL</label>
+                        <textarea 
+                            value={config.manualStyle || ''}
+                            onChange={(e) => onChange('manualStyle', e.target.value)}
+                            placeholder={t.manualStylePlaceholder}
+                            className="w-full h-48 bg-gray-900/50 border border-gray-700 p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-accent-400 rounded-sm resize-none leading-relaxed"
+                        />
+                    </div>
+                )}
             </div>
       </div>
 
       {/* ROW 2: POIS (FULL WIDTH) */}
-      <div className={`mb-8 bg-gray-900/50 p-6 border border-gray-800 border-t-4 rounded-lg ${theme === ThemeMode.FANTASY ? 'border-t-purple-600' : 'border-t-orange-600'}`}>
+      <div className={`mb-8 bg-gray-900/50 p-6 border border-gray-800 border-t-4 rounded-lg ${getBorderColor()} transition-colors duration-300`}>
             <div className="flex justify-between items-center mb-6">
                 <h3 className={`text-sm font-bold text-white font-mono uppercase tracking-tighter flex items-center gap-2`}>
-                    <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : 'text-orange-500'}>03.</span> {t.poiTitle}
+                    <span className={theme === ThemeMode.FANTASY ? 'text-purple-500' : theme === ThemeMode.HISTORICAL ? 'text-orange-500' : 'text-cyan-500'}>03.</span> {t.poiTitle}
                 </h3>
                 
                 {/* BOTON REGENERATE */}
@@ -446,15 +516,25 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
         </div>
       </div>
 
+      {/* AI RECOMMENDATION WARNING */}
+      {(theme === ThemeMode.CUSTOM || styleMode === StyleMode.MANUAL) && (
+          <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded flex items-start gap-3 animate-slide-up">
+              <span className="text-xl">⚠️</span>
+              <p className="text-xs text-yellow-200/80 font-mono leading-relaxed mt-1">
+                  {t.customInputWarning}
+              </p>
+          </div>
+      )}
+
       {/* ROW 4: GENERATION BUTTONS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             
             {/* 1. MUNDO */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.WORLD)} // Changed to false (No AI) by default
-                disabled={isGenerating || (!config.styleReference && !config.extractedStyle) || !config.civilization}
+                disabled={isGenerating || (!config.civilization)}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-cyan-900/20 border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]'}
+                ${(!config.civilization) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-cyan-900/20 border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">🌍</div>
@@ -466,9 +546,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             {/* 2. UI */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.UI)} // Changed to false (No AI) by default
-                disabled={isGenerating || (!config.styleReference && !config.extractedStyle)}
+                disabled={isGenerating}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]'}
+                ${isGenerating ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">🔮</div>
@@ -479,9 +559,9 @@ const NarrativeView: React.FC<NarrativeViewProps> = ({ config, onChange, lang, o
             {/* 3. PERSONAJES */}
             <button 
                 onClick={() => onGenerate(false, NarrativeMode.CHARACTERS)} // Changed to false (No AI) by default
-                disabled={isGenerating || (!config.styleReference && !config.extractedStyle) || !config.civilization}
+                disabled={isGenerating || (!config.civilization)}
                 className={`relative p-6 rounded-lg text-left transition-all border group overflow-hidden
-                ${(!config.styleReference && !config.extractedStyle) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-pink-900/20 border-pink-500/30 hover:bg-pink-900/40 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]'}
+                ${(!config.civilization) ? 'bg-gray-900 border-gray-800 opacity-50 cursor-not-allowed' : 'bg-pink-900/20 border-pink-500/30 hover:bg-pink-900/40 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]'}
                 `}
             >
                 <div className="text-2xl mb-2">⚔️</div>

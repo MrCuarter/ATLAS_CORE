@@ -267,6 +267,7 @@ export const UI_TEXT = {
     storycrafterTitle: "STORYCRAFTER ENGINE",
     themeFantasy: "FANTASÍA",
     themeHistory: "HISTÓRICO",
+    themeCustom: "PERSONALIZADO",
     labelRace: "1A. RAZA / ESPECIE",
     labelGeo: "1B. GEOLOCALIZACIÓN (NATURAL)",
     labelCiv: "1A. CIVILIZACIÓN",
@@ -304,9 +305,15 @@ export const UI_TEXT = {
     // Image Upload Text
     uploadRefLabel: "SUBIR REFERENCIA VISUAL",
     uploadRefDesc: "La IA copiará el estilo de tu imagen",
+    uploadDragDrop: "ARRASTRAR IMAGEN AQUÍ",
     analyzingStyle: "Analizando estilo con IA...",
     styleExtracted: "ESTILO EXTRAÍDO",
-    imageTooBig: "Imagen demasiado grande (Máx 5MB)"
+    imageTooBig: "Imagen demasiado grande (Máx 5MB)",
+    styleAssisted: "ASISTIDO",
+    styleVisualRef: "REF. VISUAL",
+    styleCustom: "PERSONALIZADO",
+    manualStylePlaceholder: "Describe el estilo artístico libremente (ej: Dibujo a carboncillo sobre papel viejo, estilo Leonardo da Vinci...)",
+    customInputWarning: "⚠️ RECOMENDACIÓN: Al usar inputs manuales personalizados, es ALTAMENTE RECOMENDABLE usar el botón 'MEJORAR CON IA' tras generar los prompts para obtener resultados óptimos."
   },
   [Language.EN]: {
     appTitle: "Atlas_Core",
@@ -375,6 +382,7 @@ export const UI_TEXT = {
     storycrafterTitle: "STORYCRAFTER ENGINE",
     themeFantasy: "FANTASÍA",
     themeHistory: "HISTORICAL",
+    themeCustom: "CUSTOM",
     labelRace: "1A. RACE / SPECIES",
     labelGeo: "1B. GEOLOCATION (NATURAL)",
     labelCiv: "1A. CIVILIZATION",
@@ -412,9 +420,15 @@ export const UI_TEXT = {
     // Image Upload Text
     uploadRefLabel: "UPLOAD VISUAL REFERENCE",
     uploadRefDesc: "AI will extract the style from your image",
+    uploadDragDrop: "DRAG IMAGE HERE",
     analyzingStyle: "Analyzing style with AI...",
     styleExtracted: "EXTRACTED STYLE",
-    imageTooBig: "Image too big (Max 5MB)"
+    imageTooBig: "Image too big (Max 5MB)",
+    styleAssisted: "ASSISTED",
+    styleVisualRef: "VISUAL REF",
+    styleCustom: "CUSTOM",
+    manualStylePlaceholder: "Describe the art style freely (e.g., Charcoal drawing on old paper, Leonardo da Vinci style...)",
+    customInputWarning: "⚠️ RECOMMENDATION: When using custom manual inputs, it is HIGHLY RECOMMENDED to use the 'ENHANCE WITH AI' button after generating prompts for optimal results."
   }
 };
 
