@@ -127,6 +127,8 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
            - MUST use "--ar 9:16".
         
         11. **NO PEOPLE**: If the prompt is for a Map or Scene (and not a Character Sheet), add "--no people characters figures" and ensure the description emphasizes "empty environment, architectural focus".
+
+        12. **NO TEXT (CRITICAL)**: Use "--no text typography letters labels watermarks signature". Ensure the description explicitly states the image is free of any text.
         `;
     } else if (promptType === PromptType.UNIVERSAL) {
         // TYPE A: UNIVERSAL ENHANCER - TECHNICAL ART DIRECTOR
@@ -159,6 +161,8 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         8. **PET SHEETS**: If the input is for a "Companion/Pet" or "Creature", ensure the output describes a QUADRUPED beast in a VERTICAL layout (9:16) with 3 DISTINCT POSES (Top, Center, Bottom).
         9. **NO PEOPLE**: If the prompt is for a MAP or SCENE, explicit state: "The scene is devoid of people. No characters present. Focus on environment and architecture."
         
+        10. **NO TEXT (CRITICAL)**: The output MUST explicitly state: "The image must be completely free of text, labels, typography, letters, or watermarks. Pure visual art only."
+        
         ENHANCEMENT STRATEGY:
         - Translate to English.
         - Improve lighting/texture (e.g. "subsurface scattering", "dynamic shadows") to match the mood.
@@ -176,7 +180,7 @@ export const enhancePromptWithGemini = async (currentPrompt: string, promptType:
         4. **PRESERVE CORE TOKENS**: Do not remove the camera type, the Style Reference, or the Civilization.
         5. **EXPAND**: Add technical tags (e.g., "ray tracing", "8k", "highly detailed", "sharp focus").
         6. **BADGE GRIDS**: If badges are mentioned, add "grid layout, 3x2 arrangement, 6 icons, circular frames, isolated on white, male hero face, female mage face, villain face, minion face, sage face, beast face".
-        7. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end.
+        7. **NEGATIVE PROMPT**: Ensure the 'Negative prompt:' section is preserved at the end AND add "text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed, letters, typography, labels, signature".
         `;
     }
 
@@ -247,7 +251,7 @@ export const generateDerivedScene = async (currentPrompt: string, mediaType: Med
     return executeWithFallback(async (ai) => {
         const modelId = "gemini-3-flash-preview";
         
-        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed. Ensure the view is from the doorway threshold looking into the interior.`;
+        const systemInstruction = `You are a Creative Director. Analyze the prompt. Create a NEW prompt for a related Point of Interest (POI) derived from that location. Maintain the same format style (Universal, MJ, or Token list). Translate to English if needed. Ensure the view is from the doorway threshold looking into the interior. Ensure strictly NO TEXT in the image.`;
 
         const response = await ai.models.generateContent({
             model: modelId,

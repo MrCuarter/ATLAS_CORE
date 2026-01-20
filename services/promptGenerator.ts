@@ -133,6 +133,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         
         Technical details: ${camera} ${viewStr}. ${isVideo ? `Camera Action: ${videoAction}. Duration: 5s.` : ''}
         Important: The camera angle specified (${camera}) is a strict technical requirement and overrides any default camera angle implied by the art style.
+        CRITICAL: The image must be strictly TEXT-FREE. Do not include any labels, UI elements, typography, or letters. Pure visual art only.
         High quality, wide ${ar} aspect ratio, professional game asset.`;
     }
 
@@ -154,7 +155,8 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
             
         const motionText = isVideo ? `, ${videoAction} motion` : "";
 
-        return `${mainSubject} ${motionText} :: ${envDetails} :: ${styleBlock} :: ${camera}, ${tokens.clarity} --ar ${ar} --v 6.0 --stylize 250 --no text ui interface`;
+        // Added extended negative parameters for text
+        return `${mainSubject} ${motionText} :: ${envDetails} :: ${styleBlock} :: ${camera}, ${tokens.clarity} --ar ${ar} --v 6.0 --stylize 250 --no text ui interface letters typography labels watermarks`;
     }
 
     // === TYPE C: ADVANCED (STABLE DIFFUSION / COMFYUI) ===
@@ -169,7 +171,7 @@ export const generatePrompt = (config: MapConfig, mediaType: MediaType, promptTy
         const styleTags = `${tokens.ref}, ${tokens.vibe}, ${tokens.detail}, ${tokens.finish},`;
             
         const techTags = `${camera}, ${tokens.clarity}, ${isVideo ? videoAction : ''}`;
-        const negative = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
+        const negative = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed, letters, typography, labels, signature";
 
         return `${qualityPrefix} ${subjectTags} ${envTags} ${styleTags} ${techTags}\n${negative}`;
     }
@@ -214,16 +216,20 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
     const formatAsset = (assetType: string, subject: string, contextDescription: string, view: string, extraTech: string = "", customAr: string = "16:9"): string => {
         const isWorldMode = mode === NarrativeMode.WORLD;
         const safetyMargin = isWorldMode 
-            ? "High quality, wide aspect ratio, professional game asset." 
-            : "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING. Wide negative space between elements.";
+            ? "High quality, wide aspect ratio, professional game asset. NO TEXT, NO LABELS." 
+            : "ISOLATED ON PURE WHITE BACKGROUND. Wide safety margin around the subject. NO CROPPING. Wide negative space between elements. STRICTLY NO TEXT.";
         
         const techLine = `${view}. ${extraTech}`;
         const ar = customAr;
 
         // NO PEOPLE LOGIC
         const noPeopleTag = isWorldMode ? "NO PEOPLE, NO CHARACTERS, empty scenery, environmental focus." : "";
-        const mjNoPeople = isWorldMode ? "--no people characters figures" : "--no text ui interface";
+        
+        // NO TEXT PARAMETERS
+        const mjNoText = "--no text ui interface letters typography labels watermarks signature";
+        const mjNoPeople = isWorldMode ? "--no people characters figures" : "";
         const sdNoPeople = isWorldMode ? "(no humans, no people, empty scenery)," : "";
+        const sdNoText = "text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed, letters, typography, labels, signature";
 
         // STYLE DECOUPLING INSTRUCTION
         const styleInstruction = `
@@ -246,21 +252,21 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
             Technical details: ${techLine}.
             ${safetyMargin}
             ${noPeopleTag}
+            CRITICAL: The image must be strictly TEXT-FREE. Do not include any labels, letters, or typography. Pure visual representation.
             Aspect Ratio: ${ar}`;
         }
 
         // 2. MIDJOURNEY
         if (promptType === PromptType.MIDJOURNEY) {
             // MJ structure: [Subject + Content] :: [Env + Tech] :: [Style Reference]
-            return `${assetType} of ${subject}, ${civ} aesthetics, ${place} environment ${era ? `, ${era}` : ''} :: ${contextDescription}, Time: ${time}, Weather: ${weather} :: ${mjStyleBlock} :: ${cleanRef} :: ${techLine} --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople}`;
+            return `${assetType} of ${subject}, ${civ} aesthetics, ${place} environment ${era ? `, ${era}` : ''} :: ${contextDescription}, Time: ${time}, Weather: ${weather} :: ${mjStyleBlock} :: ${cleanRef} :: ${techLine} --ar ${ar} --v 6.0 --stylize 250 ${mjNoPeople} ${mjNoText}`;
         }
 
         // 3. TECHNICAL (Stable Diffusion)
         if (promptType === PromptType.ADVANCED) {
             const quality = "(masterpiece, best quality, 8k, highres),";
             const isolationTag = isWorldMode ? "" : ", isolated on white background, simple background";
-            const neg = "Negative prompt: (worst quality, low quality:1.4), text, watermark, ui, interface, hud, username, blurry, artifacts, bad anatomy, deformed";
-            return `${quality} ${assetType}, ${subject}, ${civ} style, ${era}, ${place} background, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \n${neg}`;
+            return `${quality} ${assetType}, ${subject}, ${civ} style, ${era}, ${place} background, ${time}, ${weather}, ${sdNoPeople} ${cleanRef}, ${tokens.vibe}, ${tokens.finish}, ${techLine}${isolationTag}, ${tokens.clarity} \nNegative prompt: (worst quality, low quality:1.4), ${sdNoText}`;
         }
 
         return "";
@@ -350,7 +356,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 – Medium icons: Level, Star, Heart, Coin, Gem, Flag
                 – Small actions: Confirm, Cancel, Gift, Inventory, Craft, Chest, Consumables
                 – Circular utility: Mail, Edit, Settings, Help, Close, Add, Back, Energy.
-                Layout: Clear rows by category. No text inside buttons unless explicitly written. All buttons empty inside except labels/icons.`,
+                Layout: Clear rows by category. **CRITICAL: All buttons must be BLANK/EMPTY inside. DO NOT generate text inside the buttons. No letters, no labels. Pure graphical frames only.**`,
                 "16:9"
             )
         });
@@ -369,7 +375,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 – Speech boxes: Bottom dialogue box, Small speech bubble, Tooltip
                 – Panels: Title banner, Notification panel, Confirmation window
                 – Input frames: Small and Medium text boxes.
-                Layout: Empty inside (no text), rounded corners, decorative borders matching the style. Clear visual hierarchy.`,
+                Layout: **Empty inside (no text)**, rounded corners, decorative borders matching the style. Clear visual hierarchy. Pure graphical assets only.`,
                 "16:9"
             )
         });
@@ -382,7 +388,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 "Game HUD Elements", 
                 `Health bar, Mana bar, and XP bar with ${civ} ornamentation`, 
                 `UI Aesthetics: ${materialDesc}`, 
-                "Isolated health and energy bars, decorative frames, status indicators. Flat vector graphic style.",
+                "Isolated health and energy bars, decorative frames, status indicators. Flat vector graphic style. No text, no numbers.",
                 "16:9"
             )
         });
@@ -434,7 +440,7 @@ export const generateNarrativeCollection = (config: MapConfig, promptType: Promp
                 "Game Character Token Badges Sheet",
                 "Collection of 6 circular character insignias representing exactly the 6 characters of this set: 1. Male Hero, 2. Female Hero, 3. Main Villain, 4. Minion Soldier, 5. Wise Sage, 6. Beast Companion",
                 `The portraits inside the badges must be close-up headshots of the ${civ} characters generated previously. The frame style must be ${civ} ornamentation`,
-                "A clean 3x2 grid layout of 6 circular badges: exactly 3 in the top row and 3 in the bottom row. Each insignia contains a character head portrait. Wide safety margin and white negative space between each badge.",
+                "A clean 3x2 grid layout of 6 circular badges: exactly 3 in the top row and 3 in the bottom row. Each insignia contains a character head portrait. Wide safety margin and white negative space between each badge. No text.",
                 "16:9"
             )
         });
